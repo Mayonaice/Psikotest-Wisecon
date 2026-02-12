@@ -1,0 +1,224 @@
+@{
+    ViewData["Title"] = "Master Petunjuk";
+    Layout = "_DashboardLayout";
+}
+<div class="px-0 py-0 text-[#111827]">
+  <h1 class="text-3xl font-semibold text-[#1E90FF]">Master Petunjuk</h1>
+
+  <div class="mt-4 bg-[#EBEBE9] border border-gray-300 rounded-xl pl-3 pr-3 py-3 w-full max-w-[32rem]">
+    <div class="flex items-center gap-3 mb-2">
+      <span class="text-sm text-gray-700 w-28">Tanggal Input:</span>
+      <div class="flex items-center gap-2 w-80 justify-between">
+        <span class="w-3 h-3 rounded-sm bg-[#1E90FF]"></span>
+        <input id="gDateStart" type="date" class="border border-gray-300 rounded-md px-2 py-1 w-40" />
+        <span class="text-gray-700">To</span>
+        <input id="gDateEnd" type="date" class="border border-gray-300 rounded-md px-2 py-1 w-40" />
+      </div>
+    </div>
+    <div class="flex items-center gap-3 mb-2">
+      <span class="text-sm text-gray-700 w-28">Status</span>
+      <select id="gStatus" class="border border-gray-300 rounded-md px-2 py-1 w-80">
+        <option value="">Semua Status</option>
+        <option value="AKTIF">Aktif</option>
+        <option value="NONAKTIF">Nonaktif</option>
+      </select>
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="btnGRefresh" class="btn-flat inline-flex items-center gap-2 px-2 py-1 rounded-md h-7">
+        <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/RefreshNB.svg")" alt="Refresh" class="w-4 h-4" />
+        <span>Refresh</span>
+      </button>
+      <button id="btnGAdd" class="btn-flat inline-flex items-center gap-2 px-2 py-1 rounded-md h-7">
+        <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/AddNB.svg")" alt="Add" class="w-4 h-4" />
+        <span>Tambah</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="mt-4"></div>
+
+  <div id="titleGuides" class=" bg-[#EBEBE9] border border-gray-300 rounded-t-xl px-3 py-1 font-semibold">Petunjuk</div>
+  <div id="gridGuides" class="border border-gray-300 border-t-0 rounded-b-xl">
+    <div class="table-scroll overflow-x-auto overflow-y-auto max-h-[60vh]">
+      <table id="tblGuides" class="min-w-full text-sm">
+        <thead>
+        <tr class="bg-[#EBEBE9]">
+          <th class="px-3 py-1 w-16 text-left"><div id="selectAllGuides" class="select-square" title="Pilih semua"></div></th>
+          <th class="px-1 py-1 w-16 text-left"></th>
+          <th class="px-1 py-1 w-16 text-left"><div class="th-inner"><span>Num</span><span class="sort-icons" data-sort="num"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Nomor Petunjuk</span><span class="sort-icons" data-sort="seqNo"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Keterangan</span><span class="sort-icons" data-sort="keterangan"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Status</span><span class="sort-icons" data-sort="status"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>User Input</span><span class="sort-icons" data-sort="userInput"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-3 py-1 text-left"><div class="th-inner"><span>Time Input</span><span class="sort-icons" data-sort="timeInput"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>User Edit</span><span class="sort-icons" data-sort="userEdit"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Time Edit</span><span class="sort-icons" data-sort="timeEdit"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+        </tr>
+        <tr class="bg-[#EBEBE9]">
+          <th class="px-1 py-1"></th>
+          <th class="px-1 py-1"></th>
+          <th class="px-1 py-1"></th>
+          <th class="px-1 py-1 search-cell"><input data-field="seqNo" class="col-search-guides border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="keterangan" class="col-search-guides border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="status" class="col-search-guides border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="userInput" class="col-search-guides border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="timeInput" class="col-search-guides border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="userEdit" class="col-search-guides border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="timeEdit" class="col-search-guides border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="table-loader"><div class="spinner"></div></div>
+    </div>
+    <div class="px-1 py-1 text-gray-600 text-xs relative flex items-center justify-center">
+      <div class="flex items-center gap-4">
+        <span>Show</span>
+        <select id="pageSizeGuides" class="btn-flat px-2 py-1 rounded-md w-20">
+          <option>10</option>
+          <option>5</option>
+          <option>25</option>
+        </select>
+        <span>entries</span>
+        <div class="flex items-center gap-2" id="pagerGuides">
+          <button class="page-btn btn-flat px-2 py-1 rounded-md" data-page="prev">Previous</button>
+          <span id="pageNumsGuides" class="inline-flex items-center gap-1"></span>
+          <button class="page-btn btn-flat px-2 py-1 rounded-md" data-page="next">Next</button>
+        </div>
+        <span id="infoGuides" class="ml-2"></span>
+      </div>
+  </div>
+  </div>
+
+  <div id="modalOverlay" class="dct-overlay dct-hidden">
+    <div id="modalContent" class="dct-modal">
+      <button id="modalClose" type="button" class="dct-close" title="Close">
+        <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/CloseNotification.png")" alt="Close" />
+      </button>
+      <div class="dct-header">
+        <img id="modalIcon" src="@Url.Content("~/DCT3_Standarisasi/assets/icons/Confirmation.png")" alt="Modal" />
+        <div id="modalHeader" class="dct-title"></div>
+      </div>
+      <div id="modalBody" class="dct-body"></div>
+      <div class="dct-actions">
+        <button id="modalCancel" class="dct-btn" type="button"></button>
+        <button id="modalSave" class="dct-btn dct-btn-primary" type="button"></button>
+      </div>
+  </div>
+  </div>
+  <style>
+    .row-icon{ width:24px; height:auto; }
+    .cell{ border-top:1px solid #e5e7eb; }
+    .cell:first-child{ border-left:0; }
+    .cell:last-child{ border-right:1px solid #c3c5c9ff; }
+    #tblGuides thead th:last-child{ border-right:1px solid #c3c5c9ff; }
+    #tblGuides tbody tr:last-child td.cell{ border-bottom:1px solid #c3c5c9ff; }
+    #tblGuides thead th{ border-bottom:1px solid #e5e7eb; font-weight:600; color:#374151; position:relative; }
+    #tblGuides th, #tblGuides td{ white-space:nowrap; }
+    .th-inner{ display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%; }
+    .sort-icons{ font-size:14px; display:inline-flex; white-space:nowrap; }
+    .sort-icons .asc, .sort-icons .desc{ margin:0; padding:0; }
+    .sort-icons .asc, .sort-icons .desc{ color:#9CA3AF; cursor:pointer; }
+    .sort-icons .asc.active, .sort-icons .desc.active{ color:#111827; }
+    .btn-flat{ background:#FFFFFF; border:1px solid #d1d5db; color:#111827; }
+    .btn-flat{ transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease, transform .05s ease; }
+    .btn-flat:hover{ background:#F9FAFB; border-color:#cbd5e1; box-shadow:0 1px 2px rgba(0,0,0,0.06); }
+    .btn-flat:active{ background:#f3f4f6; border-color:#bfc7d8; box-shadow: inset 0 1px 2px rgba(0,0,0,0.12); transform: translateY(1px); }
+    .btn-flat:focus-visible{ outline:2px solid #1E90FF; outline-offset:2px; }
+    .select-square{ display:inline-block; width:18px; height:18px; border:1px solid #d1d5db; border-radius:4px; background:#fff; cursor:pointer; }
+    .select-square.selected{ background:#1E90FF; border-color:#1E90FF; }
+    .search-cell{ text-align:left; }
+    .search-cell input{ display:block; width:100%; }
+    .hidden{ display:none; }
+    .modal-form{ display:grid; grid-template-columns: 160px minmax(360px, auto); align-items:center; gap:8px 12px; }
+    .modal-label{ text-align:left; color:#111827; }
+    .modal-field input, .modal-field select, .modal-field textarea, .rt-area, #dToolbar{ width:100%; box-sizing:border-box; }
+    .modal-field textarea{ border:1px solid #d1d5db; border-radius:6px; padding:6px 8px; min-height:220px; }
+    .dct-modal{ width:auto !important; min-width:480px; max-width:95vw; display:inline-block; }
+    #dToolbar{ display:none; border:1px solid #d1d5db; border-radius:6px; padding:4px; gap:6px; flex-wrap:wrap; }
+    #dToolbar button{ border:1px solid #d1d5db; background:#fff; border-radius:4px; padding:2px 6px; }
+    .rt-area{ display:none; border:1px solid #d1d5db; border-radius:6px; padding:6px 8px; min-height:220px; }
+    .table-scroll{ position:relative; }
+    .table-loader{ position:absolute; inset:0; display:none; background:rgba(255,255,255,0.65); align-items:center; justify-content:center; z-index:10; }
+    .table-scroll.loading .table-loader{ display:flex; }
+    .spinner{ width:28px; height:28px; border:3px solid #d1d5db; border-top-color:#1E90FF; border-radius:50%; animation:spin .9s linear infinite; }
+    @@keyframes spin{ to{ transform:rotate(360deg); } }
+    #modalContent .dct-actions{ justify-content:flex-end; }
+    #modalOverlay .dct-btn{ display:inline-flex; align-items:center; gap:8px; white-space:nowrap; }
+    #modalOverlay .dct-btn img{ width:18px; height:18px; display:inline-block; }
+  </style>
+
+  <script>
+    (function(){
+      var tblBody = document.querySelector('#tblGuides tbody');
+      var info = document.getElementById('infoGuides');
+      var ddStart = document.getElementById('gDateStart');
+      var ddEnd = document.getElementById('gDateEnd');
+      var ddStatus = document.getElementById('gStatus');
+      var pageSizeSel = document.getElementById('pageSizeGuides');
+      var pager = document.getElementById('pagerGuides');
+      var pageNums = document.getElementById('pageNumsGuides');
+      var btnRefresh = document.getElementById('btnGRefresh');
+      var btnAdd = document.getElementById('btnGAdd');
+      var selectAll = null;
+      var raw = [];
+      var search = {};
+      var sort = { field:null, dir:1 };
+      var currentPage = 1;
+
+      function fmt(d){ var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; var dd=('0'+d.getDate()).slice(-2); var mm=months[d.getMonth()]; var yy=d.getFullYear(); var hh=('0'+d.getHours()).slice(-2); var mi=('0'+d.getMinutes()).slice(-2); return dd+' '+mm+' '+yy+' '+hh+':'+mi; }
+      function fmtDateOnly(d){ var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; var dd=('0'+d.getDate()).slice(-2); var mm=months[d.getMonth()]; var yy=d.getFullYear(); return dd+' '+mm+' '+yy; }
+      function enhanceDateInput(input){ var iso=input.value; input.classList.add('date-formatted'); var d = iso ? new Date(iso) : null; input.dataset.display = d ? fmtDateOnly(d) : ''; input.addEventListener('change', function(){ var iso2 = input.value; var d2 = iso2 ? new Date(iso2) : null; input.dataset.display = d2 ? fmtDateOnly(d2) : ''; }); }
+      function within(d, s, e){ if(!s||!e) return true; var ds=new Date(s+"T00:00:00"); var de=new Date(e+"T23:59:59"); return d>=ds && d<=de; }
+      function renderPages(el,totalPages,current){ el.innerHTML=''; var mk=function(n,a){ var b=document.createElement('button'); b.className='page-btn btn-flat px-2 py-1 rounded-md'+(a?' bg-white':''); b.textContent=n; b.dataset.page=n; el.appendChild(b); }; if(totalPages<=5){ for(var i=1;i<=totalPages;i++) mk(i, i===current); return; } mk(1,current===1); mk(2,current===2); mk(3,current===3); var ell=document.createElement('span'); ell.textContent='...'; ell.className='text-gray-500 px-1'; el.appendChild(ell); mk(totalPages,current===totalPages); }
+
+      function apply(){ var s=ddStart.value; var e=ddEnd.value; var st=ddStatus.value; var rows = raw.filter(function(x){ var ok1=!s||!e||within(new Date(x.timeInput), s, e); var ok2=!st || x.status===st; var okSearch=true; Object.keys(search).forEach(function(k){ var v=(search[k]||'').toLowerCase(); if(v){ var xv=(''+x[k]).toLowerCase(); if(k==='timeInput'||k==='timeEdit'){ xv=fmt(new Date(x[k])).toLowerCase(); } if(xv.indexOf(v)===-1) okSearch=false; } }); return ok1&&ok2&&okSearch; }); if(sort.field){ rows.sort(function(a,b){ var av=a[sort.field]; var bv=b[sort.field]; if(sort.field==='timeInput'||sort.field==='timeEdit'){ av=new Date(a[sort.field]).getTime(); bv=new Date(b[sort.field]).getTime(); } if(av<bv) return -1*sort.dir; if(av>bv) return 1*sort.dir; return 0; }); } var pageSize=parseInt(pageSizeSel.value,10)||10; var total=rows.length; var totalPages=Math.max(1, Math.ceil(total/pageSize)); if(currentPage>totalPages) currentPage=totalPages; var start=(currentPage-1)*pageSize; var pageRows=rows.slice(start, start+pageSize); tblBody.innerHTML=''; pageRows.forEach(function(r){ var tr=document.createElement('tr'); tr.innerHTML='<td class="px-3 py-1 cell select-cell"><div class="select-square"></div></td>'+'<td class="px-1 py-1 cell"><button class="row-edit-btn btn-flat inline-flex items-center gap-1 px-2 py-1 rounded-md" data-key="'+r.seqNo+'"><img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/EditNB.png")" class="row-icon" alt="edit" /> Edit</button></td>'+'<td class="px-1 py-1 cell">'+r.num+'</td>'+'<td class="px-1 py-1 cell">'+r.seqNo+'</td>'+'<td class="px-1 py-1 cell">'+r.keterangan+'</td>'+'<td class="px-1 py-1 cell">'+r.status+'</td>'+'<td class="px-1 py-1 cell">'+r.userInput+'</td>'+'<td class="px-1 py-1 cell">'+fmt(new Date(r.timeInput))+'</td>'+'<td class="px-1 py-1 cell">'+r.userEdit+'</td>'+'<td class="px-1 py-1 cell">'+fmt(new Date(r.timeEdit))+'</td>'; tblBody.appendChild(tr); }); info.textContent='Showing '+(start+1)+' to '+Math.min(start+pageSize,total)+' of '+total+' entries'; renderPages(pageNums, Math.max(1, Math.ceil(total/pageSize)), currentPage); document.querySelectorAll('#tblGuides tbody .select-square').forEach(function(el){ el.addEventListener('click', function(){ el.classList.toggle('selected'); }); }); if(!selectAll){ var sa=document.getElementById('selectAllGuides'); if(sa){ sa.addEventListener('click', function(){ var all=document.querySelectorAll('#tblGuides tbody .select-square'); var make=!sa.classList.contains('selected'); sa.classList.toggle('selected', make); all.forEach(function(sq){ sq.classList.toggle('selected', make); }); }); selectAll=sa; } } updateSortUI(); }
+
+      function updateSortUI(){ document.querySelectorAll('#tblGuides .sort-icons').forEach(function(si){ var asc=si.querySelector('.asc'); var desc=si.querySelector('.desc'); var f=si.getAttribute('data-sort'); asc.classList.remove('active'); desc.classList.remove('active'); if(sort.field===f){ if(sort.dir===1) asc.classList.add('active'); else desc.classList.add('active'); } }); }
+
+      function fetchGuides(){ var s=ddStart.value; var e=ddEnd.value; var st=ddStatus.value; var url='@Url.Content("~/Guides/List")'+'?start='+(s||'')+'&endd='+(e||'')+'&status='+(st||''); var sc=document.querySelector('#gridGuides .table-scroll'); if(sc) sc.classList.add('loading'); return fetch(url,{ method:'GET', credentials:'same-origin' }).then(function(r){ return r.json(); }).then(function(j){ raw = (j||[]).map(function(x,i){ return { num:i+1, seqNo:x.seqNo, keterangan:x.keterangan, status:x.status, userInput:x.userInput, timeInput: x.timeInput, userEdit:x.userEdit, timeEdit:x.timeEdit }; }); currentPage=1; apply(); }).finally(function(){ if(sc) sc.classList.remove('loading'); }); }
+
+      function enableFallback(){ var tb=document.getElementById('dToolbar'); var rt=document.getElementById('gKeteranganRT'); var ta=document.getElementById('gKeterangan'); if(tb) tb.style.display='flex'; if(rt) rt.style.display='block'; if(ta) ta.style.display='none'; if(tb){ tb.querySelectorAll('button[data-cmd]').forEach(function(b){ b.addEventListener('click', function(){ var cmd=this.getAttribute('data-cmd'); if(cmd==='createLink'){ var href=prompt('Masukkan URL'); if(href) document.execCommand(cmd,false,href); } else if(cmd==='insertImage'){ var src=prompt('Masukkan URL gambar'); if(src) document.execCommand(cmd,false,src); } else { document.execCommand(cmd,false,null); } }); }); } }
+
+      function guideForm(o){ var sq=o.seqNo||''; var ket=o.keterangan||''; var akt=o.status==='AKTIF'; return (
+        '<div class="modal-form">'+
+          '<div class="modal-label">Nomor Petunjuk:</div><div class="modal-field"><input id="gSeqNo" value="'+sq+'" readonly /></div>'+
+          '<div class="modal-label">Keterangan Petunjuk:</div><div class="modal-field"><div id="dToolbar" class="rt-toolbar"><button type="button" data-cmd="bold" title="Bold"><b>B</b></button><button type="button" data-cmd="italic" title="Italic"><i>I</i></button><button type="button" data-cmd="underline" title="Underline"><u>U</u></button><button type="button" data-cmd="insertUnorderedList" title="Bullets">•</button><button type="button" data-cmd="insertOrderedList" title="Numbers">1.</button><button type="button" data-cmd="createLink" title="Link">🔗</button><button type="button" data-cmd="insertImage" title="Image">🖼️</button><button type="button" data-cmd="undo" title="Undo">↶</button><button type="button" data-cmd="redo" title="Redo">↷</button></div><textarea id="gKeterangan" class="w-full">'+ket+'</textarea><div id="gKeteranganRT" class="rt-area" contenteditable="true">'+ket+'</div></div>'+
+          '<div class="modal-label">Status:</div><div class="modal-field"><label class="inline-flex items-center gap-2"><input id="gAktif" type="checkbox"'+(akt?' checked':'')+' /> <span>Aktif/Nonaktif</span></label></div>'+
+        '</div>'
+      ); }
+
+      function setupEditor(){ try{ if(window.CKEDITOR){ if(CKEDITOR.instances && CKEDITOR.instances.gKeterangan){ CKEDITOR.instances.gKeterangan.destroy(true); } setTimeout(function(){ CKEDITOR.replace('gKeterangan', { height: 320 }); }, 50); } else { enableFallback(); } } catch(e){ enableFallback(); } }
+
+      document.querySelectorAll('.col-search-guides').forEach(function(el){ el.addEventListener('input', function(){ search[el.dataset.field] = el.value; currentPage=1; apply(); }); });
+      document.querySelectorAll('#tblGuides .sort-icons .asc').forEach(function(el){ el.addEventListener('click', function(){ var f=el.parentElement.getAttribute('data-sort'); sort.field=f; sort.dir=1; apply(); }); });
+      document.querySelectorAll('#tblGuides .sort-icons .desc').forEach(function(el){ el.addEventListener('click', function(){ var f=el.parentElement.getAttribute('data-sort'); sort.field=f; sort.dir=-1; apply(); }); });
+      pageSizeSel.addEventListener('change', function(){ currentPage=1; apply(); });
+      pager.addEventListener('click', function(e){ var t=e.target.closest('.page-btn'); if(!t) return; var p=t.getAttribute('data-page'); if(p==='prev'){ currentPage=Math.max(1,currentPage-1); } else if(p==='next'){ currentPage=currentPage+1; } else { currentPage=parseInt(p,10)||1; } apply(); });
+      ddStatus.addEventListener('change', function(){ currentPage=1; fetchGuides(); });
+      ddStart.addEventListener('change', function(){ currentPage=1; fetchGuides(); });
+      ddEnd.addEventListener('change', function(){ currentPage=1; fetchGuides(); });
+      btnRefresh.addEventListener('click', function(){ document.querySelectorAll('.col-search-guides').forEach(function(el){ el.value=''; }); search={}; sort={field:null,dir:1}; ddStatus.value=''; currentPage=1; fetchGuides(); });
+      btnAdd.addEventListener('click', function(){ var o={}; openModal('Tambah Petunjuk', guideForm(o), function(){ var seq=parseInt(document.getElementById('gSeqNo').value||'0',10)||0; var aktif=!!document.getElementById('gAktif').checked; var ket=''; if(window.CKEDITOR && CKEDITOR.instances && CKEDITOR.instances.gKeterangan){ ket = CKEDITOR.instances.gKeterangan.getData()||''; } else { ket = (document.getElementById('gKeteranganRT').innerHTML||'').trim(); } return fetch('@Url.Content("~/Guides/Modify")',{ method:'POST', headers:{ 'Content-Type':'application/json' }, credentials:'same-origin', body: JSON.stringify({ SeqNo:null, Keterangan:ket, bAktif:aktif, User:'@User.Identity?.Name' }) }).then(function(){ fetchGuides(); if(window.DCT3Modals){ DCT3Modals.open('success',{ message:'Data berhasil ditambah' }); } }).catch(function(){ if(window.DCT3Modals){ DCT3Modals.open('failed',{ message:'Gagal menambah data' }); } }); }); setTimeout(setupEditor, 100); });
+
+      document.querySelector('#tblGuides tbody').addEventListener('click', function(e){ var b=e.target.closest('.row-edit-btn'); if(!b){ if(window.DCT3Modals){ DCT3Modals.open('information',{ message:'Pilih baris untuk edit' }); } return; } var key= b.getAttribute('data-key'); var idx=raw.findIndex(function(x){ return (''+x.seqNo)===(''+key); }); if(idx<0) return; var obj=raw[idx]; openModal('Edit Petunjuk', guideForm(obj), function(){ var seq=parseInt(document.getElementById('gSeqNo').value||obj.seqNo||'0',10)||0; var aktif=!!document.getElementById('gAktif').checked; var ket=''; if(window.CKEDITOR && CKEDITOR.instances && CKEDITOR.instances.gKeterangan){ ket = CKEDITOR.instances.gKeterangan.getData()||''; } else { ket = (document.getElementById('gKeteranganRT').innerHTML||'').trim(); } return fetch('@Url.Content("~/Guides/Modify")',{ method:'POST', headers:{ 'Content-Type':'application/json' }, credentials:'same-origin', body: JSON.stringify({ SeqNo:seq, Keterangan:ket, bAktif:aktif, User:'@User.Identity?.Name' }) }).then(function(){ fetchGuides(); if(window.DCT3Modals){ DCT3Modals.open('success',{ message:'Data berhasil diubah' }); } }).catch(function(){ if(window.DCT3Modals){ DCT3Modals.open('failed',{ message:'Gagal mengubah data' }); } }); }); setTimeout(setupEditor, 100); });
+
+      var modalOverlay = document.getElementById('modalOverlay');
+      var modalHeader = document.getElementById('modalHeader');
+      var modalBody = document.getElementById('modalBody');
+      var modalCancel = document.getElementById('modalCancel');
+      var modalSave = document.getElementById('modalSave');
+      var modalIcon = document.getElementById('modalIcon');
+      var modalClose = document.getElementById('modalClose');
+      function openModal(title, bodyHtml, onSave){ modalHeader.textContent = title||''; modalBody.innerHTML = bodyHtml||''; if (modalIcon) { var t=(title||'').toLowerCase(); var icon='@Url.Content("~/DCT3_Standarisasi/assets/icons/Confirmation.png")'; if(t.indexOf('tambah')>-1 || t.indexOf('add')>-1) icon='@Url.Content("~/DCT3_Standarisasi/assets/icons/AddNB.svg")'; if(t.indexOf('edit')>-1) icon='@Url.Content("~/DCT3_Standarisasi/assets/icons/EditNB.png")'; modalIcon.src=icon; } if(modalOverlay){ modalOverlay.classList.remove('dct-hidden'); modalOverlay.style.display='flex'; } var close=function(){ if(modalOverlay){ modalOverlay.style.display='none'; modalOverlay.classList.add('dct-hidden'); } }; if(modalClose) modalClose.onclick=close; if(modalCancel){ modalCancel.innerHTML='<img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/XNB.png")" class="w-4 h-4" /> <span>Batal</span>'; modalCancel.onclick=close; } if(modalSave){ modalSave.innerHTML='<img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/Success.png")" class="w-4 h-4" /> <span>Simpan</span>'; modalSave.onclick=function(){ if(typeof onSave==='function'){ var r=onSave(); if(r && typeof r.then==='function'){ r.then(close).catch(close); } else { close(); } } else { close(); } }; } }
+      function hideModal(){ if(modalOverlay){ modalOverlay.style.display='none'; modalOverlay.classList.add('dct-hidden'); } }
+
+      function initDates(){ var now=new Date(); var s=new Date(now.getFullYear(),0,1); var e=new Date(now.getFullYear(),11,31); var toISO=function(d){ return d.toISOString().slice(0,10); }; ddStart.value=toISO(s); ddEnd.value=toISO(e); }
+
+      initDates(); fetchGuides();
+    })();
+  </script>
+
+  
+
+</div>

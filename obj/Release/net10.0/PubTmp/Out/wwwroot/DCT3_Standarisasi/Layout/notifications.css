@@ -1,0 +1,20 @@
+/* DCT3 Notification Modals - Shared Styles */
+.dct-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.30); display: none; align-items: center; justify-content: center; z-index: 1000; }
+.dct-modal { background: #EBEBE9; color: #111827; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); width: 416px; max-width: 95vw; padding: 16px 20px 14px; position: relative; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+.dct-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.dct-header .dct-title { font-weight: 700; font-size: 18px; }
+.dct-header img { width: 22px; height: 22px; }
+.dct-close { position: absolute; top: 10px; right: 10px; background: transparent; border: none; width: 22px; height: 22px; cursor: pointer; padding: 0; }
+.dct-close img { width: 20px; height: 20px; opacity: 0.8; }
+.dct-close:hover img { opacity: 1; }
+.dct-body { font-size: 14px; line-height: 20px; color: #1F2937; margin-bottom: 16px; }
+.dct-body strong { font-weight: 700; }
+.dct-actions { display: flex; gap: 12px; justify-content: center; }
+.dct-btn { min-width: 76px; border-radius: 6px; border: none; padding: 6px 14px; background: #F8F8F8; color: #111827; font-weight: 600; cursor: pointer; }
+.dct-btn:hover { background: #FFFFFF; }
+.dct-btn-primary { background: #F8F8F8; }
+.dct-btn-danger { background: #F8F8F8; }
+.dct-hidden { display: none !important; }
+
+/* Compact spacing to match provided designs */
+.dct-modal .dct-actions .dct-btn { font-size: 14px; }

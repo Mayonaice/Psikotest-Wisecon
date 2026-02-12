@@ -1,0 +1,1352 @@
+@{
+    ViewData["Title"] = "Data Pelamar";
+    Layout = "_DashboardLayout";
+}
+<div class="px-0 py-0 text-[#111827]">
+  <h1 class="text-3xl font-semibold text-[#1E90FF]">Data Pelamar</h1>
+
+  <div class="mt-4 bg-[#EBEBE9] border border-gray-300 rounded-xl pl-3 pr-3 py-3 w-full max-w-[32rem]">
+    <div class="flex items-center gap-3 mb-2">
+      <span class="text-sm text-gray-700 w-28">Tanggal Input:</span>
+      <div class="flex items-center gap-2 w-80 justify-between">
+        <span class="w-3 h-3 rounded-sm bg-[#1E90FF]"></span>
+        <input id="dateStart" type="date" class="border border-gray-300 rounded-md px-2 py-1 w-40" />
+        <span class="text-gray-700">To</span>
+        <input id="dateEnd" type="date" class="border border-gray-300 rounded-md px-2 py-1 w-40" />
+      </div>
+    </div>
+    <div class="flex items-center gap-3 mb-2">
+      <span class="text-sm text-gray-700 w-28">Posisi</span>
+      <select id="posisi" class="border border-gray-300 rounded-md px-2 py-1 w-80">
+        <option value="">Semua Posisi</option>
+      </select>
+    </div>
+    <div class="flex items-center gap-3 mb-2">
+      <span class="text-sm text-gray-700 w-28">Hasil Psikotes</span>
+      <select id="hasil" class="border border-gray-300 rounded-md px-2 py-1 w-80">
+        <option value="">Semua Hasil</option>
+        <option value="BELUM UJIAN">Belum Ujian</option>
+        <option value="LULUS">Lulus</option>
+        <option value="TIDAK LULUS">Tidak Lulus</option>
+      </select>
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="btnRefresh" class="btn-flat inline-flex items-center gap-2 px-2 py-1 rounded-md h-7">
+        <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/RefreshNB.svg")" alt="Refresh" class="w-4 h-4" />
+        <span>Refresh</span>
+      </button>
+    </div>
+  </div>
+
+  
+
+  <div class="mt-1 bg-[#EBEBE9] border border-gray-300 rounded-t-xl px-3 py-1 font-semibold">Peserta</div>
+  <div class="border border-gray-300 border-t-0 rounded-b-xl">
+    <div class="table-scroll overflow-x-auto overflow-y-auto max-h-[60vh]">
+      <table id="tblPeserta" class="min-w-full text-sm">
+        <thead>
+        <tr class="bg-[#EBEBE9]">
+          <th class="px-3 py-1 w-16 text-left"><div id="selectAll" class="select-square" title="Pilih semua"></div></th>
+          <th class="px-1 py-1 w-16 text-left"><div class="th-inner"><span>Num</span><span class="sort-icons" data-sort="num"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 w-16 text-left"><div class="th-inner"><span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Nomor Peserta</span><span class="sort-icons" data-sort="nomor"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Nama Peserta</span><span class="sort-icons" data-sort="nama"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Alamat</span><span class="sort-icons" data-sort="alamat"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Email</span><span class="sort-icons" data-sort="email"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Pendidikan</span><span class="sort-icons" data-sort="pendidikan"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Posisi</span><span class="sort-icons" data-sort="posisi"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Nomor KTP</span><span class="sort-icons" data-sort="ktp"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Hasil Psikotes</span><span class="sort-icons" data-sort="hasil"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-3 py-1 text-left"><div class="th-inner"><span>Time Input</span><span class="sort-icons" data-sort="time"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+        </tr>
+        <tr class="bg-[#EBEBE9]">
+          <th class="px-1 py-1"></th>
+          <th class="px-1 py-1"></th>
+          <th class="px-1 py-1"></th>
+          <th class="px-1 py-1 search-cell"><input data-field="nomor" class="col-search border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="nama" class="col-search border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="alamat" class="col-search border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="email" class="col-search border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="pendidikan" class="col-search border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="posisi" class="col-search border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="ktp" class="col-search border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="hasil" class="col-search border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="time" class="col-search border border-gray-300 rounded-md px-2 py-1 w-full"  /></th>
+        </tr>
+        
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="table-loader"><div class="spinner"></div></div>
+    </div>
+    <div class="px-1 py-1 text-gray-600 text-xs relative flex items-center justify-center">
+      <button id="btnBulkInvite" class="btn-flat inline-flex items-center gap-2 px-2 py-1 rounded-md absolute left-2 top-1/2 -translate-y-1/2">
+        <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/Message.png")" alt="Msg" class="w-4 h-4" />
+        <span>Undang Banyak</span>
+      </button>
+      <div class="flex items-center gap-4">
+        <span>Show</span>
+        <select id="pageSize" class="btn-flat px-2 py-1 rounded-md w-20">
+          <option>10</option>
+          <option>5</option>
+          <option>25</option>
+        </select>
+        <span>entries</span>
+        <div class="flex items-center gap-2" id="pager">
+          <button class="page-btn btn-flat px-2 py-1 rounded-md" data-page="prev">Previous</button>
+          <span id="pageNums" class="inline-flex items-center gap-1"></span>
+          <button class="page-btn btn-flat px-2 py-1 rounded-md" data-page="next">Next</button>
+        </div>
+        <span id="info" class="ml-2"></span>
+      </div>
+    </div>
+  </div>
+
+  
+</div>
+
+<div class="mt-10 ">
+
+  <div id="filterUjian" class="mt-4 bg-[#EBEBE9] border border-gray-300 rounded-xl pl-3 pr-3 py-3 w-full max-w-[32rem]">
+    <div class="flex items-center gap-3 mb-2">
+      <span class="text-sm text-gray-700 w-28">Tanggal Input:</span>
+      <div class="flex items-center gap-2 w-80 justify-between">
+        <span class="w-3 h-3 rounded-sm bg-[#1E90FF]"></span>
+        <input id="ujianInputStart" type="date" class="border border-gray-300 rounded-md px-2 py-1 w-40" />
+        <span class="text-gray-700">To</span>
+        <input id="ujianInputEnd" type="date" class="border border-gray-300 rounded-md px-2 py-1 w-40" />
+      </div>
+    </div>
+    <div class="flex items-center gap-3 mb-2">
+      <span class="text-sm text-gray-700 w-28">Tanggal Ujian</span>
+      <div class="flex items-center gap-2 w-80 justify-between">
+        <span class="w-3 h-3 rounded-sm bg-[#1E90FF]"></span>
+        <input id="ujianDateStart" type="date" class="border border-gray-300 rounded-md px-2 py-1 w-40" />
+        <span class="text-gray-700">To</span>
+        <input id="ujianDateEnd" type="date" class="border border-gray-300 rounded-md px-2 py-1 w-40" />
+      </div>
+    </div>
+    <div class="flex items-center gap-3 mb-2">
+      <span class="text-sm text-gray-700 w-28">Status Pengerjaan</span>
+      <select id="statusPengerjaan" class="border border-gray-300 rounded-md px-2 py-1 w-80">
+        <option value="">Semua Status</option>
+        <option value="Belum Ujian">Belum Ujian</option>
+        <option value="Sedang Ujian">Sedang Ujian</option>
+        <option value="Selesai Ujian">Selesai Ujian</option>
+      </select>
+    </div>
+    <div class="flex items-center gap-3 mb-2">
+      <span class="text-sm text-gray-700 w-28">Hasil Psikotest</span>
+      <select id="hasilPsikotest" class="border border-gray-300 rounded-md px-2 py-1 w-80">
+        <option value="">Semua Status</option>
+        <option value="LULUS">Lulus</option>
+        <option value="TIDAK LULUS">Tidak Lulus</option>
+        <option value="BELUM UJIAN">Belum Ujian</option>
+      </select>
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="btnUjianRefresh" class="btn-flat inline-flex items-center gap-2 px-2 py-1 rounded-md h-7">
+        <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/RefreshNB.svg")" alt="Refresh" class="w-4 h-4" />
+        <span>Refresh</span>
+      </button>
+      <button id="btnExportUjian" class="btn-flat inline-flex items-center gap-2 px-2 py-1 rounded-md h-7">
+        <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/ExportNB.png")" alt="Export" class="w-4 h-4" />
+        <span>Export Psikotest</span>
+      </button>
+    </div>
+  </div>
+
+  <div id="filterInterview" class="mt-4 bg-[#EBEBE9] border border-gray-300 rounded-xl pl-3 pr-3 py-3 w-full max-w-[32rem] hidden">
+    <div class="flex items-center gap-3 mb-2">
+      <span class="text-sm text-gray-700 w-28">Tanggal Input:</span>
+      <div class="flex items-center gap-2 w-80 justify-between">
+        <span class="w-3 h-3 rounded-sm bg-[#1E90FF]"></span>
+        <input id="interviewInputStart" type="date" class="border border-gray-300 rounded-md px-2 py-1 w-40" />
+        <span class="text-gray-700">To</span>
+        <input id="interviewInputEnd" type="date" class="border border-gray-300 rounded-md px-2 py-1 w-40" />
+      </div>
+    </div>
+    <div class="flex items-center gap-3 mb-2">
+      <span class="text-sm text-gray-700 w-28">Status Interview</span>
+      <select id="statusInterview" class="border border-gray-300 rounded-md px-2 py-1 w-80">
+        <option value="">Semua Status</option>
+        <option value="Belum Interview">Belum Interview</option>
+        <option value="Sedang Interview">Sedang Interview</option>
+        <option value="Selesai Interview">Selesai Interview</option>
+      </select>
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="btnInterviewRefresh" class="btn-flat inline-flex items-center gap-2 px-2 py-1 rounded-md h-7">
+        <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/RefreshNB.svg")" alt="Refresh" class="w-4 h-4" />
+        <span>Refresh</span>
+      </button>
+      <button id="btnExportInterview" class="btn-flat inline-flex items-center gap-2 px-2 py-1 rounded-md h-7">
+        <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/ExportNB.png")" alt="Export" class="w-4 h-4" />
+        <span>Export Interview</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="flex items-center  ">
+    <button id="btnTabUjian" class="tab-btn tab-ujian px-4 py-2 rounded-md font-semibold">Psikotest</button>
+    <button id="btnTabInterview" class="tab-btn tab-interview px-4 py-2 rounded-md font-semibold">Interview</button>
+  </div>
+
+  <div id="titleUjian" class=" bg-[#EBEBE9] border border-gray-300 rounded-t-xl px-3 py-1 font-semibold">Peserta Ujian</div>
+  <div id="gridUjian" class="border border-gray-300 border-t-0 rounded-b-xl">
+    <div class="table-scroll overflow-x-auto overflow-y-auto max-h-[60vh]">
+      <table id="tblUjian" class="min-w-full text-sm">
+        <thead>
+        <tr class="bg-[#EBEBE9]">
+          <th class="px-3 py-1 w-16 text-left"><div id="selectAllUjian" class="select-square" title="Pilih semua"></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Num</span><span class="sort-icons" data-sort="num"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 w-16 text-left"><div class="th-inner"><span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Batch</span><span class="sort-icons" data-sort="batch"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Nomor Peserta</span><span class="sort-icons" data-sort="nomor"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Nama Peserta</span><span class="sort-icons" data-sort="nama"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>User ID</span><span class="sort-icons" data-sort="userId"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Undang Ke</span><span class="sort-icons" data-sort="undangKe"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Status Pengerjaan</span><span class="sort-icons" data-sort="status"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Hasil Psikotest</span><span class="sort-icons" data-sort="hasil"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Link Login</span><span class="sort-icons" data-sort="link"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Nama Paket Soal</span><span class="sort-icons" data-sort="paket"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Waktu Test</span><span class="sort-icons" data-sort="waktuTest"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Waktu Dimulai</span><span class="sort-icons" data-sort="waktuMulai"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Status Pesan</span><span class="sort-icons" data-sort="statusPesan"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Waktu Terkirim</span><span class="sort-icons" data-sort="kirim"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Waktu Terbaca</span><span class="sort-icons" data-sort="baca"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>User Input</span><span class="sort-icons" data-sort="userInput"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-3 py-1 text-left"><div class="th-inner"><span>Time Input</span><span class="sort-icons" data-sort="timeInput"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>User Edit</span><span class="sort-icons" data-sort="userEdit"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Time Edit</span><span class="sort-icons" data-sort="timeEdit"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+        </tr>
+        <tr class="bg-[#EBEBE9]">
+          <th class="px-1 py-1"></th>
+          <th class="px-1 py-1"></th>
+          <th class="px-1 py-1"></th>
+          <th class="px-1 py-1 search-cell"><input data-field="batch" class="col-search-ujian border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="nomor" class="col-search-ujian border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="nama" class="col-search-ujian border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="userId" class="col-search-ujian border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="undangKe" class="col-search-ujian border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="status" class="col-search-ujian border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="hasil" class="col-search-ujian border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="link" class="col-search-ujian border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="paket" class="col-search-ujian border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="waktuTest" class="col-search-ujian border border-gray-300 rounded-md px-2 py-1 w-full"  /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="waktuMulai" class="col-search-ujian border border-gray-300 rounded-md px-2 py-1 w-full"  /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="statusPesan" class="col-search-ujian border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="kirim" class="col-search-ujian border border-gray-300 rounded-md px-2 py-1 w-full"  /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="baca" class="col-search-ujian border border-gray-300 rounded-md px-2 py-1 w-full"  /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="userInput" class="col-search-ujian border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="timeInput" class="col-search-ujian border border-gray-300 rounded-md px-2 py-1 w-full"  /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="userEdit" class="col-search-ujian border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="timeEdit" class="col-search-ujian border border-gray-300 rounded-md px-2 py-1 w-full"  /></th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="table-loader"><div class="spinner"></div></div>
+    </div>
+    <div class="px-1 py-1 text-gray-600 text-xs relative flex items-center justify-center">
+      <div class="flex items-center gap-4">
+        <span>Show</span>
+        <select id="pageSizeUjian" class="btn-flat px-2 py-1 rounded-md w-20">
+          <option>10</option>
+          <option>5</option>
+          <option>25</option>
+        </select>
+        <span>entries</span>
+        <div class="flex items-center gap-2" id="pagerUjian">
+          <button class="page-btn btn-flat px-2 py-1 rounded-md" data-page="prev">Previous</button>
+          <span id="pageNumsUjian" class="inline-flex items-center gap-1"></span>
+          <button class="page-btn btn-flat px-2 py-1 rounded-md" data-page="next">Next</button>
+        </div>
+        <span id="infoUjian" class="ml-2"></span>
+      </div>
+    </div>
+  </div>
+
+  <div id="titleInterview" class=" bg-[#EBEBE9] border border-gray-300 rounded-t-xl px-3 py-1 font-semibold hidden">Peserta Interview</div>
+  <div id="gridInterview" class="border border-gray-300 border-t-0 rounded-b-xl hidden">
+    <div class="table-scroll overflow-x-auto overflow-y-auto max-h-[60vh]">
+      <table id="tblInterview" class="min-w-full text-sm">
+        <thead>
+        <tr class="bg-[#EBEBE9]">
+          <th class="px-3 py-1 w-16 text-left"><div id="selectAllInterview" class="select-square" title="Pilih semua"></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Num</span><span class="sort-icons" data-sort="num"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 w-16 text-left"><div class="th-inner"><span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Batch</span><span class="sort-icons" data-sort="batch"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Nomor Peserta</span><span class="sort-icons" data-sort="nomor"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Nama Peserta</span><span class="sort-icons" data-sort="nama"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Waktu Interview</span><span class="sort-icons" data-sort="waktuInterview"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Lokasi</span><span class="sort-icons" data-sort="lokasi"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Status Interview</span><span class="sort-icons" data-sort="statusInterview"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Undang Ke</span><span class="sort-icons" data-sort="undangKe"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Status Pesan</span><span class="sort-icons" data-sort="statusPesan"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Waktu Terkirim</span><span class="sort-icons" data-sort="kirim"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Waktu Terbaca</span><span class="sort-icons" data-sort="baca"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>User Input</span><span class="sort-icons" data-sort="userInput"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-3 py-1 text-left"><div class="th-inner"><span>Time Input</span><span class="sort-icons" data-sort="timeInput"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>User Edit</span><span class="sort-icons" data-sort="userEdit"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left"><div class="th-inner"><span>Time Edit</span><span class="sort-icons" data-sort="timeEdit"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+        </tr>
+        <tr class="bg-[#EBEBE9]">
+          <th class="px-1 py-1"></th>
+          <th class="px-1 py-1"></th>
+          <th class="px-1 py-1"></th>
+
+          <th class="px-1 py-1 search-cell"><input data-field="batch" class="col-search-interview border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="nomor" class="col-search-interview border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="nama" class="col-search-interview border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="waktuInterview" class="col-search-interview border border-gray-300 rounded-md px-2 py-1 w-full"  /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="lokasi" class="col-search-interview border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="statusInterview" class="col-search-interview border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="undangKe" class="col-search-interview border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="statusPesan" class="col-search-interview border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="kirim" class="col-search-interview border border-gray-300 rounded-md px-2 py-1 w-full"  /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="baca" class="col-search-interview border border-gray-300 rounded-md px-2 py-1 w-full"  /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="userInput" class="col-search-interview border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="timeInput" class="col-search-interview border border-gray-300 rounded-md px-2 py-1 w-full"  /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="userEdit" class="col-search-interview border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="timeEdit" class="col-search-interview border border-gray-300 rounded-md px-2 py-1 w-full"  /></th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="table-loader"><div class="spinner"></div></div>
+    </div>
+    <div class="px-1 py-1 text-gray-600 text-xs relative flex items-center justify-center">
+      <div class="flex items-center gap-4">
+        <span>Show</span>
+        <select id="pageSizeInterview" class="btn-flat px-2 py-1 rounded-md w-20">
+          <option>10</option>
+          <option>5</option>
+          <option>25</option>
+        </select>
+        <span>entries</span>
+        <div class="flex items-center gap-2" id="pagerInterview">
+          <button class="page-btn btn-flat px-2 py-1 rounded-md" data-page="prev">Previous</button>
+          <span id="pageNumsInterview" class="inline-flex items-center gap-1"></span>
+          <button class="page-btn btn-flat px-2 py-1 rounded-md" data-page="next">Next</button>
+        </div>
+        <span id="infoInterview" class="ml-2"></span>
+      </div>
+    </div>
+  </div>
+
+  <div id="invite-overlay" class="dct-overlay" aria-hidden="true">
+    <div class="dct-modal invite-modal" role="dialog" aria-labelledby="invite-title" aria-modal="true">
+      <button type="button" class="dct-close" id="invite-close" title="Close">
+        <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/CloseNotification.png")" alt="Close" class="w-4 h-4" />
+      </button>
+      <div class="dct-header">
+        <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/Message.png")" alt="Undang" class="w-6 h-6" />
+        <div id="invite-title" class="dct-title">Undang Peserta</div>
+      </div>
+      <div class="dct-body">
+        <div class="invite-panel">
+          <div class="invite-row">
+            <div class="invite-label">Undang</div>
+            <div class="invite-field">
+              <div class="invite-radio-inline">
+                <label class="invite-radio-inline-item">
+                  <input type="radio" name="inviteType" value="psikotest" checked />
+                  <span>Psikotes</span>
+                </label>
+                <label class="invite-radio-inline-item">
+                  <input type="radio" name="inviteType" value="interview" />
+                  <span>Interview</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="invite-row">
+            <div class="invite-label">Peserta</div>
+            <div class="invite-field">
+              <div id="invite-target-text" class="invite-target-text"></div>
+            </div>
+          </div>
+
+          <div class="invite-row">
+            <div class="invite-label">Batch</div>
+            <div class="invite-field">
+              <select id="invite-batchType" class="border border-gray-300 rounded-md px-2 py-1 w-full">
+                <option value="1">Batch</option>
+                <option value="0">NonBatch</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="invite-row hidden" id="invite-batchRow">
+            <div class="invite-label">Nama Batch</div>
+            <div class="invite-field">
+              <input id="invite-batch" list="invite-batch-datalist" class="border border-gray-300 rounded-md px-2 py-1 w-full" />
+            </div>
+          </div>
+
+          <div class="invite-row">
+            <div class="invite-label">Tanggal</div>
+            <div class="invite-field">
+              <input id="invite-date" type="date" class="border border-gray-300 rounded-md px-2 py-1 w-full" />
+            </div>
+          </div>
+
+          <div class="invite-row">
+            <div class="invite-label">Waktu</div>
+            <div class="invite-field">
+              <input id="invite-time" type="time" class="border border-gray-300 rounded-md px-2 py-1 w-32" />
+            </div>
+          </div>
+
+          <div class="invite-row" id="invite-row-paket">
+            <div class="invite-label">Nama Paket Soal</div>
+            <div class="invite-field">
+              <select id="invite-paket" class="border border-gray-300 rounded-md px-2 py-1 w-full"></select>
+            </div>
+          </div>
+
+          <div class="invite-row hidden" id="invite-row-lokasi">
+            <div class="invite-label">Lokasi</div>
+            <div class="invite-field">
+              <input id="invite-lokasi" class="border border-gray-300 rounded-md px-2 py-1 w-full" />
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="dct-actions">
+        <button type="button" class="dct-btn" data-action="cancel" id="invite-cancel">Close</button>
+        <button type="button" class="dct-btn dct-btn-primary" data-action="save" id="invite-save">Save & Kirim</button>
+      </div>
+    </div>
+  </div>
+
+  <datalist id="invite-batch-datalist"></datalist>
+
+  <style>
+  .row-select{ accent-color:#1E90FF; width:16px; height:16px; }
+  .row-icon{ width:24px; height:auto; }
+  .bg-icon{ width:24px; height:24px; display:inline-block; background-size:contain; background-repeat:no-repeat; background-position:center; }
+  .cell{ border-top:1px solid #e5e7eb; }
+  .cell:first-child{ border-left:0; }
+  .cell:last-child{ border-right:1px solid #c3c5c9ff; }
+  #tblPeserta thead th:last-child{ border-right:1px solid #c3c5c9ff; }
+  #tblPeserta tbody tr:last-child td.cell{ border-bottom:1px solid #c3c5c9ff; }
+  #tblPeserta thead th{ border-bottom:1px solid #e5e7eb; font-weight:600; color:#374151; position:relative; }
+  #tblUjian th, #tblUjian td, #tblInterview th, #tblInterview td{ white-space:nowrap; }
+  #tblUjian thead th:last-child{ border-right:1px solid #c3c5c9ff; }
+  #tblUjian tbody tr:last-child td.cell{ border-bottom:1px solid #c3c5c9ff; }
+  #tblInterview thead th:last-child{ border-right:1px solid #c3c5c9ff; }
+  #tblInterview tbody tr:last-child td.cell{ border-bottom:1px solid #c3c5c9ff; }
+  .th-inner{ display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%; }
+  .sort-icons{ font-size:14px; display:inline-flex; white-space:nowrap; }
+  .sort-icons .asc, .sort-icons .desc{ margin:0; padding:0; }
+  .sort-icons .asc, .sort-icons .desc{ color:#9CA3AF; cursor:pointer; }
+  .sort-icons .asc.active, .sort-icons .desc.active{ color:#111827; }
+  #tblPeserta th, #tblPeserta td{ white-space:nowrap; }
+  #tblPeserta tbody{ background:#fff; }
+  .btn-flat{ background:#FFFFFF; border:1px solid #d1d5db; color:#111827; }
+  .btn-flat{ transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease, transform .05s ease; }
+  .btn-flat:hover{ background:#F9FAFB; border-color:#cbd5e1; box-shadow:0 1px 2px rgba(0,0,0,0.06); }
+  .btn-flat:active{ background:#f3f4f6; border-color:#bfc7d8; box-shadow: inset 0 1px 2px rgba(0,0,0,0.12); transform: translateY(1px); }
+  .btn-flat:focus-visible{ outline:2px solid #1E90FF; outline-offset:2px; }
+  .select-square{ display:inline-block; width:18px; height:18px; border:1px solid #d1d5db; border-radius:4px; background:#fff; cursor:pointer; }
+  .select-square.selected{ background:#1E90FF; border-color:#1E90FF; }
+  #tblPeserta tbody tr.row-active > td{ background:#DBEAFE; }
+  #tblPeserta tbody tr{ cursor:pointer; }
+  .search-cell{ text-align:left; }
+  .search-cell input{ display:block; width:100%; }
+  .tab-btn{ border:1px solid #111827; color:#fff; }
+  .tab-ujian{ background:#1E90FF; }
+  .tab-interview{ background:#F4A026; }
+  .tab-btn:hover{ filter: brightness(1.05); }
+  .tab-btn:active{ filter: brightness(0.97); }
+  .hidden{ display:none !important; }
+  .date-formatted{ position:relative; padding-right:2.25rem; }
+  .date-formatted::before{ content: attr(data-display); position:absolute; left:.5rem; right:2.25rem; top:50%; transform:translateY(-50%); color:#111827; pointer-events:none; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .date-formatted::-webkit-datetime-edit{ color:transparent; }
+  .date-formatted::-webkit-calendar-picker-indicator{ opacity:1; position:absolute; right:.5rem; top:50%; transform:translateY(-50%); margin:0; padding:0; cursor:pointer; }
+  .table-scroll{ position:relative; }
+  .table-loader{ position:absolute; inset:0; display:none; background:rgba(255,255,255,0.65); align-items:center; justify-content:center; z-index:10; }
+  .table-scroll.loading .table-loader{ display:flex; }
+  .spinner{ width:28px; height:28px; border:3px solid #d1d5db; border-top-color:#1E90FF; border-radius:50%; animation:spin .9s linear infinite; }
+  @@keyframes spin{ to{ transform:rotate(360deg); } }
+  .invite-modal{ width:520px; max-width:95vw; }
+  .invite-panel{ padding:2px 2px; }
+  .invite-row{ display:grid; grid-template-columns: 140px 1fr; align-items:center; gap:10px; margin-bottom:10px; }
+  .invite-row:last-child{ margin-bottom:0; }
+  .invite-label{ font-size:13px; color:#374151; font-weight:600; position:relative; padding-right:10px; }
+  .invite-label::after{ content: ":"; position:absolute; right:0; color:#6b7280; }
+  .invite-radio-inline{ display:flex; align-items:center; gap:16px; }
+  .invite-radio-inline-item{ display:flex; align-items:center; gap:6px; cursor:pointer; }
+  .invite-radio-inline-item input{ accent-color:#1E90FF; }
+  .invite-target-text{ font-size:13px; color:#111827; word-break:break-word; padding:7px 10px; border:1px solid #d1d5db; border-radius:6px; background:#fff; min-height:34px; }
+  .invite-modal .dct-actions{ display:flex; justify-content:flex-end !important; gap:10px; width:100%; }
+  </style>
+
+<script>
+  (function(){
+    var debug = true;
+    var rawData = [];
+    var activeNoPeserta = '';
+    var selectedPesertaIds = new Set();
+    var paketSoalCache = null;
+    var batchCache = null;
+    var currentUser = '@(User.Identity?.Name ?? "")';
+
+    var tblBody = document.querySelector('#tblPeserta tbody');
+    var info = document.getElementById('info');
+    var ddStart = document.getElementById('dateStart');
+    var ddEnd = document.getElementById('dateEnd');
+    var ddPosisi = document.getElementById('posisi');
+    var ddHasil = document.getElementById('hasil');
+    var btnRefresh = document.getElementById('btnRefresh');
+
+    var iconMsg = '@Url.Content("~/DCT3_Standarisasi/assets/icons/Message.png")';
+
+    var inviteOverlay = document.getElementById('invite-overlay');
+    var inviteClose = document.getElementById('invite-close');
+    var inviteCancel = document.getElementById('invite-cancel');
+    var inviteSave = document.getElementById('invite-save');
+    var inviteTargetText = document.getElementById('invite-target-text');
+    var inviteBatchDatalist = document.getElementById('invite-batch-datalist');
+    var inviteBatchType = document.getElementById('invite-batchType');
+    var inviteBatchRow = document.getElementById('invite-batchRow');
+    var inviteBatch = document.getElementById('invite-batch');
+    var inviteDate = document.getElementById('invite-date');
+    var inviteTime = document.getElementById('invite-time');
+    var invitePaketRow = document.getElementById('invite-row-paket');
+    var invitePaket = document.getElementById('invite-paket');
+    var inviteLokasiRow = document.getElementById('invite-row-lokasi');
+    var inviteLokasi = document.getElementById('invite-lokasi');
+
+    var inviteState = { ids: [], type: 'psikotest' };
+
+    function openInvite(ids, type){
+      inviteState.ids = (ids || []).map(function(x){ return ''+x; }).filter(function(x){ return x; });
+      inviteState.type = type || inviteState.type || 'psikotest';
+      if(inviteTargetText){
+        if(inviteState.ids.length === 1) inviteTargetText.textContent = inviteState.ids[0];
+        else inviteTargetText.textContent = inviteState.ids.length + ' peserta (' + inviteState.ids.slice(0, 5).join(', ') + (inviteState.ids.length > 5 ? ', ...' : '') + ')';
+      }
+      var radios = document.querySelectorAll('input[name="inviteType"]');
+      radios.forEach(function(r){ r.checked = (r.value === inviteState.type); });
+      applyInviteType(inviteState.type);
+      ensurePaketSoal();
+      ensureBatchList();
+      if(inviteOverlay){ inviteOverlay.style.display = 'flex'; inviteOverlay.classList.remove('dct-hidden'); inviteOverlay.setAttribute('aria-hidden','false'); }
+    }
+
+    function closeInvite(){
+      if(inviteOverlay){ inviteOverlay.style.display = 'none'; inviteOverlay.classList.add('dct-hidden'); inviteOverlay.setAttribute('aria-hidden','true'); }
+    }
+
+    function applyInviteType(t){
+      inviteState.type = t;
+      if(invitePaketRow) invitePaketRow.classList.toggle('hidden', t !== 'psikotest');
+      if(inviteLokasiRow) inviteLokasiRow.classList.toggle('hidden', t !== 'interview');
+      if(t !== 'psikotest' && invitePaket) invitePaket.value = '';
+      if(t !== 'interview' && inviteLokasi) inviteLokasi.value = '';
+    }
+
+    function updateBatchVisibility(){
+      if(inviteBatchRow && inviteBatchType){
+        inviteBatchRow.classList.toggle('hidden', inviteBatchType.value !== '1');
+        if(inviteBatchType.value !== '1' && inviteBatch) inviteBatch.value = '';
+      }
+    }
+
+    function ensurePaketSoal(){
+      if(paketSoalCache) { fillPaketOptions(paketSoalCache); return; }
+      var url='@Url.Content("~/Applicants/PaketSoal/List")';
+      return fetch(url,{ method:'GET', credentials:'same-origin' })
+        .then(function(r){ return r.ok ? r.json() : []; })
+        .then(function(rows){
+          paketSoalCache = (rows||[]).map(function(x){ return { noPaket: x.noPaket, namaPaket: x.namaPaket }; });
+          fillPaketOptions(paketSoalCache);
+        })
+        .catch(function(){ fillPaketOptions([]); });
+    }
+
+    function fillPaketOptions(rows){
+      if(!invitePaket) return;
+      var prev = invitePaket.value;
+      invitePaket.innerHTML = '<option value="">Pilih Paket Soal</option>';
+      (rows||[]).forEach(function(p){
+        var opt = document.createElement('option');
+        opt.value = ''+p.noPaket;
+        opt.textContent = (p.noPaket!=null?(''+p.noPaket+' - '):'') + (p.namaPaket||'');
+        invitePaket.appendChild(opt);
+      });
+      if(prev) invitePaket.value = prev;
+    }
+
+    function ensureBatchList(){
+      if(batchCache) { fillBatchDatalist(batchCache); return; }
+      var url='@Url.Content("~/Applicants/Batch/List")';
+      return fetch(url,{ method:'GET', credentials:'same-origin' })
+        .then(function(r){ return r.ok ? r.json() : []; })
+        .then(function(rows){
+          batchCache = (rows||[]).map(function(x){ return ''+x; }).filter(function(x){ return x; });
+          fillBatchDatalist(batchCache);
+        })
+        .catch(function(){ fillBatchDatalist([]); });
+    }
+
+    function fillBatchDatalist(rows){
+      if(!inviteBatchDatalist) return;
+      inviteBatchDatalist.innerHTML = '';
+      (rows||[]).forEach(function(b){
+        var opt = document.createElement('option');
+        opt.value = b;
+        inviteBatchDatalist.appendChild(opt);
+      });
+    }
+
+    function showError(msg){
+      if(window.DCT3Modals){ DCT3Modals.open('failed', { message: msg }); }
+      else { alert(msg); }
+    }
+
+    function showSuccess(msg){
+      if(window.DCT3Modals){ DCT3Modals.open('success', { message: msg }); }
+      else { alert(msg); }
+    }
+
+    function postJson(url, body){
+      return fetch(url, { method:'POST', credentials:'same-origin', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(body) })
+        .then(function(r){
+          if(r.ok) return { ok:true };
+          return r.text().then(function(t){ return { ok:false, status:r.status, text:t }; });
+        });
+    }
+
+    function saveInvite(){
+      var ids = inviteState.ids.map(function(x){ return parseInt(x,10); }).filter(function(x){ return !isNaN(x); });
+      if(ids.length === 0){ showError('Pilih minimal 1 peserta'); return; }
+
+      updateBatchVisibility();
+
+      var date = inviteDate ? (inviteDate.value||'') : '';
+      if(!date){ showError('Tanggal wajib diisi'); return; }
+      var time = inviteTime ? (inviteTime.value||'') : '';
+      if(!time){ showError('Waktu wajib diisi'); return; }
+      var waktuIso = date + 'T' + time + ':00';
+
+      if(inviteState.type === 'psikotest'){
+        var batch = (inviteBatchType && inviteBatchType.value === '1') ? (inviteBatch ? (inviteBatch.value||'').trim() : '') : '';
+        if(inviteBatchType && inviteBatchType.value === '1' && !batch){ showError('Nama Batch wajib diisi'); return; }
+        var noPaket = invitePaket ? parseInt(invitePaket.value,10) : NaN;
+        if(isNaN(noPaket) || noPaket <= 0){ showError('Paket Soal wajib dipilih'); return; }
+        var endpoint = ids.length === 1 ? '@Url.Content("~/Applicants/Ujian/Assign")' : '@Url.Content("~/Applicants/Ujian/AssignBulk")';
+        var payload = ids.length === 1
+          ? { Batch: batch, NoPeserta: ids[0], WaktuUjian: waktuIso, NoPaket: noPaket, User: currentUser }
+          : { Batch: batch, NoPeserta: ids, WaktuUjian: waktuIso, NoPaket: noPaket, User: currentUser };
+        postJson(endpoint, payload).then(function(res){
+          if(!res.ok){ showError('Gagal menyimpan undangan Psikotest'); return; }
+          closeInvite();
+          showSuccess('Undangan Psikotest berhasil diproses');
+          selectedPesertaIds.clear();
+          var target = activeNoPeserta || (ids[0] ? (''+ids[0]) : '');
+          if(window.CustomEvent && target){ window.dispatchEvent(new CustomEvent('applicants:select', { detail: { noPeserta: target } })); }
+          applyFilters();
+        }).catch(function(){ showError('Gagal menyimpan undangan Psikotest'); });
+      } else {
+        var batch2 = (inviteBatchType && inviteBatchType.value === '1') ? (inviteBatch ? (inviteBatch.value||'').trim() : '') : '';
+        if(inviteBatchType && inviteBatchType.value === '1' && !batch2){ showError('Nama Batch wajib diisi'); return; }
+        var lokasi = inviteLokasi ? (inviteLokasi.value||'').trim() : '';
+        if(!lokasi){ showError('Lokasi wajib diisi'); return; }
+        var endpoint2 = ids.length === 1 ? '@Url.Content("~/Applicants/Interview/Assign")' : '@Url.Content("~/Applicants/Interview/AssignBulk")';
+        var payload2 = ids.length === 1
+          ? { Batch: batch2, NoPeserta: ids[0], WaktuInterview: waktuIso, Lokasi: lokasi, User: currentUser }
+          : { Batch: batch2, NoPeserta: ids, WaktuInterview: waktuIso, Lokasi: lokasi, User: currentUser };
+        postJson(endpoint2, payload2).then(function(res){
+          if(!res.ok){ showError('Gagal menyimpan undangan Interview'); return; }
+          closeInvite();
+          showSuccess('Undangan Interview berhasil diproses');
+          selectedPesertaIds.clear();
+          var target = activeNoPeserta || (ids[0] ? (''+ids[0]) : '');
+          if(window.CustomEvent && target){ window.dispatchEvent(new CustomEvent('applicants:select', { detail: { noPeserta: target } })); }
+          applyFilters();
+        }).catch(function(){ showError('Gagal menyimpan undangan Interview'); });
+      }
+    }
+
+    function updatePositions(){ var positions = Array.from(new Set(rawData.map(function(d){ return d.posisi; }))).filter(function(x){ return x; }); ddPosisi.innerHTML = '<option value="">Semua Posisi</option>'; positions.forEach(function(p){ var opt = document.createElement('option'); opt.value = p; opt.textContent = p; ddPosisi.appendChild(opt); }); }
+
+    function toISODateLocal(d){
+      var y = d.getFullYear();
+      var m = ('0'+(d.getMonth()+1)).slice(-2);
+      var da = ('0'+d.getDate()).slice(-2);
+      return y+'-'+m+'-'+da;
+    }
+
+    function parseDateValue(v){
+      if(!v) return null;
+      if(typeof v === 'string') return new Date(v);
+      if(typeof v === 'number') return new Date(v);
+      if(typeof v === 'object'){
+        if(typeof v.value === 'string' || typeof v.value === 'number') return new Date(v.value);
+        if(typeof v.Value === 'string' || typeof v.Value === 'number') return new Date(v.Value);
+      }
+      return null;
+    }
+
+    function initDefaults(){
+      var now = new Date();
+      var start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      start.setDate(start.getDate()-7);
+      ddStart.value = toISODateLocal(start);
+      ddEnd.value = toISODateLocal(now);
+      ddHasil.value = '';
+      ddStart.dispatchEvent(new Event('change'));
+      ddEnd.dispatchEvent(new Event('change'));
+    }
+
+    function fmtDateOnly(d){ var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; var dd=('0'+d.getDate()).slice(-2); var mm=months[d.getMonth()]; var yy=d.getFullYear(); return dd+' '+mm+' '+yy; }
+    function enhanceDateInput(input){ var iso=input.value; input.classList.add('date-formatted'); var d = iso ? new Date(iso) : null; input.dataset.display = d ? fmtDateOnly(d) : ''; input.addEventListener('change', function(){ var iso2 = input.value; var d2 = iso2 ? new Date(iso2) : null; input.dataset.display = d2 ? fmtDateOnly(d2) : ''; }); }
+    function getDateValue(input){ return input.value; }
+    enhanceDateInput(ddStart);
+    enhanceDateInput(ddEnd);
+
+    function fetchPeserta(){
+      var sc=document.querySelector('#tblPeserta')?document.querySelector('#tblPeserta').closest('.table-scroll'):null; if(sc) sc.classList.add('loading');
+      var start=ddStart.value; var end=ddEnd.value; var posisi=ddPosisi.value; var hasil=ddHasil.value;
+      var url='@Url.Content("~/Applicants/Peserta/List")'+'?inputStart='+(encodeURIComponent(start||''))+'&inputEnd='+(encodeURIComponent(end||''))+'&posisi='+(encodeURIComponent(posisi||''))+'&hasil='+(encodeURIComponent(hasil||''));
+      if(debug){ console.groupCollapsed('[Applicants] fetch peserta'); console.log('url', url); console.log('filters', { inputStart:start, inputEnd:end, posisi:posisi, hasil:hasil }); }
+      return fetch(url,{ method:'GET', credentials:'same-origin' })
+        .then(function(r){
+          var status = r.status;
+          var ok = r.ok;
+          var ct = (r.headers && r.headers.get) ? (r.headers.get('content-type') || '') : '';
+          if(debug){ console.log('status', status, 'ok', ok, 'content-type', ct); }
+          return r.text().then(function(t){
+            if(!ok){
+              console.error('[Applicants] fetch peserta failed', status, t.slice(0, 500));
+              return [];
+            }
+            var isJson = ct.indexOf('application/json') !== -1;
+            if(!isJson){
+              console.error('[Applicants] expected JSON but got', ct || '(no content-type)', 'sample', t.slice(0, 200));
+              return [];
+            }
+            try{
+              return JSON.parse(t);
+            }catch(e){
+              console.error('[Applicants] JSON parse error', e, 'sample', t.slice(0, 200));
+              return [];
+            }
+          });
+        })
+        .then(function(rows){
+          rawData = rows||[];
+          if(debug){
+            var t0 = rawData[0] ? rawData[0].time : null;
+            console.log('rows', rawData.length, rawData[0] ? Object.keys(rawData[0]) : []);
+            console.log('sample.time', t0, 'parsed', parseDateValue(t0));
+          }
+          updatePositions();
+        })
+        .catch(function(err){
+          console.error('[Applicants] fetch peserta error', err);
+        })
+        .finally(function(){
+          if(debug){ console.groupEnd(); }
+          if(sc) sc.classList.remove('loading');
+        });
+    }
+
+    function fmt(d){
+      var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      var dd = ('0'+d.getDate()).slice(-2);
+      var mm = months[d.getMonth()];
+      var yy = d.getFullYear();
+      var hh = ('0'+d.getHours()).slice(-2);
+      var mi = ('0'+d.getMinutes()).slice(-2);
+      return dd+' '+mm+' '+yy+' '+hh+':'+mi;
+    }
+
+    function withinRange(d, start, end){
+      var ds = new Date(start+"T00:00:00");
+      var de = new Date(end+"T23:59:59");
+      return d >= ds && d <= de;
+    }
+
+    var search = {};
+    var sort = { field:null, dir:1 };
+    var pageSizeSel = document.getElementById('pageSize');
+    var pager = document.getElementById('pager');
+    var pageNums = document.getElementById('pageNums');
+    var currentPage = 1;
+    var selectAll = null;
+
+    function applyFilters(){
+      var sc=document.querySelector('#tblPeserta')?document.querySelector('#tblPeserta').closest('.table-scroll'):null; if(sc) sc.classList.add('loading');
+      var start = ddStart.value;
+      var end = ddEnd.value;
+      var posisi = ddPosisi.value;
+      var hasil = ddHasil.value;
+      var rows = rawData.filter(function(x){
+        var dt = x ? parseDateValue(x.time) : null;
+        var okDate = true;
+        if(start && end){
+          okDate = !!dt && !isNaN(dt.getTime()) && withinRange(dt, start, end);
+        }
+        var okPos = !posisi || x.posisi === posisi;
+        var okHsl = !hasil || x.hasil === hasil;
+        var okSearch = true;
+        Object.keys(search).forEach(function(k){
+          var v = (search[k]||'').toLowerCase();
+          if(v){
+            var xv = (''+x[k]).toLowerCase();
+            if(k==='time') xv = fmt(new Date(x.time)).toLowerCase();
+            if(xv.indexOf(v)===-1) okSearch = false;
+          }
+        });
+        return okDate && okPos && okHsl && okSearch;
+      });
+      if(sort.field){
+        rows.sort(function(a,b){
+          var av = a[sort.field];
+          var bv = b[sort.field];
+          if(sort.field==='time'){ av = new Date(a.time).getTime(); bv = new Date(b.time).getTime(); }
+          if(av<bv) return -1*sort.dir;
+          if(av>bv) return 1*sort.dir;
+          return 0;
+        });
+      }
+      var pageSize = parseInt(pageSizeSel.value,10)||10;
+      var total = rows.length;
+      if(debug){ console.log('[Applicants] applyFilters', { raw: rawData.length, filtered: total, inputStart: start, inputEnd: end, posisi: posisi, hasil: hasil }); }
+      var totalPages = Math.max(1, Math.ceil(total/pageSize));
+      if(currentPage>totalPages) currentPage = totalPages;
+      var startIdx = (currentPage-1)*pageSize;
+      var pageRows = rows.slice(startIdx, startIdx+pageSize);
+      tblBody.innerHTML = '';
+      pageRows.forEach(function(r){
+        var tr = document.createElement('tr');
+        var noPesertaStr = ''+(r.nomor==null?'':r.nomor);
+        tr.dataset.nopeserta = noPesertaStr;
+        if(activeNoPeserta && noPesertaStr === activeNoPeserta){ tr.classList.add('row-active'); }
+        var t = r ? parseDateValue(r.time) : null;
+        var timeDisplay = (t && !isNaN(t.getTime())) ? fmt(t) : '';
+        var isSelected = selectedPesertaIds.has(noPesertaStr);
+        tr.innerHTML =
+          '<td class="px-3 py-1 cell select-cell">'+
+            '<div class="select-square'+(isSelected?' selected':'')+'"></div>'+
+          '</td>'+
+          '<td class="px-1 py-1 cell">'+r.num+'</td>'+
+          '<td class="px-1 py-1 cell">'+
+          '<button class="msg-btn btn-flat inline-flex items-center gap-1 px-2 py-1 rounded-md">'+
+            '<img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/Message.png")" class="row-icon" alt="msg" />'+
+          '</button>'+
+          '</td>'+
+          '<td class="px-1 py-1 cell">'+r.nomor+'</td>'+
+          '<td class="px-1 py-1 cell">'+r.nama+'</td>'+
+          '<td class="px-1 py-1 cell">'+r.alamat+'</td>'+
+          '<td class="px-1 py-1 cell">'+r.email+'</td>'+
+          '<td class="px-1 py-1 cell">'+r.pendidikan+'</td>'+
+          '<td class="px-1 py-1 cell">'+r.posisi+'</td>'+
+          '<td class="px-1 py-1 cell">'+r.ktp+'</td>'+
+          '<td class="px-1 py-1 cell">'+r.hasil+'</td>'+
+          '<td class="px-1 py-1 cell">'+timeDisplay+'</td>';
+        tblBody.appendChild(tr);
+        tr.addEventListener('click', function(e){
+          var ignore = e.target.closest('.select-cell') || e.target.closest('.select-square') || e.target.closest('.msg-btn');
+          if(ignore) return;
+          activeNoPeserta = noPesertaStr;
+          document.querySelectorAll('#tblPeserta tbody tr.row-active').forEach(function(x){ x.classList.remove('row-active'); });
+          tr.classList.add('row-active');
+          if(window.CustomEvent){
+            window.dispatchEvent(new CustomEvent('applicants:select', { detail: { noPeserta: r.nomor } }));
+          }
+        });
+      });
+      info.textContent = 'Showing '+(startIdx+1)+' to '+Math.min(startIdx+pageSize,total)+' of '+total+' entries';
+      renderPages(totalPages);
+      attachRowEvents();
+      updateSortUI();
+      if(sc) sc.classList.remove('loading');
+    }
+
+    function renderPages(totalPages){
+      pageNums.innerHTML = '';
+      var makeBtn = function(n, active){
+        var b = document.createElement('button');
+        b.className = 'page-btn btn-flat px-2 py-1 rounded-md'+(active?' bg-white':'');
+        b.textContent = n;
+        b.dataset.page = n;
+        pageNums.appendChild(b);
+      };
+      if(totalPages <= 5){ for(var i=1;i<=totalPages;i++) makeBtn(i, i===currentPage); return; }
+      makeBtn(1, currentPage===1);
+      makeBtn(2, currentPage===2);
+      makeBtn(3, currentPage===3);
+      var ell = document.createElement('span'); ell.textContent = '...'; ell.className = 'text-gray-500 px-1'; pageNums.appendChild(ell);
+      makeBtn(totalPages, currentPage===totalPages);
+    }
+
+    function attachRowEvents(){
+      document.querySelectorAll('#tblPeserta tbody .select-square').forEach(function(el){
+        el.addEventListener('click', function(e){
+          e.stopPropagation();
+          var tr = el.closest('tr');
+          var id = tr ? (tr.dataset.nopeserta||'') : '';
+          var make = !el.classList.contains('selected');
+          el.classList.toggle('selected', make);
+          if(id){
+            if(make) selectedPesertaIds.add(id);
+            else selectedPesertaIds.delete(id);
+          }
+        });
+      });
+      if(!selectAll){
+        selectAll = document.getElementById('selectAll');
+        if(selectAll){
+          selectAll.addEventListener('click', function(e){
+            e.stopPropagation();
+            var all = document.querySelectorAll('#tblPeserta tbody .select-square');
+            var makeSelected = !selectAll.classList.contains('selected');
+            selectAll.classList.toggle('selected', makeSelected);
+            all.forEach(function(sq){
+              var tr = sq.closest('tr');
+              var id = tr ? (tr.dataset.nopeserta||'') : '';
+              sq.classList.toggle('selected', makeSelected);
+              if(id){
+                if(makeSelected) selectedPesertaIds.add(id);
+                else selectedPesertaIds.delete(id);
+              }
+            });
+          });
+        }
+      }
+      document.querySelectorAll('#tblPeserta tbody .msg-btn').forEach(function(btn){
+        btn.addEventListener('click', function(e){
+          e.stopPropagation();
+          var tr = btn.closest('tr');
+          var id = tr ? (tr.dataset.nopeserta||'') : '';
+          if(!id){ showError('Nomor peserta tidak ditemukan'); return; }
+          openInvite([id], 'psikotest');
+        });
+      });
+    }
+
+    function updateSortUI(){
+      document.querySelectorAll('.sort-icons').forEach(function(si){
+        var asc = si.querySelector('.asc'); var desc = si.querySelector('.desc');
+        var f = si.getAttribute('data-sort');
+        asc.classList.remove('active'); desc.classList.remove('active');
+        if(sort.field===f){ if(sort.dir===1) asc.classList.add('active'); else desc.classList.add('active'); }
+      });
+    }
+
+    btnRefresh.addEventListener('click', function(){ currentPage=1; fetchPeserta().then(function(){ applyFilters(); }); });
+    ddStart.addEventListener('change', function(){ currentPage=1; fetchPeserta().then(function(){ applyFilters(); }); });
+    ddEnd.addEventListener('change', function(){ currentPage=1; fetchPeserta().then(function(){ applyFilters(); }); });
+    document.querySelectorAll('.col-search').forEach(function(el){
+      el.addEventListener('input', function(){ search[el.dataset.field] = el.value; currentPage=1; applyFilters(); });
+    });
+    document.querySelectorAll('.sort-icons .asc').forEach(function(el){ el.addEventListener('click', function(){ var p = el.parentElement.getAttribute('data-sort'); sort.field = p; sort.dir = 1; applyFilters(); }); });
+    document.querySelectorAll('.sort-icons .desc').forEach(function(el){ el.addEventListener('click', function(){ var p = el.parentElement.getAttribute('data-sort'); sort.field = p; sort.dir = -1; applyFilters(); }); });
+    pageSizeSel.addEventListener('change', function(){ currentPage=1; applyFilters(); });
+    pager.addEventListener('click', function(e){
+      var t = e.target;
+      if(!t.classList.contains('page-btn')) return;
+      var p = t.dataset.page;
+      if(p==='prev'){ currentPage = Math.max(1, currentPage-1); }
+      else if(p==='next'){ currentPage = currentPage+1; }
+      else { currentPage = parseInt(p,10)||1; }
+      applyFilters();
+    });
+
+    document.getElementById('btnBulkInvite').addEventListener('click', function(){
+      var ids = Array.from(selectedPesertaIds.values());
+      if(ids.length === 0){ showError('Pilih minimal 1 peserta'); return; }
+      openInvite(ids, 'psikotest');
+    });
+    // Selection handled via select-square click, no default checkbox
+    window.addEventListener('applicants:select', function(e){
+      activeNoPeserta = (e && e.detail && e.detail.noPeserta!=null) ? (''+e.detail.noPeserta) : '';
+      applyFilters();
+    });
+
+    if(inviteOverlay){
+      inviteOverlay.classList.add('dct-hidden');
+      inviteOverlay.style.display = 'none';
+      inviteOverlay.addEventListener('click', function(e){ if(e.target === inviteOverlay) closeInvite(); });
+    }
+    if(inviteClose) inviteClose.addEventListener('click', closeInvite);
+    if(inviteCancel) inviteCancel.addEventListener('click', closeInvite);
+    if(inviteSave) inviteSave.addEventListener('click', saveInvite);
+    document.querySelectorAll('input[name="inviteType"]').forEach(function(r){ r.addEventListener('change', function(){ applyInviteType(r.value); }); });
+    if(inviteBatchType) inviteBatchType.addEventListener('change', updateBatchVisibility);
+    updateBatchVisibility();
+
+    initDefaults();
+    fetchPeserta().then(function(){ applyFilters(); });
+  })();
+</script>
+
+<script>
+  (function(){
+    var debug = true;
+    var examData = [];
+    var interviewData = [];
+
+    var iconMsg2 = '@Url.Content("~/DCT3_Standarisasi/assets/icons/Message.png")';
+
+    function toISODate(d){
+      var y = d.getFullYear();
+      var m = ('0'+(d.getMonth()+1)).slice(-2);
+      var da = ('0'+d.getDate()).slice(-2);
+      return y+'-'+m+'-'+da;
+    }
+
+    function parseDateValue(v){
+      if(!v) return null;
+      if(typeof v === 'string') return new Date(v);
+      if(typeof v === 'number') return new Date(v);
+      if(typeof v === 'object'){
+        if(typeof v.value === 'string' || typeof v.value === 'number') return new Date(v.value);
+        if(typeof v.Value === 'string' || typeof v.Value === 'number') return new Date(v.Value);
+      }
+      return null;
+    }
+    function fmtDateTime(d){ var m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; var dd=(''+('0'+d.getDate()).slice(-2)); var mm=m[d.getMonth()]; var yy=d.getFullYear(); var hh=('0'+d.getHours()).slice(-2); var mi=('0'+d.getMinutes()).slice(-2); return dd+' '+mm+' '+yy+' '+hh+':'+mi; }
+    function within(d, s, e){ var ds=new Date(s+"T00:00:00"); var de=new Date(e+"T23:59:59"); return d>=ds && d<=de; }
+    function fmtDateOnly(d){ var m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; var dd=('0'+d.getDate()).slice(-2); var mm=m[d.getMonth()]; var yy=d.getFullYear(); return dd+' '+mm+' '+yy; }
+    function enhanceDateInput(input){ var iso=input.value; input.classList.add('date-formatted'); var d = iso ? new Date(iso) : null; input.dataset.display = d ? fmtDateOnly(d) : ''; input.addEventListener('change', function(){ var iso2 = input.value; var d2 = iso2 ? new Date(iso2) : null; input.dataset.display = d2 ? fmtDateOnly(d2) : ''; }); }
+    function eqText(a,b){ return (''+(a==null?'':a)).trim().toLowerCase() === (''+(b==null?'':b)).trim().toLowerCase(); }
+    function updateSelectOptions(selectEl, rows, fieldName){
+      if(!selectEl) return;
+      var current = selectEl.value || '';
+      var values = Array.from(new Set((rows||[]).map(function(r){
+        var v = r ? r[fieldName] : '';
+        v = (''+(v==null?'':v)).trim();
+        return v;
+      }).filter(function(v){ return v; })));
+      values.sort(function(a,b){ return a.localeCompare(b); });
+      selectEl.innerHTML = '<option value="">Semua Status</option>' + values.map(function(v){ return '<option value="'+v.replace(/"/g,'&quot;')+'">'+v+'</option>'; }).join('');
+      selectEl.value = current;
+      if(selectEl.value !== current) selectEl.value = '';
+    }
+    function getDateValue(input){ return input.value; }
+
+    var ddUjianInputStart = document.getElementById('ujianInputStart');
+    var ddUjianInputEnd = document.getElementById('ujianInputEnd');
+    var ddUjianDateStart = document.getElementById('ujianDateStart');
+    var ddUjianDateEnd = document.getElementById('ujianDateEnd');
+    var ddStatusPengerjaan = document.getElementById('statusPengerjaan');
+    var ddHasilPsikotest = document.getElementById('hasilPsikotest');
+    var pageSizeUjian = document.getElementById('pageSizeUjian');
+    var pagerUjian = document.getElementById('pagerUjian');
+    var pageNumsUjian = document.getElementById('pageNumsUjian');
+    var infoUjian = document.getElementById('infoUjian');
+
+    var ddInterviewInputStart = document.getElementById('interviewInputStart');
+    var ddInterviewInputEnd = document.getElementById('interviewInputEnd');
+    var ddStatusInterview = document.getElementById('statusInterview');
+    var pageSizeInterview = document.getElementById('pageSizeInterview');
+    var pagerInterview = document.getElementById('pagerInterview');
+    var pageNumsInterview = document.getElementById('pageNumsInterview');
+    var infoInterview = document.getElementById('infoInterview');
+
+    var selectAllUjian = null;
+    var selectAllInterview = null;
+    var searchUjian = {};
+    var sortUjian = { field:null, dir:1 };
+    var currentPageUjian = 1;
+    var searchInterview = {};
+    var sortInterview = { field:null, dir:1 };
+    var currentPageInterview = 1;
+
+    function initDefaults(){
+      var now=new Date();
+      var start=new Date(now);
+      start.setDate(start.getDate()-7);
+      ddUjianInputStart.value = toISODate(start);
+      ddUjianInputEnd.value = toISODate(now);
+      ddUjianDateStart.value = toISODate(start);
+      ddUjianDateEnd.value = toISODate(now);
+      ddStatusPengerjaan.value = '';
+      ddHasilPsikotest.value = '';
+      ddInterviewInputStart.value = toISODate(start);
+      ddInterviewInputEnd.value = toISODate(now);
+      ddStatusInterview.value = '';
+      enhanceDateInput(ddUjianInputStart); enhanceDateInput(ddUjianInputEnd); enhanceDateInput(ddUjianDateStart); enhanceDateInput(ddUjianDateEnd); enhanceDateInput(ddInterviewInputStart); enhanceDateInput(ddInterviewInputEnd);
+    }
+
+    function renderPages(el, totalPages, current){
+      el.innerHTML='';
+      var mk=function(n,a){ var b=document.createElement('button'); b.className='page-btn btn-flat px-2 py-1 rounded-md'+(a?' bg-white':''); b.textContent=n; b.dataset.page=n; el.appendChild(b); };
+      if(totalPages<=5){ for(var i=1;i<=totalPages;i++) mk(i, i===current); return; }
+      mk(1, current===1); mk(2, current===2); mk(3, current===3); var s=document.createElement('span'); s.textContent='...'; s.className='text-gray-500 px-1'; el.appendChild(s); mk(totalPages, current===totalPages);
+    }
+
+    function updateSortUI(rootSel, sort){
+      document.querySelectorAll(rootSel+' .sort-icons').forEach(function(si){
+        var asc=si.querySelector('.asc'); var desc=si.querySelector('.desc'); var f=si.getAttribute('data-sort');
+        asc.classList.remove('active'); desc.classList.remove('active');
+        if(sort.field===f){ if(sort.dir===1) asc.classList.add('active'); else desc.classList.add('active'); }
+      });
+    }
+
+    function applyUjian(){
+      var sc=document.querySelector('#gridUjian .table-scroll'); if(sc) sc.classList.add('loading');
+      var s1=ddUjianInputStart.value; var e1=ddUjianInputEnd.value; var s2=ddUjianDateStart.value; var e2=ddUjianDateEnd.value; var st=ddStatusPengerjaan.value; var hs=ddHasilPsikotest.value;
+      var url='@Url.Content("~/Applicants/Ujian/List")'+
+        '?inputStart='+(encodeURIComponent(s1||''))+
+        '&inputEnd='+(encodeURIComponent(e1||''))+
+        '&ujianStart='+(encodeURIComponent(s2||''))+
+        '&ujianEnd='+(encodeURIComponent(e2||''))+
+        '&status='+(encodeURIComponent(st||''))+
+        '&hasil='+(encodeURIComponent(hs||''));
+      if(debug){ console.groupCollapsed('[Applicants] fetch ujian'); console.log('url', url); console.log('filters', { inputStart:s1, inputEnd:e1, ujianStart:s2, ujianEnd:e2, status:st, hasil:hs }); }
+      return fetch(url,{ method:'GET', credentials:'same-origin' }).then(function(r){
+        var status=r.status; var ok=r.ok; var ct=(r.headers&&r.headers.get)?(r.headers.get('content-type')||''):'';
+        if(debug){ console.log('status', status, 'ok', ok, 'content-type', ct); }
+        return r.text().then(function(t){
+          if(!ok){ console.error('[Applicants] fetch ujian failed', status, t.slice(0, 500)); return []; }
+          if(ct.indexOf('application/json')===-1){ console.error('[Applicants] expected JSON but got', ct||'(no content-type)', 'sample', t.slice(0,200)); return []; }
+          try{ return JSON.parse(t); }catch(e){ console.error('[Applicants] JSON parse error', e, 'sample', t.slice(0,200)); return []; }
+        });
+      }).then(function(rows){
+        examData = (rows||[]);
+        updateSelectOptions(ddStatusPengerjaan, examData, 'status');
+        if(debug){
+          var t0 = examData[0] ? examData[0].timeInput : null;
+          var u0 = examData[0] ? examData[0].waktuTest : null;
+          console.log('rows', examData.length, examData[0] ? Object.keys(examData[0]) : []);
+          console.log('sample.timeInput', t0, 'parsed', parseDateValue(t0));
+          console.log('sample.waktuTest', u0, 'parsed', parseDateValue(u0));
+        }
+        var rows2 = examData.filter(function(x){
+          var okSearch = true;
+          var timeKeysUjian = { waktuTest:1, waktuMulai:1, kirim:1, baca:1, timeInput:1, timeEdit:1 };
+          Object.keys(searchUjian).forEach(function(k){
+            var v=(searchUjian[k]||'').toLowerCase();
+            if(!v) return;
+            var xv=(''+x[k]).toLowerCase();
+            if(timeKeysUjian[k]){
+              var kd = parseDateValue(x[k]);
+              xv = (kd && !isNaN(kd.getTime())) ? fmtDateTime(kd).toLowerCase() : '';
+            }
+            if(xv.indexOf(v)===-1) okSearch=false;
+          });
+          return okSearch;
+        });
+        if(debug){ console.log('[Applicants] ujian filtered', { server: examData.length, filtered: rows2.length }); }
+        if(sortUjian.field){
+          rows2.sort(function(a,b){
+            var av=a[sortUjian.field];
+            var bv=b[sortUjian.field];
+            if(sortUjian.field==='timeInput'){
+              var ad = parseDateValue(a.timeInput); var bd = parseDateValue(b.timeInput);
+              av = (ad && !isNaN(ad.getTime())) ? ad.getTime() : 0;
+              bv = (bd && !isNaN(bd.getTime())) ? bd.getTime() : 0;
+            }
+            if(av<bv) return -1*sortUjian.dir;
+            if(av>bv) return 1*sortUjian.dir;
+            return 0;
+          });
+        }
+        var pageSize = parseInt(pageSizeUjian.value,10)||10; var total=rows2.length; var totalPages=Math.max(1, Math.ceil(total/pageSize)); if(currentPageUjian>totalPages) currentPageUjian=totalPages; var start=(currentPageUjian-1)*pageSize; var pageRows=rows2.slice(start, start+pageSize);
+        var body=document.querySelector('#tblUjian tbody'); body.innerHTML='';
+        pageRows.forEach(function(r){ var tr=document.createElement('tr'); tr.innerHTML=
+          '<td class="px-3 py-1 cell select-cell"><div class="select-square"></div></td>'+
+          '<td class="px-1 py-1 cell">'+(r.num||'')+'</td>'+
+          '<td class="px-1 py-1 cell">'+
+            '<button class="msg-btn btn-flat inline-flex items-center gap-1 px-2 py-1 rounded-md">'+
+              '<span class="bg-icon" style="background-image:url(@Url.Content("~/DCT3_Standarisasi/assets/icons/Message.png"));"></span>'+
+            '</button>'+
+          '</td>'+
+          '<td class="px-1 py-1 cell">'+(r.batch||'')+'</td>'+
+          '<td class="px-1 py-1 cell">'+(r.nomor||'')+'</td>'+
+          '<td class="px-1 py-1 cell">'+(r.nama||'')+'</td>'+
+          '<td class="px-1 py-1 cell">'+(r.userId||'')+'</td>'+
+          '<td class="px-1 py-1 cell">'+(r.undangKe||'')+'</td>'+
+          '<td class="px-1 py-1 cell">'+(r.status||'')+'</td>'+
+          '<td class="px-1 py-1 cell">'+(r.hasil||'')+'</td>'+
+          '<td class="px-1 py-1 cell">'+(r.link||'')+'</td>'+
+          '<td class="px-1 py-1 cell">'+(r.paket||'')+'</td>'+
+          '<td class="px-1 py-1 cell">'+(function(){ var d=parseDateValue(r.waktuTest); return (d && !isNaN(d.getTime())) ? fmtDateTime(d) : ''; })()+'</td>'+
+          '<td class="px-1 py-1 cell">'+(function(){ var d=parseDateValue(r.waktuMulai); return (d && !isNaN(d.getTime())) ? fmtDateTime(d) : ''; })()+'</td>'+
+          '<td class="px-1 py-1 cell">'+(r.statusPesan||'')+'</td>'+
+          '<td class="px-1 py-1 cell">'+(function(){ var d=parseDateValue(r.kirim); return (d && !isNaN(d.getTime())) ? fmtDateTime(d) : ''; })()+'</td>'+
+          '<td class="px-1 py-1 cell">'+(function(){ var d=parseDateValue(r.baca); return (d && !isNaN(d.getTime())) ? fmtDateTime(d) : ''; })()+'</td>'+
+          '<td class="px-1 py-1 cell">'+(r.userInput||'')+'</td>'+
+          '<td class="px-1 py-1 cell">'+(function(){ var d=parseDateValue(r.timeInput); return (d && !isNaN(d.getTime())) ? fmtDateTime(d) : ''; })()+'</td>'+
+          '<td class="px-1 py-1 cell">'+(r.userEdit||'')+'</td>'+
+          '<td class="px-1 py-1 cell">'+(function(){ var d=parseDateValue(r.timeEdit); return (d && !isNaN(d.getTime())) ? fmtDateTime(d) : ''; })()+'</td>';
+          body.appendChild(tr); });
+        infoUjian.textContent='Showing '+(start+1)+' to '+Math.min(start+pageSize,total)+' of '+total+' entries';
+        renderPages(pageNumsUjian, Math.max(1, Math.ceil(total/pageSize)), currentPageUjian);
+        document.querySelectorAll('#tblUjian tbody .select-square').forEach(function(el){ el.addEventListener('click', function(){ el.classList.toggle('selected'); }); });
+        if(!selectAllUjian){ var sa=document.getElementById('selectAllUjian'); if(sa){ sa.addEventListener('click', function(){ var all=document.querySelectorAll('#tblUjian tbody .select-square'); var make=!sa.classList.contains('selected'); sa.classList.toggle('selected', make); all.forEach(function(sq){ sq.classList.toggle('selected', make); }); }); selectAllUjian=sa; } }
+        updateSortUI('#tblUjian', sortUjian);
+      }).catch(function(err){ console.error('applyUjian error', err); }).finally(function(){ if(debug){ console.groupEnd(); } if(sc) sc.classList.remove('loading'); });
+    }
+
+    function applyInterview(){
+      var sc=document.querySelector('#gridInterview .table-scroll'); if(sc) sc.classList.add('loading');
+      var s1=ddInterviewInputStart.value; var e1=ddInterviewInputEnd.value; var st=ddStatusInterview.value;
+      var url='@Url.Content("~/Applicants/Interview/List")'+
+        '?inputStart='+(encodeURIComponent(s1||''))+
+        '&inputEnd='+(encodeURIComponent(e1||''))+
+        '&statusInterview='+(encodeURIComponent(st||''));
+      if(debug){ console.groupCollapsed('[Applicants] fetch interview'); console.log('url', url); console.log('filters', { inputStart:s1, inputEnd:e1, statusInterview:st }); }
+      return fetch(url,{ method:'GET', credentials:'same-origin' }).then(function(r){
+        var status=r.status; var ok=r.ok; var ct=(r.headers&&r.headers.get)?(r.headers.get('content-type')||''):'';
+        if(debug){ console.log('status', status, 'ok', ok, 'content-type', ct); }
+        return r.text().then(function(t){
+          if(!ok){ console.error('[Applicants] fetch interview failed', status, t.slice(0, 500)); return []; }
+          if(ct.indexOf('application/json')===-1){ console.error('[Applicants] expected JSON but got', ct||'(no content-type)', 'sample', t.slice(0,200)); return []; }
+          try{ return JSON.parse(t); }catch(e){ console.error('[Applicants] JSON parse error', e, 'sample', t.slice(0,200)); return []; }
+        });
+      }).then(function(rows){
+        interviewData=(rows||[]);
+        updateSelectOptions(ddStatusInterview, interviewData, 'statusInterview');
+        if(debug){
+          var t0 = interviewData[0] ? interviewData[0].timeInput : null;
+          var w0 = interviewData[0] ? interviewData[0].waktuInterview : null;
+          console.log('rows', interviewData.length, interviewData[0] ? Object.keys(interviewData[0]) : []);
+          console.log('sample.timeInput', t0, 'parsed', parseDateValue(t0));
+          console.log('sample.waktuInterview', w0, 'parsed', parseDateValue(w0));
+        }
+        var rows2 = interviewData.filter(function(x){
+          var okSearch = true;
+          var timeKeysInterview = { waktuInterview:1, kirim:1, baca:1, timeInput:1, timeEdit:1 };
+          Object.keys(searchInterview).forEach(function(k){
+            var v=(searchInterview[k]||'').toLowerCase();
+            if(!v) return;
+            var xv=(''+x[k]).toLowerCase();
+            if(timeKeysInterview[k]){
+              var kd = parseDateValue(x[k]);
+              xv = (kd && !isNaN(kd.getTime())) ? fmtDateTime(kd).toLowerCase() : '';
+            }
+            if(xv.indexOf(v)===-1) okSearch=false;
+          });
+          return okSearch;
+        });
+        if(debug){ console.log('[Applicants] interview filtered', { server: interviewData.length, filtered: rows2.length }); }
+        if(sortInterview.field){
+          rows2.sort(function(a,b){
+            var av=a[sortInterview.field];
+            var bv=b[sortInterview.field];
+            if(sortInterview.field==='timeInput' || sortInterview.field==='waktuInterview'){
+              var ad = parseDateValue(a[sortInterview.field]); var bd = parseDateValue(b[sortInterview.field]);
+              av = (ad && !isNaN(ad.getTime())) ? ad.getTime() : 0;
+              bv = (bd && !isNaN(bd.getTime())) ? bd.getTime() : 0;
+            }
+            if(av<bv) return -1*sortInterview.dir;
+            if(av>bv) return 1*sortInterview.dir;
+            return 0;
+          });
+        }
+        var pageSize = parseInt(pageSizeInterview.value,10)||10; var total=rows2.length; var totalPages=Math.max(1, Math.ceil(total/pageSize)); if(currentPageInterview>totalPages) currentPageInterview=totalPages; var start=(currentPageInterview-1)*pageSize; var pageRows=rows2.slice(start, start+pageSize);
+        var body=document.querySelector('#tblInterview tbody'); body.innerHTML='';
+        pageRows.forEach(function(r){ var tr=document.createElement('tr'); tr.innerHTML=
+          '<td class="px-3 py-1 cell select-cell"><div class="select-square"></div></td>'+
+          '<td class="px-1 py-1 cell">'+(r.num||'')+'</td>'+
+          '<td class="px-1 py-1 cell">'+
+            '<button class="msg-btn btn-flat inline-flex items-center gap-1 px-2 py-1 rounded-md">'+
+              '<span class="bg-icon" style="background-image:url(@Url.Content("~/DCT3_Standarisasi/assets/icons/Message.png"));"></span>'+
+            '</button>'+
+          '</td>'+
+          '<td class="px-1 py-1 cell">'+(r.batch||'')+'</td>'+
+          '<td class="px-1 py-1 cell">'+(r.nomor||'')+'</td>'+
+          '<td class="px-1 py-1 cell">'+(r.nama||'')+'</td>'+
+          '<td class="px-1 py-1 cell">'+(function(){ var d=parseDateValue(r.waktuInterview); return (d && !isNaN(d.getTime())) ? fmtDateTime(d) : ''; })()+'</td>'+
+          '<td class="px-1 py-1 cell">'+(r.lokasi||'')+'</td>'+
+          '<td class="px-1 py-1 cell">'+(r.statusInterview||'')+'</td>'+
+          '<td class="px-1 py-1 cell">'+(r.undangKe||'')+'</td>'+
+          '<td class="px-1 py-1 cell">'+(r.statusPesan||'')+'</td>'+
+          '<td class="px-1 py-1 cell">'+(function(){ var d=parseDateValue(r.kirim); return (d && !isNaN(d.getTime())) ? fmtDateTime(d) : ''; })()+'</td>'+
+          '<td class="px-1 py-1 cell">'+(function(){ var d=parseDateValue(r.baca); return (d && !isNaN(d.getTime())) ? fmtDateTime(d) : ''; })()+'</td>'+
+          '<td class="px-1 py-1 cell">'+(r.userInput||'')+'</td>'+
+          '<td class="px-1 py-1 cell">'+(function(){ var d=parseDateValue(r.timeInput); return (d && !isNaN(d.getTime())) ? fmtDateTime(d) : ''; })()+'</td>'+
+          '<td class="px-1 py-1 cell">'+(r.userEdit||'')+'</td>'+
+          '<td class="px-1 py-1 cell">'+(function(){ var d=parseDateValue(r.timeEdit); return (d && !isNaN(d.getTime())) ? fmtDateTime(d) : ''; })()+'</td>';
+          body.appendChild(tr); });
+        infoInterview.textContent='Showing '+(start+1)+' to '+Math.min(start+pageSize,total)+' of '+total+' entries';
+        renderPages(pageNumsInterview, Math.max(1, Math.ceil(total/pageSize)), currentPageInterview);
+        document.querySelectorAll('#tblInterview tbody .select-square').forEach(function(el){ el.addEventListener('click', function(){ el.classList.toggle('selected'); }); });
+        if(!selectAllInterview){ var sa=document.getElementById('selectAllInterview'); if(sa){ sa.addEventListener('click', function(){ var all=document.querySelectorAll('#tblInterview tbody .select-square'); var make=!sa.classList.contains('selected'); sa.classList.toggle('selected', make); all.forEach(function(sq){ sq.classList.toggle('selected', make); }); }); selectAllInterview=sa; } }
+        updateSortUI('#tblInterview', sortInterview);
+      }).catch(function(err){ console.error('applyInterview error', err); }).finally(function(){ if(debug){ console.groupEnd(); } if(sc) sc.classList.remove('loading'); });
+    }
+
+    document.querySelectorAll('.col-search-ujian').forEach(function(el){ el.addEventListener('input', function(){ searchUjian[el.dataset.field] = el.value; currentPageUjian=1; applyUjian(); }); });
+    document.querySelectorAll('#tblUjian .sort-icons .asc').forEach(function(el){ el.addEventListener('click', function(){ var f=el.parentElement.getAttribute('data-sort'); sortUjian.field=f; sortUjian.dir=1; applyUjian(); }); });
+    document.querySelectorAll('#tblUjian .sort-icons .desc').forEach(function(el){ el.addEventListener('click', function(){ var f=el.parentElement.getAttribute('data-sort'); sortUjian.field=f; sortUjian.dir=-1; applyUjian(); }); });
+    pageSizeUjian.addEventListener('change', function(){ currentPageUjian=1; applyUjian(); });
+    pagerUjian.addEventListener('click', function(e){ var t=e.target; if(!t.classList.contains('page-btn')) return; var p=t.dataset.page; if(p==='prev'){ currentPageUjian=Math.max(1,currentPageUjian-1); } else if(p==='next'){ currentPageUjian=currentPageUjian+1; } else { currentPageUjian=parseInt(p,10)||1; } applyUjian(); });
+    ddStatusPengerjaan.addEventListener('change', function(){ currentPageUjian=1; applyUjian(); });
+    ddHasilPsikotest.addEventListener('change', function(){ currentPageUjian=1; applyUjian(); });
+    ddUjianInputStart.addEventListener('change', function(){ currentPageUjian=1; applyUjian(); });
+    ddUjianInputEnd.addEventListener('change', function(){ currentPageUjian=1; applyUjian(); });
+    ddUjianDateStart.addEventListener('change', function(){ currentPageUjian=1; applyUjian(); });
+    ddUjianDateEnd.addEventListener('change', function(){ currentPageUjian=1; applyUjian(); });
+
+    document.querySelectorAll('.col-search-interview').forEach(function(el){ el.addEventListener('input', function(){ searchInterview[el.dataset.field] = el.value; currentPageInterview=1; applyInterview(); }); });
+    document.querySelectorAll('#tblInterview .sort-icons .asc').forEach(function(el){ el.addEventListener('click', function(){ var f=el.parentElement.getAttribute('data-sort'); sortInterview.field=f; sortInterview.dir=1; applyInterview(); }); });
+    document.querySelectorAll('#tblInterview .sort-icons .desc').forEach(function(el){ el.addEventListener('click', function(){ var f=el.parentElement.getAttribute('data-sort'); sortInterview.field=f; sortInterview.dir=-1; applyInterview(); }); });
+    pageSizeInterview.addEventListener('change', function(){ currentPageInterview=1; applyInterview(); });
+    pagerInterview.addEventListener('click', function(e){ var t=e.target; if(!t.classList.contains('page-btn')) return; var p=t.dataset.page; if(p==='prev'){ currentPageInterview=Math.max(1,currentPageInterview-1); } else if(p==='next'){ currentPageInterview=currentPageInterview+1; } else { currentPageInterview=parseInt(p,10)||1; } applyInterview(); });
+    ddInterviewInputStart.addEventListener('change', function(){ currentPageInterview=1; applyInterview(); });
+    ddInterviewInputEnd.addEventListener('change', function(){ currentPageInterview=1; applyInterview(); });
+    ddStatusInterview.addEventListener('change', function(){ currentPageInterview=1; applyInterview(); });
+
+    var btnTabUjian = document.getElementById('btnTabUjian');
+    var btnTabInterview = document.getElementById('btnTabInterview');
+    var filterUjian = document.getElementById('filterUjian');
+    var filterInterview = document.getElementById('filterInterview');
+    var titleUjian = document.getElementById('titleUjian');
+    var titleInterview = document.getElementById('titleInterview');
+    var gridUjian = document.getElementById('gridUjian');
+    var gridInterview = document.getElementById('gridInterview');
+    
+
+    function showUjian(){
+      filterUjian.classList.remove('hidden'); titleUjian.classList.remove('hidden'); gridUjian.classList.remove('hidden');
+      filterInterview.classList.add('hidden'); titleInterview.classList.add('hidden'); gridInterview.classList.add('hidden');
+      btnTabUjian.classList.add('ring-2'); btnTabInterview.classList.remove('ring-2');
+      applyUjian();
+    }
+    function showInterview(){
+      filterUjian.classList.add('hidden'); titleUjian.classList.add('hidden'); gridUjian.classList.add('hidden');
+      filterInterview.classList.remove('hidden'); titleInterview.classList.remove('hidden'); gridInterview.classList.remove('hidden');
+      btnTabInterview.classList.add('ring-2'); btnTabUjian.classList.remove('ring-2');
+      applyInterview();
+    }
+
+    document.getElementById('btnUjianRefresh').addEventListener('click', function(){ applyUjian(); });
+    document.getElementById('btnInterviewRefresh').addEventListener('click', function(){ applyInterview(); });
+    document.getElementById('btnExportUjian').addEventListener('click', function(){
+      var s1=ddUjianInputStart.value; var e1=ddUjianInputEnd.value; var s2=ddUjianDateStart.value; var e2=ddUjianDateEnd.value; var st=ddStatusPengerjaan.value; var hs=ddHasilPsikotest.value;
+      var p=new URLSearchParams();
+      p.set('inputStart', s1||''); p.set('inputEnd', e1||''); p.set('ujianStart', s2||''); p.set('ujianEnd', e2||''); p.set('status', st||''); p.set('hasil', hs||'');
+      Object.keys(searchUjian).forEach(function(k){ var v=searchUjian[k]||''; if(v) p.set('q_'+k, v); });
+      if(sortUjian.field) p.set('sortField', sortUjian.field);
+      p.set('sortDir', ''+(sortUjian.dir||1));
+      window.location.href='@Url.Content("~/Applicants/Ujian/Export")'+'?'+p.toString();
+    });
+    document.getElementById('btnExportInterview').addEventListener('click', function(){
+      var s1=ddInterviewInputStart.value; var e1=ddInterviewInputEnd.value; var st=ddStatusInterview.value;
+      var p=new URLSearchParams();
+      p.set('inputStart', s1||''); p.set('inputEnd', e1||''); p.set('statusInterview', st||'');
+      Object.keys(searchInterview).forEach(function(k){ var v=searchInterview[k]||''; if(v) p.set('q_'+k, v); });
+      if(sortInterview.field) p.set('sortField', sortInterview.field);
+      p.set('sortDir', ''+(sortInterview.dir||1));
+      window.location.href='@Url.Content("~/Applicants/Interview/Export")'+'?'+p.toString();
+    });
+    btnTabUjian.addEventListener('click', function(){ showUjian(); });
+    btnTabInterview.addEventListener('click', function(){ showInterview(); });
+
+    initDefaults();
+    showUjian();
+    applyUjian();
+    applyInterview();
+  })();
+</script>

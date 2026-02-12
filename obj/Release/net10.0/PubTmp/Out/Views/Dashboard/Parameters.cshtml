@@ -1,0 +1,156 @@
+@{
+    ViewData["Title"] = "Master Parameter";
+    Layout = "_DashboardLayout";
+}
+<div class="px-0 py-0 text-[#111827]" id="parametersPage">
+  <h1 class="text-3xl font-semibold text-[#1E90FF]">Master Parameter</h1>
+
+  
+
+  <div class="mt-3 border border-gray-300 rounded-xl overflow-hidden">
+    <div class="table-scroll">
+      <table id="tblParameters" class="w-full table-fixed">
+        <thead>
+        <tr class="bg-[#EBEBE9]">
+          <th class="px-3 py-1 text-left w-10"><div class="th-inner"><span>No</span></div></th>
+          <th class="px-1 py-1 text-left w-16"><div class="th-inner"><span>Aksi</span></div></th>
+          <th class="px-1 py-1 text-left w-48"><div class="th-inner"><span>Name</span><span class="sort-icons" data-sort="name"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left w-64"><div class="th-inner"><span>Remark</span><span class="sort-icons" data-sort="remark"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left w-[28rem]"><div class="th-inner"><span>Value</span><span class="sort-icons" data-sort="value"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left w-24"><div class="th-inner"><span>Status</span><span class="sort-icons" data-sort="statusText"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left w-36"><div class="th-inner"><span>User Input</span><span class="sort-icons" data-sort="userInput"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left w-40"><div class="th-inner"><span>Time Input</span><span class="sort-icons" data-sort="timeInput"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left w-36"><div class="th-inner"><span>User Edit</span><span class="sort-icons" data-sort="userEdit"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+          <th class="px-1 py-1 text-left w-40"><div class="th-inner"><span>Time Edit</span><span class="sort-icons" data-sort="timeEdit"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>
+        </tr>
+        <tr class="bg-[#EBEBE9]">
+          <th class="px-1 py-1"></th>
+          <th class="px-1 py-1"></th>
+          <th class="px-1 py-1 search-cell"><input data-field="name" class="col-search-param border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="remark" class="col-search-param border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="value" class="col-search-param border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="statusText" class="col-search-param border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="userInput" class="col-search-param border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="timeInput" class="col-search-param border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="userEdit" class="col-search-param border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="timeEdit" class="col-search-param border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="table-loader"><div class="spinner"></div></div>
+    </div>
+    <div class="px-1 py-1 text-gray-600 text-xs relative flex items-center justify-center">
+      <div class="flex items-center gap-4">
+        <span>Show</span>
+        <select id="pageSizeParam" class="btn-flat px-2 py-1 rounded-md w-20">
+          <option>10</option>
+          <option>5</option>
+          <option>25</option>
+        </select>
+        <span>entries</span>
+        <div class="flex items-center gap-2" id="pagerParam">
+          <button class="page-btn btn-flat px-2 py-1 rounded-md" data-page="prev">Previous</button>
+          <div id="pageNumsParam" class="flex items-center gap-1"></div>
+          <button class="page-btn btn-flat px-2 py-1 rounded-md" data-page="next">Next</button>
+        </div>
+        <div id="infoParam" class="absolute right-2">Showing 0 to 0 of 0 entries</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalOverlay" class="dct-overlay dct-hidden">
+    <div id="modalContent" class="dct-modal">
+      <div class="dct-header">
+        <img id="modalIcon" src="@Url.Content("~/DCT3_Standarisasi/assets/icons/Confirmation.png")" alt="Icon" class="w-5 h-5" />
+        <div id="modalHeader" class="dct-title">Parameter</div>
+        <button id="modalClose" class="btn-flat px-2 py-1 rounded-md">
+          <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/XNB.png")" alt="Close" class="w-4 h-4" />
+        </button>
+      </div>
+      <div id="modalBody" class="dct-body"></div>
+      <div class="dct-actions">
+        <button id="modalCancel" class="btn-flat inline-flex items-center gap-2 px-2 py-1 rounded-md">
+          <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/XNB.png")" class="w-4 h-4" />
+          <span>Batal</span>
+        </button>
+        <button id="modalSave" class="btn-flat inline-flex items-center gap-2 px-2 py-1 rounded-md">
+          <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/Success.png")" class="w-4 h-4" />
+          <span>Simpan</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .table-scroll{ position:relative; }
+    .table-loader{ position:absolute; inset:0; display:none; background:rgba(255,255,255,0.65); align-items:center; justify-content:center; z-index:10; }
+    .table-scroll.loading .table-loader{ display:flex; }
+    .spinner{ width:28px; height:28px; border:3px solid #d1d5db; border-top-color:#1E90FF; border-radius:50%; animation:spin .9s linear infinite; }
+    @@keyframes spin{ to{ transform:rotate(360deg); } }
+    .th-inner{ display:flex; align-items:center; gap:6px; }
+    .sort-icons{ display:inline-flex; align-items:center; gap:3px; }
+    .sort-icons .asc,.sort-icons .desc{ opacity:.2; cursor:pointer; }
+    .sort-icons .asc.active,.sort-icons .desc.active{ opacity:1; }
+    .cell{ font-size:12px; }
+    .select-cell{ text-align:center; width:40px; }
+    .select-square{ width:14px; height:14px; border:1px solid #9CA3AF; border-radius:2px; display:inline-block; }
+    .select-square.selected{ background-color:#1E90FF; border-color:#1E90FF; }
+    .row-icon{ width:16px; height:16px; }
+    #modalContent .dct-actions{ justify-content:flex-end; }
+    #modalOverlay .dct-btn{ display:inline-flex; align-items:center; gap:8px; white-space:nowrap; }
+    #modalOverlay .dct-btn img{ width:18px; height:18px; display:inline-block; }
+    .modal-form{ display:grid; grid-template-columns:160px 1fr; gap:8px 12px; }
+    .modal-label{ font-size:14px; align-self:center; }
+    .modal-field textarea{ min-height:160px; }
+  </style>
+
+  <script>
+    (function(){
+      function boot(){
+        var raw=[];
+        var search={};
+        var sort={field:null,dir:1};
+        var currentPage=1;
+        var pageSizeSel=document.getElementById('pageSizeParam');
+        var pageNums=document.getElementById('pageNumsParam');
+        var info=document.getElementById('infoParam');
+        var tblBody=document.querySelector('#tblParameters tbody');
+
+        function fmt(d){ var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; var dd=('0'+d.getDate()).slice(-2); var mm=months[d.getMonth()]; var yy=d.getFullYear(); var hh=('0'+d.getHours()).slice(-2); var mi=('0'+d.getMinutes()).slice(-2); return dd+' '+mm+' '+yy+' '+hh+':'+mi; }
+        function renderPages(totalPages){ pageNums.innerHTML=''; var mk=function(n,a){ var b=document.createElement('button'); b.className='page-btn btn-flat px-2 py-1 rounded-md'+(a?' bg-white':''); b.textContent=n; b.dataset.page=n; pageNums.appendChild(b); }; if(totalPages<=5){ for(var i=1;i<=totalPages;i++) mk(i, i===currentPage); return; } mk(1,currentPage===1); mk(2,currentPage===2); mk(3,currentPage===3); var ell=document.createElement('span'); ell.textContent='...'; ell.className='text-gray-500 px-1'; pageNums.appendChild(ell); mk(totalPages,currentPage===totalPages); }
+        function updateSortUI(){ document.querySelectorAll('#tblParameters .sort-icons').forEach(function(si){ var asc=si.querySelector('.asc'); var desc=si.querySelector('.desc'); var f=si.getAttribute('data-sort'); asc.classList.remove('active'); desc.classList.remove('active'); if(sort.field===f){ if(sort.dir===1) asc.classList.add('active'); else desc.classList.add('active'); } }); }
+        function apply(){ var rows = raw.filter(function(x){ var ok=true; Object.keys(search).forEach(function(k){ var v=(search[k]||'').toLowerCase(); if(v){ var xv=(''+x[k]).toLowerCase(); if(k==='timeInput'||k==='timeEdit'){ xv=fmt(new Date(x[k])).toLowerCase(); } if(xv.indexOf(v)===-1) ok=false; } }); return ok; }); if(sort.field){ rows.sort(function(a,b){ var av=a[sort.field]; var bv=b[sort.field]; if(sort.field==='timeInput'||sort.field==='timeEdit'){ av=new Date(av).getTime(); bv=new Date(bv).getTime(); } if(av<bv) return -1*sort.dir; if(av>bv) return 1*sort.dir; return 0; }); } var pageSize=parseInt(pageSizeSel.value,10)||10; var total=rows.length; var totalPages=Math.max(1, Math.ceil(total/pageSize)); if(currentPage>totalPages) currentPage=totalPages; var start=(currentPage-1)*pageSize; var pageRows=rows.slice(start, start+pageSize); tblBody.innerHTML=''; pageRows.forEach(function(r){ var tr=document.createElement('tr'); tr.innerHTML='<td class="px-3 py-1 cell select-cell"><div class="select-square"></div></td>'+'<td class="px-1 py-1 cell">'+r.num+'</td>'+'<td class="px-1 py-1 cell">'+r.name+'</td>'+'<td class="px-1 py-1 cell">'+(r.remark||'')+'</td>'+'<td class="px-1 py-1 cell">'+(r.value||'')+'</td>'+'<td class="px-1 py-1 cell">'+(r.statusText||'')+'</td>'+'<td class="px-1 py-1 cell">'+(r.userInput||'')+'</td>'+'<td class="px-1 py-1 cell">'+fmt(new Date(r.timeInput))+'</td>'+'<td class="px-1 py-1 cell">'+(r.userEdit||'')+'</td>'+'<td class="px-1 py-1 cell">'+(r.timeEdit?fmt(new Date(r.timeEdit)):'')+'</td>'; tr.setAttribute('data-name', r.name); tblBody.appendChild(tr); }); info.textContent='Showing '+(start+1)+' to '+Math.min(start+pageSize,total)+' of '+total+' entries'; renderPages(totalPages); updateSortUI(); attachRowEvents(); }
+
+        function attachRowEvents(){ document.querySelectorAll('#tblParameters tbody .select-square').forEach(function(el){ el.addEventListener('click', function(){ var tr = el.closest('tr'); var makeSelected = !el.classList.contains('selected'); document.querySelectorAll('#tblParameters tbody .select-square').forEach(function(sq){ sq.classList.remove('selected'); sq.closest('tr').removeAttribute('data-selected'); sq.closest('tr').classList.remove('bg-gray-100'); }); el.classList.toggle('selected', makeSelected); if(makeSelected){ tr.setAttribute('data-selected','1'); tr.classList.add('bg-gray-100'); } }); }); }
+
+        function fetchParams(){ var sc=document.querySelector('#tblParameters')?document.querySelector('#tblParameters').closest('.table-scroll'):null; if(sc) sc.classList.add('loading'); var url='@Url.Content("~/Parameters/List")'; return fetch(url,{ method:'GET', credentials:'same-origin' }).then(function(r){ return r.json(); }).then(function(rows){ raw=(rows||[]).map(function(x,i){ return { num:i+1, name:x.name, remark:x.remark, value:x.value, statusText:x.statusText, userInput:x.userInput, timeInput:x.timeInput, userEdit:x.userEdit, timeEdit:x.timeEdit }; }); currentPage=1; apply(); }).finally(function(){ if(sc) sc.classList.remove('loading'); }); }
+
+        var page = document.getElementById('parametersPage');
+        document.getElementById('pagerParam').addEventListener('click', function(e){ var t=e.target.closest('.page-btn'); if(!t) return; var p=t.getAttribute('data-page'); if(p==='prev'){ currentPage=Math.max(1,currentPage-1); } else if(p==='next'){ currentPage=currentPage+1; } else { currentPage=parseInt(p,10)||1; } apply(); });
+        document.querySelectorAll('#tblParameters .sort-icons .asc').forEach(function(el){ el.addEventListener('click', function(){ var f=el.parentElement.getAttribute('data-sort'); sort.field=f; sort.dir=1; apply(); }); });
+        document.querySelectorAll('#tblParameters .sort-icons .desc').forEach(function(el){ el.addEventListener('click', function(){ var f=el.parentElement.getAttribute('data-sort'); sort.field=f; sort.dir=-1; apply(); }); });
+        document.querySelectorAll('.col-search-param').forEach(function(el){ el.addEventListener('input', function(){ search[el.dataset.field]=el.value; currentPage=1; apply(); }); });
+        pageSizeSel.addEventListener('change', function(){ currentPage=1; apply(); });
+
+        var modalOverlay=document.getElementById('modalOverlay');
+        var modalHeader=document.getElementById('modalHeader');
+        var modalBody=document.getElementById('modalBody');
+        var modalCancel=document.getElementById('modalCancel');
+        var modalSave=document.getElementById('modalSave');
+        var modalIcon=document.getElementById('modalIcon');
+        var modalClose=document.getElementById('modalClose');
+        function openModal(title, bodyHtml, onSave){ modalHeader.textContent=title||''; modalBody.innerHTML=bodyHtml||''; if(modalIcon){ var t=(title||'').toLowerCase(); var icon='@Url.Content("~/DCT3_Standarisasi/assets/icons/Confirmation.png")'; if(t.indexOf('tambah')>-1||t.indexOf('add')>-1) icon='@Url.Content("~/DCT3_Standarisasi/assets/icons/AddNB.svg")'; if(t.indexOf('edit')>-1) icon='@Url.Content("~/DCT3_Standarisasi/assets/icons/EditNB.png")'; modalIcon.src=icon; } if(modalOverlay){ modalOverlay.classList.remove('dct-hidden'); modalOverlay.style.display='flex'; } var close=function(){ if(modalOverlay){ modalOverlay.style.display='none'; modalOverlay.classList.add('dct-hidden'); } }; if(modalClose) modalClose.onclick=close; if(modalCancel){ modalCancel.onclick=close; } if(modalSave){ modalSave.onclick=function(){ if(typeof onSave==='function'){ var r=onSave(); if(r && typeof r.then==='function'){ r.then(close).catch(close); } else { close(); } } else { close(); } }; } }
+
+        function formHtml(isAdd, row){ var ro=isAdd?'':'readonly'; var nameVal=isAdd?'':(row&&row.name)||''; var remarkVal=(row&&row.remark)||''; var valueVal=(row&&row.value)||''; var statusVal=((row&&row.statusText)==='Yes'?1:0); return '<div class="modal-form">'+'<div class="modal-label">Name:</div>'+'<div class="modal-field"><input id="prmName" class="dct-input w-full" '+ro+' value="'+nameVal+'" /></div>'+'<div class="modal-label">Remark:</div>'+'<div class="modal-field"><input id="prmRemark" class="dct-input w-full" value="'+remarkVal+'" /></div>'+'<div class="modal-label">Value:</div>'+'<div class="modal-field"><textarea id="prmValue" class="dct-input w-full">'+valueVal+'</textarea></div>'+'<div class="modal-label">Status:</div>'+'<div class="modal-field"><select id="prmStatus" class="dct-input w-full"><option value="1">Yes</option><option value="0">No</option></select></div>'+'</div>'; }
+
+        function postJson(path, data){ return fetch(path,{ method:'POST', headers:{ 'Content-Type':'application/json' }, credentials:'same-origin', body: JSON.stringify(data) }); }
+
+        
+
+        fetchParams();
+      }
+      if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
+    })();
+  </script>
+</div>

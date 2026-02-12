@@ -1,0 +1,552 @@
+@{
+    ViewData["Title"] = "Master Penilaian";
+    Layout = "_DashboardLayout";
+}
+<div class="px-0 py-0 text-[#111827]" id="scoresPage">
+  <h1 class="text-3xl font-semibold text-[#1E90FF]">Master Penilaian</h1>
+
+  
+
+  <div class="mt-4 bg-[#EBEBE9] border border-gray-300 rounded-xl pl-3 pr-3 py-3 w-full max-w-[32rem]">
+    <div class="flex items-center gap-3 mb-2">
+      <span class="text-sm text-gray-700 w-28">Tanggal Input:</span>
+      <div class="flex items-center gap-2 w-80 justify-between">
+        <span class="w-3 h-3 rounded-sm bg-[#1E90FF]"></span>
+        <input id="scStart" type="date" class="border border-gray-300 rounded-md px-2 py-1 w-40" />
+        <span class="text-gray-700">To</span>
+        <input id="scEnd" type="date" class="border border-gray-300 rounded-md px-2 py-1 w-40" />
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="btnScRefresh" class="btn-flat inline-flex items-center gap-2 px-2 py-1 rounded-md h-7">
+        <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/RefreshNB.svg")" alt="Refresh" class="w-4 h-4" />
+        <span>Refresh</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="flex items-center mt-3">
+    <button id="tabPersonal" class="tab-btn tab-personal px-4 py-2 rounded-md font-semibold">Data Pribadi</button>
+    <button id="tabExperience" class="tab-btn tab-experience px-4 py-2 rounded-md font-semibold">Pengalaman</button>
+    <button id="tabPersonality" class="tab-btn tab-personality px-4 py-2 rounded-md font-semibold">Kepribadian</button>
+  </div>
+
+  <div id="titleScores" class="mt-1 bg-[#EBEBE9] border border-gray-300 rounded-t-xl px-3 py-1 font-semibold">Data Pribadi</div>
+  <div id="gridScores" class="border border-gray-300 border-t-0 rounded-b-xl">
+    <div class="table-scroll overflow-x-auto overflow-y-auto max-h-[60vh]">
+      <table id="tblScores" class="min-w-full text-sm">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
+      <div class="table-loader"><div class="spinner"></div></div>
+    </div>
+    <div class="px-1 py-1 text-gray-600 text-xs relative flex items-center justify-center">
+      <div class="flex items-center gap-2 absolute left-2 top-1/2 -translate-y-1/2">
+        <span>Aksi:</span>
+        <button id="btnScAdd2" class="btn-flat inline-flex items-center gap-2 px-2 py-1 rounded-md h-7">
+          <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/AddNB.svg")" alt="Add" class="w-4 h-4" />
+          <span>Add</span>
+        </button>
+        <button id="btnScEdit2" class="btn-flat inline-flex items-center gap-2 px-2 py-1 rounded-md h-7">
+          <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/EditNB.png")" alt="Edit" class="w-4 h-4" />
+          <span>Edit</span>
+        </button>
+        <button id="btnScDelete2" class="btn-flat inline-flex items-center gap-2 px-2 py-1 rounded-md h-7">
+          <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/XNB.png")" alt="Delete" class="w-4 h-4" />
+          <span>Delete</span>
+        </button>
+      </div>
+      <div class="flex items-center gap-4">
+        <span>Show</span>
+        <select id="scPageSize" class="btn-flat px-2 py-1 rounded-md w-20">
+          <option>10</option>
+          <option>5</option>
+          <option>25</option>
+        </select>
+        <span>entries</span>
+        <div class="flex items-center gap-2" id="scPager">
+          <button class="page-btn btn-flat px-2 py-1 rounded-md" data-page="prev">Previous</button>
+          <span id="scPageNums" class="inline-flex items-center gap-1"></span>
+          <button class="page-btn btn-flat px-2 py-1 rounded-md" data-page="next">Next</button>
+        </div>
+        <span id="scInfo" class="ml-2"></span>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalOverlay" class="dct-overlay dct-hidden">
+    <div id="modalContent" class="dct-modal">
+      <button id="modalClose" type="button" class="dct-close" title="Close">
+        <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/CloseNotification.png")" alt="Close" />
+      </button>
+      <div class="dct-header">
+        <img id="modalIcon" src="@Url.Content("~/DCT3_Standarisasi/assets/icons/Confirmation.png")" alt="Modal" />
+        <div id="modalHeader" class="dct-title"></div>
+      </div>
+      <div id="modalBody" class="dct-body"></div>
+      <div class="dct-actions">
+        <button id="modalCancel" class="dct-btn" type="button"></button>
+        <button id="modalSave" class="dct-btn dct-btn-primary" type="button"></button>
+      </div>
+    </div>
+  </div>
+  <style>
+  .row-icon{ width:24px; height:auto; }
+  .cell{ border-top:1px solid #e5e7eb; }
+  .cell:last-child{ border-right:1px solid #c3c5c9ff; }
+  #tblScores thead th:last-child{ border-right:1px solid #c3c5c9ff; }
+  #tblScores tbody tr:last-child td.cell{ border-bottom:1px solid #c3c5c9ff; }
+  #tblScores thead th{ border-bottom:1px solid #e5e7eb; font-weight:600; color:#374151; position:relative; }
+  .th-inner{ display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%; }
+  .sort-icons{ font-size:14px; display:inline-flex; white-space:nowrap; }
+  .sort-icons .asc, .sort-icons .desc{ margin:0; padding:0; color:#9CA3AF; cursor:pointer; }
+  .sort-icons .asc.active, .sort-icons .desc.active{ color:#111827; }
+  .btn-flat{ background:#FFFFFF; border:1px solid #d1d5db; color:#111827; transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease, transform .05s ease; }
+  .btn-flat:hover{ background:#F9FAFB; border-color:#cbd5e1; box-shadow:0 1px 2px rgba(0,0,0,0.06); }
+  .btn-flat:active{ background:#f3f4f6; border-color:#bfc7d8; box-shadow: inset 0 1px 2px rgba(0,0,0,0.12); transform: translateY(1px); }
+  .btn-flat:focus-visible{ outline:2px solid #1E90FF; outline-offset:2px; }
+  .select-square{ display:inline-block; width:18px; height:18px; border:1px solid #d1d5db; border-radius:4px; background:#fff; cursor:pointer; }
+  .select-square.selected{ background:#1E90FF; border-color:#1E90FF; }
+  .search-cell input{ display:block; width:100%; }
+  .tab-btn{ border:1px solid #111827; color:#fff; }
+  .tab-personal{ background:#1E90FF; }
+  .tab-experience{ background:#F4A026; }
+  .tab-personality{ background:#6FCF97; }
+  .tab-btn:hover{ filter: brightness(1.05); }
+  .tab-btn:active{ filter: brightness(0.97); }
+  .date-formatted{ position:relative; padding-right:2.25rem; }
+  .date-formatted::before{ content: attr(data-display); position:absolute; left:.5rem; right:2.25rem; top:50%; transform:translateY(-50%); color:#111827; pointer-events:none; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .date-formatted::-webkit-datetime-edit{ color:transparent; }
+  .date-formatted::-webkit-calendar-picker-indicator{ opacity:1; position:absolute; right:.5rem; top:50%; transform:translateY(-50%); margin:0; padding:0; cursor:pointer; }
+  .table-scroll{ position:relative; }
+  .table-loader{ position:absolute; inset:0; display:none; background:rgba(255,255,255,0.65); align-items:center; justify-content:center; z-index:10; }
+  .table-scroll.loading .table-loader{ display:flex; }
+  .spinner{ width:28px; height:28px; border:3px solid #d1d5db; border-top-color:#1E90FF; border-radius:50%; animation:spin .9s linear infinite; }
+  @@keyframes spin{ to{ transform:rotate(360deg); } }
+  #modalContent .dct-actions{ justify-content:flex-end; }
+  #modalContent.dct-modal{ width:auto; min-width:480px; max-width:95vw; display:inline-block; }
+  .modal-form{ display:grid; grid-template-columns:160px 1fr; gap:8px 12px; }
+  .modal-label{ font-size:14px; align-self:center; }
+  .modal-field textarea{ min-height:120px; }
+  #modalOverlay .dct-btn{ display:inline-flex; align-items:center; gap:8px; white-space:nowrap; }
+  #modalOverlay .dct-btn img{ width:18px; height:18px; display:inline-block; }
+  </style>
+
+  <script>
+    (function(){
+      function boot(){
+        var currentKind = 'personal';
+        var raw = [];
+        var sort = { field:null, dir:1 };
+        var search = {};
+        var currentPage = 1;
+
+        var ddStart = document.getElementById('scStart');
+        var ddEnd = document.getElementById('scEnd');
+        var btnRefresh = document.getElementById('btnScRefresh');
+        var btnAdd2 = document.getElementById('btnScAdd2');
+        var btnEdit2 = document.getElementById('btnScEdit2');
+        var btnDelete2 = document.getElementById('btnScDelete2');
+        var tblBody = document.querySelector('#tblScores tbody');
+        var tblHead = document.querySelector('#tblScores thead');
+        var pageSizeSel = document.getElementById('scPageSize');
+        var pageNums = document.getElementById('scPageNums');
+        var info = document.getElementById('scInfo');
+        var selectAll = null;
+        var titleScores = document.getElementById('titleScores');
+
+        function fmt(d){ var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; var dd=('0'+d.getDate()).slice(-2); var mm=months[d.getMonth()]; var yy=d.getFullYear(); var hh=('0'+d.getHours()).slice(-2); var mi=('0'+d.getMinutes()).slice(-2); return dd+' '+mm+' '+yy+' '+hh+':'+mi; }
+        function fmtDateOnly(d){ var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; var dd=('0'+d.getDate()).slice(-2); var mm=months[d.getMonth()]; var yy=d.getFullYear(); return dd+' '+mm+' '+yy; }
+        function enhanceDateInput(input){ var iso=input.value; input.classList.add('date-formatted'); var d = iso ? new Date(iso) : null; input.dataset.display = d ? fmtDateOnly(d) : ''; input.addEventListener('change', function(){ var iso2 = input.value; var d2 = iso2 ? new Date(iso2) : null; input.dataset.display = d2 ? fmtDateOnly(d2) : ''; }); }
+        function within(d, s, e){ if(!s||!e) return true; var ds=new Date(s+'T00:00:00'); var de=new Date(e+'T23:59:59'); return d>=ds && d<=de; }
+        function renderPages(totalPages){ pageNums.innerHTML=''; var mk=function(n,a){ var b=document.createElement('button'); b.className='page-btn btn-flat px-2 py-1 rounded-md'+(a?' bg-white':''); b.textContent=n; b.dataset.page=n; pageNums.appendChild(b); }; if(totalPages<=5){ for(var i=1;i<=totalPages;i++) mk(i, i===currentPage); return; } mk(1,currentPage===1); mk(2,currentPage===2); mk(3,currentPage===3); var ell=document.createElement('span'); ell.textContent='...'; ell.className='text-gray-500 px-1'; pageNums.appendChild(ell); mk(totalPages,currentPage===totalPages); }
+
+        function isPersonality(){ return (currentKind||'').toLowerCase()==='personality'; }
+
+        function headerHtml(){
+          if(isPersonality()){
+            return '<tr class="bg-[#EBEBE9]">'+
+              '<th class="px-3 py-1 w-16 text-left"><div id="selectAllScores" class="select-square" title="Pilih semua"></div></th>'+
+              '<th class="px-1 py-1 w-16 text-left"><div class="th-inner"><span>Num</span><span class="sort-icons" data-sort="num"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>'+
+              '<th class="px-1 py-1 text-left"><div class="th-inner"><span>Aspek</span><span class="sort-icons" data-sort="aspek"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>'+
+              '<th class="px-1 py-1 text-left"><div class="th-inner"><span>Uraian</span><span class="sort-icons" data-sort="uraian"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>'+
+              '<th class="px-1 py-1 text-left"><div class="th-inner"><span>User Input</span><span class="sort-icons" data-sort="userInput"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>'+
+              '<th class="px-3 py-1 text-left"><div class="th-inner"><span>Time Input</span><span class="sort-icons" data-sort="timeInput"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>'+
+            '</tr>'+
+            '<tr class="bg-[#EBEBE9]">'+
+              '<th class="px-1 py-1"></th>'+
+              '<th class="px-1 py-1"></th>'+
+              '<th class="px-1 py-1 search-cell"><input class="col-search-scores border border-gray-300 rounded-md px-2 py-1 w-full" data-field="aspek" placeholder="Search aspek" /></th>'+
+              '<th class="px-1 py-1 search-cell"><input class="col-search-scores border border-gray-300 rounded-md px-2 py-1 w-full" data-field="uraian" placeholder="Search uraian" /></th>'+
+              '<th class="px-1 py-1 search-cell"><input class="col-search-scores border border-gray-300 rounded-md px-2 py-1 w-full" data-field="userInput" placeholder="Search user" /></th>'+
+              '<th class="px-1 py-1 search-cell"><input class="col-search-scores border border-gray-300 rounded-md px-2 py-1 w-full" data-field="timeInput" placeholder="Search time" /></th>'+
+            '</tr>';
+          }
+
+          return '<tr class="bg-[#EBEBE9]">'+
+            '<th class="px-3 py-1 w-16 text-left"><div id="selectAllScores" class="select-square" title="Pilih semua"></div></th>'+
+            '<th class="px-1 py-1 w-16 text-left"><div class="th-inner"><span>Num</span><span class="sort-icons" data-sort="num"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>'+
+            '<th class="px-1 py-1 text-left"><div class="th-inner"><span>Pertanyaan</span><span class="sort-icons" data-sort="question"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>'+
+            '<th class="px-1 py-1 text-left"><div class="th-inner"><span>User Input</span><span class="sort-icons" data-sort="userInput"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>'+
+            '<th class="px-3 py-1 text-left"><div class="th-inner"><span>Time Input</span><span class="sort-icons" data-sort="timeInput"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>'+
+          '</tr>'+
+          '<tr class="bg-[#EBEBE9]">'+
+            '<th class="px-1 py-1"></th>'+
+            '<th class="px-1 py-1"></th>'+
+            '<th class="px-1 py-1 search-cell"><input class="col-search-scores border border-gray-300 rounded-md px-2 py-1 w-full" data-field="question" placeholder="Search pertanyaan" /></th>'+
+            '<th class="px-1 py-1 search-cell"><input class="col-search-scores border border-gray-300 rounded-md px-2 py-1 w-full" data-field="userInput" placeholder="Search user" /></th>'+
+            '<th class="px-1 py-1 search-cell"><input class="col-search-scores border border-gray-300 rounded-md px-2 py-1 w-full" data-field="timeInput" placeholder="Search time" /></th>'+
+          '</tr>';
+        }
+
+        function renderHeader(){
+          if(!tblHead) return;
+          tblHead.innerHTML = headerHtml();
+          selectAll = null;
+          bindHeaderEvents();
+        }
+
+        function bindHeaderEvents(){
+          document.querySelectorAll('.col-search-scores').forEach(function(el){
+            el.addEventListener('input', function(){
+              search[el.dataset.field] = el.value;
+              currentPage = 1;
+              apply();
+            });
+          });
+          document.querySelectorAll('#tblScores .sort-icons .asc').forEach(function(el){
+            el.addEventListener('click', function(){
+              var f = el.parentElement.getAttribute('data-sort');
+              sort.field = f;
+              sort.dir = 1;
+              apply();
+            });
+          });
+          document.querySelectorAll('#tblScores .sort-icons .desc').forEach(function(el){
+            el.addEventListener('click', function(){
+              var f = el.parentElement.getAttribute('data-sort');
+              sort.field = f;
+              sort.dir = -1;
+              apply();
+            });
+          });
+        }
+
+        function apply(){
+          var s=ddStart.value; var e=ddEnd.value;
+          var rows = raw.filter(function(x){
+            var okDate=!s||!e||within(new Date(x.timeInput), s, e);
+            var okSearch=true;
+            Object.keys(search).forEach(function(k){
+              var v=(search[k]||'').toLowerCase();
+              if(v){
+                var xv=(''+(x[k]||'')).toLowerCase();
+                if(k==='timeInput'){ xv=fmt(new Date(x[k])).toLowerCase(); }
+                if(xv.indexOf(v)===-1) okSearch=false;
+              }
+            });
+            return okDate && okSearch;
+          });
+          if(sort.field){
+            rows.sort(function(a,b){
+              var av=a[sort.field]; var bv=b[sort.field];
+              if(sort.field==='timeInput'){ av=new Date(a[sort.field]).getTime(); bv=new Date(b[sort.field]).getTime(); }
+              if(av<bv) return -1*sort.dir;
+              if(av>bv) return 1*sort.dir;
+              return 0;
+            });
+          }
+          var pageSize=parseInt(pageSizeSel.value,10)||10;
+          var total=rows.length;
+          var totalPages=Math.max(1, Math.ceil(total/pageSize));
+          if(currentPage>totalPages) currentPage=totalPages;
+          var start=(currentPage-1)*pageSize;
+          var pageRows=rows.slice(start, start+pageSize);
+          tblBody.innerHTML='';
+          pageRows.forEach(function(r){
+            var tr=document.createElement('tr');
+            if(isPersonality()){
+              tr.innerHTML='<td class="px-3 py-1 cell select-cell"><div class="select-square"></div></td>'+
+                '<td class="px-1 py-1 cell">'+r.num+'</td>'+
+                '<td class="px-1 py-1 cell">'+(r.aspek||'')+'</td>'+
+                '<td class="px-1 py-1 cell">'+(r.uraian||'')+'</td>'+
+                '<td class="px-1 py-1 cell">'+(r.userInput||'')+'</td>'+
+                '<td class="px-1 py-1 cell">'+fmt(new Date(r.timeInput))+'</td>';
+            } else {
+              tr.innerHTML='<td class="px-3 py-1 cell select-cell"><div class="select-square"></div></td>'+
+                '<td class="px-1 py-1 cell">'+r.num+'</td>'+
+                '<td class="px-1 py-1 cell">'+(r.question||'')+'</td>'+
+                '<td class="px-1 py-1 cell">'+(r.userInput||'')+'</td>'+
+                '<td class="px-1 py-1 cell">'+fmt(new Date(r.timeInput))+'</td>';
+            }
+            tr.setAttribute('data-id', r.id);
+            tblBody.appendChild(tr);
+          });
+          info.textContent='Showing '+(start+1)+' to '+Math.min(start+pageSize,total)+' of '+total+' entries';
+          renderPages(totalPages);
+          updateSortUI();
+          attachRowEvents();
+        }
+
+        function updateSortUI(){ document.querySelectorAll('#tblScores .sort-icons').forEach(function(si){ var asc=si.querySelector('.asc'); var desc=si.querySelector('.desc'); var f=si.getAttribute('data-sort'); asc.classList.remove('active'); desc.classList.remove('active'); if(sort.field===f){ if(sort.dir===1) asc.classList.add('active'); else desc.classList.add('active'); } }); }
+
+        var modalOverlay = document.getElementById('modalOverlay');
+        var modalHeader = document.getElementById('modalHeader');
+        var modalBody = document.getElementById('modalBody');
+        var modalCancel = document.getElementById('modalCancel');
+        var modalSave = document.getElementById('modalSave');
+        var modalIcon = document.getElementById('modalIcon');
+        var modalClose = document.getElementById('modalClose');
+function openModal(title, bodyHtml, onSave){
+  modalHeader.textContent = title||'';
+  modalBody.innerHTML = bodyHtml||'';
+
+  if (modalIcon) {
+    var t=(title||'').toLowerCase();
+    var icon='@Url.Content("~/DCT3_Standarisasi/assets/icons/Confirmation.png")';
+    if(t.indexOf('tambah')>-1 || t.indexOf('add')>-1)
+      icon='@Url.Content("~/DCT3_Standarisasi/assets/icons/AddNB.svg")';
+    if(t.indexOf('edit')>-1)
+      icon='@Url.Content("~/DCT3_Standarisasi/assets/icons/EditNB.png")';
+    modalIcon.src=icon;
+  }
+
+  if(modalOverlay){
+    modalOverlay.classList.remove('dct-hidden');
+    modalOverlay.style.display='flex';
+  }
+
+  var close=function(){
+    if(modalOverlay){
+      modalOverlay.style.display='none';
+      modalOverlay.classList.add('dct-hidden');
+    }
+  };
+
+  if(modalClose) modalClose.onclick=close;
+
+  if(modalCancel){
+    modalCancel.innerHTML='<img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/XNB.png")" class="w-4 h-4" /> <span>Batal</span>';
+    modalCancel.onclick=close;
+  }
+
+  if(modalSave){
+    modalSave.innerHTML='<img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/Success.png")" class="w-4 h-4" /> <span>Simpan</span>';
+    modalSave.onclick=function(){
+      if(typeof onSave==='function'){
+        var r=onSave();
+        if(r && typeof r.then==='function'){
+          r.then(close).catch(close);
+        } else {
+          close();
+        }
+      } else {
+        close();
+      }
+    };
+  }
+}
+
+function hideModal(){
+  if(modalOverlay){
+    modalOverlay.style.display='none';
+    modalOverlay.classList.add('dct-hidden');
+  }
+}
+
+        function formHtml(){
+          if(isPersonality()){
+            return '<div class="modal-form">'+
+              '<div class="modal-label">Aspek:</div>'+
+              '<div class="modal-field"><input id="scAspek" class="dct-input w-full" placeholder="Masukkan aspek" /></div>'+
+              '<div class="modal-label">Uraian:</div>'+
+              '<div class="modal-field"><textarea id="scUraian" class="dct-input w-full" placeholder="Masukkan uraian"></textarea></div>'+
+            '</div>';
+          }
+          return '<div class="modal-form">'+
+            '<div class="modal-label">Pertanyaan:</div>'+
+            '<div class="modal-field"><textarea id="scQuestion" class="dct-input w-full" placeholder="Masukkan pertanyaan"></textarea></div>'+
+          '</div>';
+        }
+
+        function fetchData(){
+          var sc=document.querySelector('#gridScores .table-scroll');
+          if(sc) sc.classList.add('loading');
+          var s=ddStart.value; var e=ddEnd.value;
+          var url='@Url.Content("~/Scores/List")'+'?kind='+currentKind+'&start='+(s||'')+'&endd='+(e||'');
+          return fetch(url,{ method:'GET', credentials:'same-origin' })
+            .then(function(r){ return r.json(); })
+            .then(function(j){
+              raw=(j||[]).map(function(x,i){
+                return {
+                  num:i+1,
+                  id:x.id,
+                  question:x.question,
+                  aspek:x.aspek,
+                  uraian:x.uraian,
+                  userInput:x.userInput,
+                  timeInput:x.timeInput
+                };
+              });
+              currentPage=1;
+              apply();
+            })
+            .finally(function(){ if(sc) sc.classList.remove('loading'); });
+        }
+
+        function postJson(path, data){ return fetch(path,{ method:'POST', headers:{ 'Content-Type':'application/json' }, credentials:'same-origin', body: JSON.stringify(data) }); }
+
+        function onAdd(){
+          var title = currentKind==='personal'?'Data Pribadi': (currentKind==='experience'?'Pengalaman':'Kepribadian');
+          openModal('Tambah '+title, formHtml(), function(){
+            if(isPersonality()){
+              var a=(document.getElementById('scAspek').value||'').trim();
+              var r=(document.getElementById('scUraian').value||'').trim();
+              if(!a || !r){
+                if(window.DCT3Modals){ DCT3Modals.open('information',{ message:'Aspek dan Uraian tidak boleh kosong' }); }
+                return Promise.resolve();
+              }
+              return postJson('@Url.Content("~/Scores/Add")',{ Kind: currentKind, Id: null, Question: r, Aspek: a, Uraian: r, User: '@User.Identity?.Name' })
+                .then(function(){ if(window.DCT3Modals){ DCT3Modals.open('success',{ message:'Data berhasil ditambah' }); } return fetchData(); })
+                .catch(function(){ if(window.DCT3Modals){ DCT3Modals.open('failed',{ message:'Gagal menambah data' }); } });
+            }
+            var q=(document.getElementById('scQuestion').value||'').trim();
+            if(!q){
+              if(window.DCT3Modals){ DCT3Modals.open('information',{ message:'Pertanyaan tidak boleh kosong' }); }
+              return Promise.resolve();
+            }
+            return postJson('@Url.Content("~/Scores/Add")',{ Kind: currentKind, Id: null, Question: q, Aspek: '', Uraian: '', User: '@User.Identity?.Name' })
+              .then(function(){ if(window.DCT3Modals){ DCT3Modals.open('success',{ message:'Data berhasil ditambah' }); } return fetchData(); })
+              .catch(function(){ if(window.DCT3Modals){ DCT3Modals.open('failed',{ message:'Gagal menambah data' }); } });
+          });
+        }
+
+        function onEdit(){
+          var sel=document.querySelector('#tblScores tbody tr[data-selected="1"]');
+          if(!sel){ if(window.DCT3Modals){ DCT3Modals.open('information',{ message:'Pilih satu baris untuk edit' }); } return; }
+          var id=sel.getAttribute('data-id');
+          var idx=raw.findIndex(function(x){ return (''+x.id)===(''+id); });
+          var o = idx>=0? raw[idx] : { question:'', aspek:'', uraian:'' };
+          var title = currentKind==='personal'?'Data Pribadi': (currentKind==='experience'?'Pengalaman':'Kepribadian');
+          openModal('Edit '+title, formHtml(), function(){
+            if(isPersonality()){
+              var a=(document.getElementById('scAspek').value||o.aspek||'').trim();
+              var r=(document.getElementById('scUraian').value||o.uraian||'').trim();
+              if(!a || !r){
+                if(window.DCT3Modals){ DCT3Modals.open('information',{ message:'Aspek dan Uraian tidak boleh kosong' }); }
+                return Promise.resolve();
+              }
+              return postJson('@Url.Content("~/Scores/Edit")',{ Kind: currentKind, Id: parseInt(id,10), Question: r, Aspek: a, Uraian: r, User: '@User.Identity?.Name' })
+                .then(function(){ if(window.DCT3Modals){ DCT3Modals.open('success',{ message:'Data berhasil diubah' }); } return fetchData(); })
+                .catch(function(){ if(window.DCT3Modals){ DCT3Modals.open('failed',{ message:'Gagal mengubah data' }); } });
+            }
+            var q=(document.getElementById('scQuestion').value||o.question||'').trim();
+            if(!q){
+              if(window.DCT3Modals){ DCT3Modals.open('information',{ message:'Pertanyaan tidak boleh kosong' }); }
+              return Promise.resolve();
+            }
+            return postJson('@Url.Content("~/Scores/Edit")',{ Kind: currentKind, Id: parseInt(id,10), Question: q, Aspek: '', Uraian: '', User: '@User.Identity?.Name' })
+              .then(function(){ if(window.DCT3Modals){ DCT3Modals.open('success',{ message:'Data berhasil diubah' }); } return fetchData(); })
+              .catch(function(){ if(window.DCT3Modals){ DCT3Modals.open('failed',{ message:'Gagal mengubah data' }); } });
+          });
+          setTimeout(function(){
+            if(isPersonality()){
+              var ia=document.getElementById('scAspek'); if(ia) ia.value=o.aspek||'';
+              var ir=document.getElementById('scUraian'); if(ir) ir.value=o.uraian||'';
+            } else {
+              var ta=document.getElementById('scQuestion'); if(ta) ta.value=o.question||'';
+            }
+          }, 50);
+        }
+function onDelete(){
+  var sel = document.querySelector('#tblScores tbody tr[data-selected="1"]');
+  if(!sel){
+    if(window.DCT3Modals){
+      DCT3Modals.open('information',{ message:'Pilih satu baris untuk hapus' });
+    }
+    return;
+  }
+
+  var id = sel.getAttribute('data-id');
+
+  if(window.DCT3Modals){
+    DCT3Modals.open('confirmation',{
+      message:'Hapus data?',
+      onYes:function(){
+        postJson('@Url.Content("~/Scores/Delete")',{
+          Kind: currentKind,
+          Id: parseInt(id,10),
+          Question: '',
+          Aspek: '',
+          Uraian: '',
+          User: '@User.Identity?.Name'
+        })
+        .then(function(){
+          fetchData();
+          DCT3Modals.open('success',{ message:'Data berhasil dihapus' });
+        })
+        .catch(function(){
+          DCT3Modals.open('failed',{ message:'Gagal menghapus data' });
+        });
+      }
+    });
+  } 
+  else {
+    if(!confirm('Hapus data?')) return;
+    postJson('@Url.Content("~/Scores/Delete")',{
+      Kind: currentKind,
+      Id: parseInt(id,10),
+      Question: '',
+      Aspek: '',
+      Uraian: '',
+      User: '@User.Identity?.Name'
+    })
+    .then(function(){
+      fetchData();
+    });
+  }
+}
+        function switchKind(kind, btn){
+          currentKind = kind;
+          setActiveTab(btn);
+          if(titleScores) titleScores.textContent = (kind==='personal'?'Data Pribadi': (kind==='experience'?'Pengalaman':'Kepribadian'));
+          search = {};
+          sort = { field:null, dir:1 };
+          currentPage = 1;
+          renderHeader();
+          fetchData();
+        }
+
+        document.getElementById('tabPersonal').addEventListener('click', function(){ switchKind('personal', this); });
+        document.getElementById('tabExperience').addEventListener('click', function(){ switchKind('experience', this); });
+        document.getElementById('tabPersonality').addEventListener('click', function(){ switchKind('personality', this); });
+        function setActiveTab(btn){ document.querySelectorAll('#scoresPage .tab-btn').forEach(function(b){ b.classList.remove('bg-white'); }); btn.classList.add('bg-white'); }
+
+        pageSizeSel.addEventListener('change', function(){ currentPage=1; apply(); });
+        document.getElementById('gridScores').addEventListener('click', function(e){ var t=e.target.closest('.page-btn'); if(!t) return; var p=t.getAttribute('data-page'); if(p==='prev'){ currentPage=Math.max(1,currentPage-1); } else if(p==='next'){ currentPage=currentPage+1; } else { currentPage=parseInt(p,10)||1; } apply(); });
+
+        var page = document.getElementById('scoresPage');
+        if(page){ page.addEventListener('click', function(e){ var b=e.target.closest('button'); if(!b) return; var id=b.id||''; if(id==='btnScAdd' || id==='btnScAdd2') onAdd(); else if(id==='btnScEdit' || id==='btnScEdit2') onEdit(); else if(id==='btnScDelete' || id==='btnScDelete2') onDelete(); else if(id==='btnScRefresh'){ document.querySelectorAll('.col-search-scores').forEach(function(el){ el.value=''; }); search={}; sort={field:null,dir:1}; currentPage=1; fetchData(); } }); }
+        if(btnRefresh){ btnRefresh.addEventListener('click', function(){ document.querySelectorAll('.col-search-scores').forEach(function(el){ el.value=''; }); search={}; sort={field:null,dir:1}; currentPage=1; fetchData(); }); }
+        if(btnAdd2){ btnAdd2.addEventListener('click', onAdd); }
+        if(btnEdit2){ btnEdit2.addEventListener('click', onEdit); }
+        if(btnDelete2){ btnDelete2.addEventListener('click', onDelete); }
+
+        function attachRowEvents(){
+          document.querySelectorAll('#tblScores tbody .select-square').forEach(function(el){ el.addEventListener('click', function(){ var tr = el.closest('tr'); var makeSelected = !el.classList.contains('selected'); document.querySelectorAll('#tblScores tbody .select-square').forEach(function(sq){ sq.classList.remove('selected'); sq.closest('tr').removeAttribute('data-selected'); sq.closest('tr').classList.remove('bg-gray-100'); }); el.classList.toggle('selected', makeSelected); if(makeSelected){ tr.setAttribute('data-selected','1'); tr.classList.add('bg-gray-100'); } }); });
+          if(!selectAll){ var sa=document.getElementById('selectAllScores'); if(sa){ selectAll=sa; sa.addEventListener('click', function(){ var all=document.querySelectorAll('#tblScores tbody .select-square'); var makeSelected=!sa.classList.contains('selected'); sa.classList.toggle('selected', makeSelected); all.forEach(function(sq){ sq.classList.toggle('selected', makeSelected); var tr=sq.closest('tr'); if(makeSelected){ tr.setAttribute('data-selected','1'); tr.classList.add('bg-gray-100'); } else { tr.removeAttribute('data-selected'); tr.classList.remove('bg-gray-100'); } }); }); } }
+        }
+
+        function initDates(){ var now=new Date(); var s=new Date(now.getFullYear(),0,1); var e=new Date(now.getFullYear(),11,31); var toISO=function(d){ return d.toISOString().slice(0,10); }; if(ddStart){ ddStart.value=toISO(s); try{ ddStart.valueAsDate=s; }catch(_){} enhanceDateInput(ddStart); } if(ddEnd){ ddEnd.value=toISO(e); try{ ddEnd.valueAsDate=e; }catch(_){} enhanceDateInput(ddEnd); } }
+        initDates();
+        renderHeader();
+        setActiveTab(document.getElementById('tabPersonal'));
+        fetchData();
+      }
+      if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
+    })();
+  </script>
+
+  
+
+</div>

@@ -1,0 +1,84 @@
+<link rel="stylesheet" href="@Url.Content("~/DCT3_Standarisasi/Layout/notifications.css")" />
+
+<div id="dct-information-overlay" class="dct-overlay" aria-hidden="true">
+  <div class="dct-modal" role="dialog" aria-labelledby="dct-information-title" aria-modal="true">
+    <button type="button" class="dct-close" title="Close">
+      <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/CloseNotification.png")" alt="Close" />
+    </button>
+    <div class="dct-header">
+      <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/Information.png")" alt="Information" />
+      <div id="dct-information-title" class="dct-title">Information</div>
+    </div>
+    <div id="dct-information-message" class="dct-body"></div>
+    <div class="dct-actions">
+      <button type="button" class="dct-btn dct-btn-primary" data-action="ok">OK</button>
+    </div>
+  </div>
+</div>
+
+<div id="dct-alert-overlay" class="dct-overlay" aria-hidden="true">
+  <div class="dct-modal" role="dialog" aria-labelledby="dct-alert-title" aria-modal="true">
+    <button type="button" class="dct-close" title="Close">
+      <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/CloseNotification.png")" alt="Close" />
+    </button>
+    <div class="dct-header">
+      <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/Alert.png")" alt="Alert" />
+      <div id="dct-alert-title" class="dct-title">Alert</div>
+    </div>
+    <div id="dct-alert-message" class="dct-body"></div>
+    <div class="dct-actions">
+      <button type="button" class="dct-btn dct-btn-primary" data-action="ok">OK</button>
+    </div>
+  </div>
+</div>
+
+<div id="dct-failed-overlay" class="dct-overlay" aria-hidden="true">
+  <div class="dct-modal" role="dialog" aria-labelledby="dct-failed-title" aria-modal="true">
+    <button type="button" class="dct-close" title="Close">
+      <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/CloseNotification.png")" alt="Close" />
+    </button>
+    <div class="dct-header">
+      <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/Failed.png")" alt="Failed" />
+      <div id="dct-failed-title" class="dct-title">Failed</div>
+    </div>
+    <div id="dct-failed-message" class="dct-body"></div>
+    <div class="dct-actions">
+      <button type="button" class="dct-btn dct-btn-danger" data-action="ok">OK</button>
+    </div>
+  </div>
+</div>
+
+<div id="dct-success-overlay" class="dct-overlay" aria-hidden="true">
+  <div class="dct-modal" role="dialog" aria-labelledby="dct-success-title" aria-modal="true">
+    <button type="button" class="dct-close" title="Close">
+      <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/CloseNotification.png")" alt="Close" />
+    </button>
+    <div class="dct-header">
+      <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/Success.png")" alt="Success" />
+      <div id="dct-success-title" class="dct-title">Success</div>
+    </div>
+    <div id="dct-success-message" class="dct-body"></div>
+    <div class="dct-actions">
+      <button type="button" class="dct-btn dct-btn-primary" data-action="ok">OK</button>
+    </div>
+  </div>
+</div>
+
+<div id="dct-confirmation-overlay" class="dct-overlay" aria-hidden="true">
+  <div class="dct-modal" role="dialog" aria-labelledby="dct-confirmation-title" aria-modal="true">
+    <button type="button" class="dct-close" title="Close">
+      <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/CloseNotification.png")" alt="Close" />
+    </button>
+    <div class="dct-header">
+      <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/Confirmation.png")" alt="Confirmation" />
+      <div id="dct-confirmation-title" class="dct-title">Confirmation</div>
+    </div>
+    <div id="dct-confirmation-message" class="dct-body"></div>
+    <div class="dct-actions">
+      <button type="button" class="dct-btn dct-btn-primary" data-action="yes">Yes</button>
+      <button type="button" class="dct-btn" data-action="no">No</button>
+    </div>
+  </div>
+</div>
+
+<script src="@Url.Content("~/DCT3_Standarisasi/Layout/notifications.js")"></script>

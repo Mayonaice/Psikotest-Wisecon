@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<linker>
+  <assembly fullname="PsikotestWisesa">
+    <resource name="FSharpSignatureData.PsikotestWisesa" action="remove"></resource>
+    <resource name="FSharpSignatureCompressedData.PsikotestWisesa" action="remove"></resource>
+    <resource name="FSharpSignatureDataB.PsikotestWisesa" action="remove"></resource>
+    <resource name="FSharpSignatureCompressedDataB.PsikotestWisesa" action="remove"></resource>
+    <resource name="FSharpOptimizationData.PsikotestWisesa" action="remove"></resource>
+    <resource name="FSharpOptimizationCompressedData.PsikotestWisesa" action="remove"></resource>
+    <resource name="FSharpOptimizationDataB.PsikotestWisesa" action="remove"></resource>
+    <resource name="FSharpOptimizationCompressedDataB.PsikotestWisesa" action="remove"></resource>
+    <resource name="FSharpOptimizationInfo.PsikotestWisesa" action="remove"></resource>
+    <resource name="FSharpSignatureInfo.PsikotestWisesa" action="remove"></resource>
+  </assembly>
+</linker>

@@ -1,0 +1,35 @@
+/* DCT3 Standardisasi CSS - compact layout & DataTables helpers */
+
+:root {
+  --std-font-size: 12px;
+}
+
+/* Compact tables */
+.table.std-compact thead th,
+.table.std-compact tbody td {
+  font-size: var(--std-font-size);
+  padding: 4px 8px;
+}
+
+/* Compact form controls */
+.form-control.std-compact,
+.form-select.std-compact {
+  height: 30px;
+  font-size: var(--std-font-size);
+  padding: 4px 8px;
+}
+
+/* Pagination sizing */
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+  padding: 0.2rem 0.5rem;
+  font-size: var(--std-font-size);
+}
+
+/* Info text */
+.datatable-info { font-size: var(--std-font-size); }
+
+/* Utility spacing */
+.std-mt-1 { margin-top: 4px; }
+.std-mt-2 { margin-top: 8px; }
+.std-mb-1 { margin-bottom: 4px; }
+.std-mb-2 { margin-bottom: 8px; }

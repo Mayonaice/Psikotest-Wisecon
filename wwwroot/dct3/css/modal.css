@@ -1,0 +1,4 @@
+/* Placeholder styles; will be replaced by DCT3 originals when provided */
+#notif-overlay.hidden, #notif-modal.hidden { display: none; }
+#notif-overlay { backdrop-filter: blur(2px); }
+#notif-modal { max-height: 80vh; overflow: auto; }

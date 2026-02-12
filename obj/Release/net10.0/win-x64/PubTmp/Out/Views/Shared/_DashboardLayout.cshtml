@@ -1,0 +1,83 @@
+@{
+    Layout = null;
+    var empCode = User.FindFirst("EmployeeCode")?.Value ?? "";
+    var empName = User.FindFirst("EmployeeName")?.Value ?? User.Identity?.Name ?? "";
+    var active = ViewContext?.RouteData?.Values["action"]?.ToString() ?? "";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] - Psikotes Wisesa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      .brand-purple{ background-color:#5D4BB3; }
+      .navside{ background-color:#1f2937; }
+      .navside .group:hover{ background-color:#111827; }
+    </style>
+</head>
+<body class="min-h-screen">
+    <header class="brand-purple relative text-white h-[3.45rem] flex items-center px-0 shadow">
+        <div class="w-[20.4rem] px-4 font-semibold text-[1.5rem]">WSS RECRUITMENT</div>
+        <div id="header-divider" class="absolute left-[20.4rem] top-0 bottom-0 w-px bg-white/20"></div>
+        <button id="nav-toggle" class="ml-4 text-white/90 font-bold">☰</button>
+        <div class="flex-1"></div>
+        <div class="pr-[60px] text-base font-semibold flex items-center gap-2">@empName <span class="text-white/80">▼</span></div>
+    </header>
+    <div class="flex">
+        <aside id="navside" class="navside text-white w-[20.4rem] shrink-0 min-h-[calc(100vh-3rem)] transform transition-transform ease-in-out duration-300 translate-x-0">
+            <div class="px-5 py-5 border-b border-gray-700">
+                <div class="text-[1.1rem] font-bold">@empCode</div>
+                <a id="logout-link" href="#" title="Logout" class="inline-block mt-2">
+                    <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/shutdown.png")" alt="Logout" class="w-5 h-5" />
+                </a>
+            </div>
+            <div class="bg-[#0f172a] px-5 py-4 border-b border-gray-700">
+                <div class="uppercase text-gray-300 tracking-wide text-[1rem]">MAIN NAVIGATION</div>
+            </div>
+            <nav class="pt-1 text-[1.15rem]">
+                <a class="block px-5 py-4 transition-colors duration-200 @(active == "Applicants" ? "bg-[#0c1220] border-l-4 border-[#5D4BB3] text-white" : "text-gray-300 hover:bg-[#111827]")" asp-controller="Dashboard" asp-action="Applicants">Data Pelamar</a>
+                <a class="block px-5 py-4 transition-colors duration-200 @(active == "Questions" ? "bg-[#0c1220] border-l-4 border-[#5D4BB3] text-white" : "text-gray-300 hover:bg-[#111827]")" asp-controller="Dashboard" asp-action="Questions">Master Pertanyaan</a>
+                <a class="block px-5 py-4 transition-colors duration-200 @(active == "Guides" ? "bg-[#0c1220] border-l-4 border-[#5D4BB3] text-white" : "text-gray-300 hover:bg-[#111827]")" asp-controller="Dashboard" asp-action="Guides">Master Petunjuk</a>
+                <a class="block px-5 py-4 transition-colors duration-200 @(active == "Parameters" ? "bg-[#0c1220] border-l-4 border-[#5D4BB3] text-white" : "text-gray-300 hover:bg-[#111827]")" asp-controller="Dashboard" asp-action="Parameters">Master Parameter</a>
+                <a class="block px-5 py-4 transition-colors duration-200 @(active == "Scores" ? "bg-[#0c1220] border-l-4 border-[#5D4BB3] text-white" : "text-gray-300 hover:bg-[#111827]")" asp-controller="Dashboard" asp-action="Scores">Master Penilaian</a>
+                <a class="block px-5 py-4 transition-colors duration-200 @(active == "Screening" ? "bg-[#0c1220] border-l-4 border-[#5D4BB3] text-white" : "text-gray-300 hover:bg-[#111827]")" asp-controller="Dashboard" asp-action="Screening">View Screening</a>
+            </nav>
+        </aside>
+        <main class="flex-1 p-6">
+            @RenderBody()
+        </main>
+    </div>
+
+    <script>
+      (function(){
+        var open = true;
+        var nav = document.getElementById('navside');
+        var divider = document.getElementById('header-divider');
+        document.getElementById('nav-toggle').addEventListener('click', function(){
+          open = !open;
+          if(open){
+            nav.classList.remove('-translate-x-full');
+            divider.style.display = 'block';
+          } else {
+            nav.classList.add('-translate-x-full');
+            divider.style.display = 'none';
+          }
+        });
+        var logout = document.getElementById('logout-link');
+        if(logout){
+          logout.addEventListener('click', function(e){
+            e.preventDefault();
+            if(window.DCT3Modals){
+              DCT3Modals.open('confirmation', { message: 'Keluar dari sesi?', onYes: function(){ window.location.href = '@Url.Action("Logout","Account")'; } });
+            } else {
+              window.location.href = '@Url.Action("Logout","Account")';
+            }
+          });
+        }
+      })();
+    </script>
+    @await Html.PartialAsync("_DCT3Notifications")
+</body>
+</html>
