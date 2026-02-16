@@ -498,7 +498,7 @@ C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\bin\Debug\net10
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\bin\Debug\net10.0\RBush.dll
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\bin\Debug\net10.0\SixLabors.Fonts.dll
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\bin\Debug\net10.0\System.IO.Packaging.dll
-C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Debug\net10.0\compressed\qdjv32dj6m-{0}-7ccyko0ilh-7ccyko0ilh.gz
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Debug\net10.0\compressed\zut9pys375-{0}-tpz7hn2v79-tpz7hn2v79.gz
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Debug\net10.0\PsikotestWisesa.sourcelink.json
+C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt

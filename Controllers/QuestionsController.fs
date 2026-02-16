@@ -120,7 +120,7 @@ type QuestionsController (db: System.Data.IDbConnection) =
             cmd.CommandText <- (if hasPos then
                                     "INSERT INTO WISECON_PSIKOTEST.dbo.MS_PaketSoal (NamaPaket, ToleransiWaktu, Position, bAktif, UserInput, TimeInput, UserEdit, TimeEdit) VALUES (@NamaPaket, @ToleransiWaktu, @Position, @bAktif, @User, GETDATE(), @User, GETDATE()); SELECT SCOPE_IDENTITY()"
                                 else
-                                    "INSERT INTO WISECON_PSIKOTEST.dbo.MS_PaketSoal (NamaPaket, ToleransiWaktu, bAktif, UserInput, TimeInput, UserEdit, TimeEdit) VALUES (@NamaPaket, @ToleransiWaktu, @bAktif, @User, GETDATE(), @User, GETDATE()); SELECT SCOPE_IDENTITY()")
+                                    "INSERT INTO WISECON_PSIKOTEST.dbo.MS_PaketSoal (NamaPaket, ToleransiWaktu, Position, bAktif, UserInput, TimeInput, UserEdit, TimeEdit) VALUES (@NamaPaket, @ToleransiWaktu, @bAktif, @User, GETDATE(), @User, GETDATE()); SELECT SCOPE_IDENTITY()")
             let idObj = cmd.ExecuteScalar()
             let id = (if isNull idObj then 0L else Convert.ToInt64(idObj))
             this.Ok(box {| NoPaket = id |})
@@ -246,6 +246,26 @@ type QuestionsController (db: System.Data.IDbConnection) =
             while rdr.Read() do
                 let code = if rdr.IsDBNull(0) then "" else rdr.GetString(0)
                 rows.Add(box {| code = code |})
+            this.Ok(rows)
+        finally
+            conn.Close()
+
+    [<Authorize>]
+    [<HttpGet>]
+    [<Route("Questions/Paket/Posisi/Options")>]
+    member this.ListPosisiOptions () : IActionResult =
+        let conn = db :?> Microsoft.Data.SqlClient.SqlConnection
+        use cmd = new Microsoft.Data.SqlClient.SqlCommand()
+        cmd.Connection <- conn
+        cmd.CommandType <- CommandType.Text
+        cmd.CommandText <- "SELECT DISTINCT LTRIM(RTRIM(LamarSebagai)) AS Posisi FROM WISECON_PSIKOTEST.dbo.VW_MASTER_Peserta WHERE LamarSebagai IS NOT NULL AND LTRIM(RTRIM(LamarSebagai)) <> '' ORDER BY LTRIM(RTRIM(LamarSebagai))"
+        conn.Open()
+        try
+            use rdr = cmd.ExecuteReader()
+            let rows = ResizeArray<string>()
+            while rdr.Read() do
+                let posisi = if rdr.IsDBNull(0) then "" else rdr.GetString(0)
+                if not (String.IsNullOrWhiteSpace(posisi)) then rows.Add(posisi)
             this.Ok(rows)
         finally
             conn.Close()
@@ -427,7 +447,7 @@ type QuestionsController (db: System.Data.IDbConnection) =
         use cmd = new Microsoft.Data.SqlClient.SqlCommand()
         cmd.Connection <- conn
         cmd.CommandType <- CommandType.Text
-        cmd.CommandText <- "SELECT SeqNo, Nama, BatasAtas, BatasBawah, UserInput, TimeInput, UserEdit, TimeEdit FROM WISECON_PSIKOTEST.dbo.MS_NormaDtl WHERE NoGroup=@g ORDER BY SeqNo"
+        cmd.CommandText <- "SELECT SeqNo, Nama, BatasAtas, BatasBawah, UserInput, TimeInput FROM WISECON_PSIKOTEST.dbo.MS_NormaDtl WHERE NoGroup=@g ORDER BY SeqNo"
         cmd.Parameters.AddWithValue("@g", noGroup) |> ignore
         conn.Open()
         try
@@ -452,12 +472,32 @@ type QuestionsController (db: System.Data.IDbConnection) =
         let conn = db :?> Microsoft.Data.SqlClient.SqlConnection
         conn.Open()
         try
+            use chk = new Microsoft.Data.SqlClient.SqlCommand()
+            chk.Connection <- conn
+            chk.CommandType <- CommandType.Text
+            chk.CommandText <- "SELECT SUM(CASE WHEN name='UserEdit' THEN 1 ELSE 0 END) AS HasUserEdit, SUM(CASE WHEN name='TimeEdit' THEN 1 ELSE 0 END) AS HasTimeEdit FROM sys.columns WHERE object_id = OBJECT_ID('WISECON_PSIKOTEST.dbo.MS_NormaDtl')"
+            use chkRdr = chk.ExecuteReader()
+            let mutable hasUserEdit = false
+            let mutable hasTimeEdit = false
+            if chkRdr.Read() then
+                let a = try chkRdr.GetInt32(0) with _ -> 0
+                let b = try chkRdr.GetInt32(1) with _ -> 0
+                hasUserEdit <- a > 0
+                hasTimeEdit <- b > 0
+            chkRdr.Close()
+
             let seqNo =
                 if req.SeqNo.HasValue && req.SeqNo.Value > 0L then
                     use cmd = new Microsoft.Data.SqlClient.SqlCommand()
                     cmd.Connection <- conn
                     cmd.CommandType <- CommandType.Text
-                    cmd.CommandText <- "UPDATE WISECON_PSIKOTEST.dbo.MS_NormaDtl SET Nama=@n, BatasAtas=@a, BatasBawah=@b, UserEdit=@u, TimeEdit=GETDATE() WHERE SeqNo=@s; SELECT @s"
+                    let editCols =
+                        match hasUserEdit, hasTimeEdit with
+                        | true, true -> ", UserEdit=@u, TimeEdit=GETDATE()"
+                        | true, false -> ", UserEdit=@u"
+                        | false, true -> ", TimeEdit=GETDATE()"
+                        | false, false -> ""
+                    cmd.CommandText <- "UPDATE WISECON_PSIKOTEST.dbo.MS_NormaDtl SET Nama=@n, BatasAtas=@a, BatasBawah=@b" + editCols + " WHERE SeqNo=@s; SELECT @s"
                     cmd.Parameters.AddWithValue("@n", (if isNull req.LabelNorma then "" else req.LabelNorma)) |> ignore
                     cmd.Parameters.AddWithValue("@a", (if req.BatasAtas.HasValue then req.BatasAtas.Value else 0)) |> ignore
                     cmd.Parameters.AddWithValue("@b", (if req.BatasBawah.HasValue then req.BatasBawah.Value else 0)) |> ignore
@@ -524,7 +564,7 @@ type QuestionsController (db: System.Data.IDbConnection) =
             let vObj = chk.ExecuteScalar()
             conn2.Close()
             let hasPos = try Convert.ToInt32(vObj) = 1 with _ -> false
-            if hasPos then "ps.Position" else "'' AS Position"
+            if hasPos then "ISNULL(CAST(ps.Position AS NVARCHAR(200)), '') AS Position" else "'' AS Position"
         cmd.CommandText <- baseSelect.Replace("{POS}", posExpr)
         cmd.Parameters.AddWithValue("@f", (if String.IsNullOrWhiteSpace(fromDate) then box DBNull.Value else box fromDate)) |> ignore
         cmd.Parameters.AddWithValue("@t", (if String.IsNullOrWhiteSpace(toDate) then box DBNull.Value else box toDate)) |> ignore

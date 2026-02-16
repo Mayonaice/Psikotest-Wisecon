@@ -278,11 +278,11 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
 
         cmd.CommandText <-
             "SELECT " +
-            "'' AS Batch, " +
+            "ISNULL(A.Batch,'') AS Batch, " +
             "A.NoPeserta, " +
             "A.NamaPeserta, " +
             "A.UserId, " +
-            "0 AS UndangPsikotestKe, " +
+            "ISNULL(A.UndangPsikotestKe,0) AS UndangPsikotestKe, " +
             "CASE " +
             "WHEN A.StartTest IS NULL THEN 'Belum Ujian' " +
             "WHEN A.TimeEdit IS NULL THEN 'Sedang Ujian' " +
@@ -451,11 +451,11 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
 
         cmd.CommandText <-
             "SELECT " +
-            "'' AS Batch, " +
+            "ISNULL(A.Batch,'') AS Batch, " +
             "A.NoPeserta, " +
             "A.NamaPeserta, " +
             "A.UserId, " +
-            "0 AS UndangPsikotestKe, " +
+            "ISNULL(A.UndangPsikotestKe,0) AS UndangPsikotestKe, " +
             statusExpr + " AS StatusPengerjaan, " +
             "ISNULL(P.LblRek,'') AS LblRek, " +
             "ISNULL(PS.NamaPaket,'') AS NamaPaket, " +

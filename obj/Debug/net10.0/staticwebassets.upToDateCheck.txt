@@ -103,6 +103,7 @@ wwwroot\lib\jquery\dist\jquery.slim.min.map
 wwwroot\lib\jquery\LICENSE.txt
 wwwroot\uploads\20251205040744_1d1faed7.png
 wwwroot\DCT3_Standarisasi\assets\icons\sendNB.png
+wwwroot\DCT3_Standarisasi\assets\icons\editwb.png
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\wwwroot\DCT3_Standarisasi\Layout\notifications.css
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\wwwroot\favicon.ico
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\wwwroot\js\site.js

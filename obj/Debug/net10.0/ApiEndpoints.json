@@ -802,6 +802,16 @@
   },
   {
     "ContainingType": "PsikotestWisesa.Controllers.QuestionsController",
+    "Method": "ListPosisiOptions",
+    "RelativePath": "Questions/Paket/Posisi/Options",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "PsikotestWisesa.Controllers.QuestionsController",
     "Method": "ListPaketPositions",
     "RelativePath": "Questions/Paket/Positions/List",
     "HttpMethod": "GET",
