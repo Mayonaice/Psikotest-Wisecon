@@ -238,7 +238,7 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
     [<Authorize>]
     [<HttpGet>]
     [<Route("Applicants/Ujian/List")>]
-    member this.ListUjian([<FromQuery>] inputStart: Nullable<DateTime>, [<FromQuery>] inputEnd: Nullable<DateTime>, [<FromQuery>] ujianStart: Nullable<DateTime>, [<FromQuery>] ujianEnd: Nullable<DateTime>, [<FromQuery>] status: string, [<FromQuery>] hasil: string) : IActionResult =
+    member this.ListUjian([<FromQuery>] inputStart: Nullable<DateTime>, [<FromQuery>] inputEnd: Nullable<DateTime>, [<FromQuery>] ujianStart: Nullable<DateTime>, [<FromQuery>] ujianEnd: Nullable<DateTime>, [<FromQuery>] status: string, [<FromQuery>] hasil: string, [<FromQuery>] noPeserta: string) : IActionResult =
         let conn = db :?> Microsoft.Data.SqlClient.SqlConnection
         use cmd = new Microsoft.Data.SqlClient.SqlCommand()
         cmd.Connection <- conn
@@ -269,6 +269,13 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
             whereClause <- whereClause + " AND A.StartTest IS NULL "
         | _ -> ()
 
+        match noPeserta with
+        | null -> ()
+        | s when String.IsNullOrWhiteSpace(s) -> ()
+        | s ->
+            whereClause <- whereClause + " AND (CONVERT(VARCHAR(50),A.NoPeserta)=@noPeserta OR TRY_CONVERT(BIGINT, CONVERT(VARCHAR(50),A.NoPeserta))=TRY_CONVERT(BIGINT, @noPeserta)) "
+            cmd.Parameters.AddWithValue("@noPeserta", s.Trim()) |> ignore
+
         cmd.CommandText <-
             "SELECT " +
             "'' AS Batch, " +
@@ -280,8 +287,8 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
             "WHEN A.StartTest IS NULL THEN 'Belum Ujian' " +
             "WHEN A.TimeEdit IS NULL THEN 'Sedang Ujian' " +
             "ELSE 'Selesai Ujian' END AS StatusPengerjaan, " +
-            "'' AS LblRek, " +
-            "'' AS NamaPaket, " +
+            "ISNULL(P.LblRek,'') AS LblRek, " +
+            "ISNULL(PS.NamaPaket,'') AS NamaPaket, " +
             "A.Url, " +
             "A.WaktuTest, " +
             "A.StartTest, " +
@@ -292,7 +299,10 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
             "A.TimeInput, " +
             "A.UserEdit, " +
             "A.TimeEdit " +
-            "FROM WISECON_PSIKOTEST.dbo.VW_MASTER_PesertaDtl A" + whereClause + " ORDER BY A.TimeInput DESC"
+            "FROM WISECON_PSIKOTEST.dbo.VW_MASTER_PesertaDtl A " +
+            "LEFT JOIN WISECON_PSIKOTEST.dbo.VW_MASTER_Peserta P ON P.NoPeserta=A.NoPeserta " +
+            "LEFT JOIN WISECON_PSIKOTEST.dbo.MS_PaketSoal PS ON PS.NoPaket=A.NoPaket " +
+            whereClause + " ORDER BY A.TimeInput DESC"
         conn.Open()
         try
             use rdr = cmd.ExecuteReader()
@@ -343,7 +353,7 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
     [<Authorize>]
     [<HttpGet>]
     [<Route("Applicants/Ujian/Export")>]
-    member this.ExportUjian([<FromQuery>] inputStart: Nullable<DateTime>, [<FromQuery>] inputEnd: Nullable<DateTime>, [<FromQuery>] ujianStart: Nullable<DateTime>, [<FromQuery>] ujianEnd: Nullable<DateTime>, [<FromQuery>] status: string, [<FromQuery>] hasil: string, [<FromQuery>] sortField: string, [<FromQuery>] sortDir: Nullable<int>) : IActionResult =
+    member this.ExportUjian([<FromQuery>] inputStart: Nullable<DateTime>, [<FromQuery>] inputEnd: Nullable<DateTime>, [<FromQuery>] ujianStart: Nullable<DateTime>, [<FromQuery>] ujianEnd: Nullable<DateTime>, [<FromQuery>] status: string, [<FromQuery>] hasil: string, [<FromQuery>] sortField: string, [<FromQuery>] sortDir: Nullable<int>, [<FromQuery>] noPeserta: string) : IActionResult =
         let conn = db :?> Microsoft.Data.SqlClient.SqlConnection
         use cmd = new Microsoft.Data.SqlClient.SqlCommand()
         cmd.Connection <- conn
@@ -397,6 +407,13 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
             whereClause <- whereClause + " AND A.StartTest IS NULL "
         | _ -> ()
 
+        match noPeserta with
+        | null -> ()
+        | s when String.IsNullOrWhiteSpace(s) -> ()
+        | s ->
+            whereClause <- whereClause + " AND (CONVERT(VARCHAR(50),A.NoPeserta)=@noPeserta OR TRY_CONVERT(BIGINT, CONVERT(VARCHAR(50),A.NoPeserta))=TRY_CONVERT(BIGINT, @noPeserta)) "
+            cmd.Parameters.AddWithValue("@noPeserta", s.Trim()) |> ignore
+
         addLike "q_nomor" "CONVERT(VARCHAR(50),A.NoPeserta)" "@q_nomor"
         addLike "q_nama" "ISNULL(A.NamaPeserta,'')" "@q_nama"
         addLike "q_userId" "ISNULL(A.UserId,'')" "@q_userId"
@@ -440,8 +457,8 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
             "A.UserId, " +
             "0 AS UndangPsikotestKe, " +
             statusExpr + " AS StatusPengerjaan, " +
-            "'' AS LblRek, " +
-            "'' AS NamaPaket, " +
+            "ISNULL(P.LblRek,'') AS LblRek, " +
+            "ISNULL(PS.NamaPaket,'') AS NamaPaket, " +
             "A.Url, " +
             "A.WaktuTest, " +
             "A.StartTest, " +
@@ -452,7 +469,10 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
             "A.TimeInput, " +
             "A.UserEdit, " +
             "A.TimeEdit " +
-            "FROM WISECON_PSIKOTEST.dbo.VW_MASTER_PesertaDtl A" + whereClause + " ORDER BY " + orderBy
+            "FROM WISECON_PSIKOTEST.dbo.VW_MASTER_PesertaDtl A " +
+            "LEFT JOIN WISECON_PSIKOTEST.dbo.VW_MASTER_Peserta P ON P.NoPeserta=A.NoPeserta " +
+            "LEFT JOIN WISECON_PSIKOTEST.dbo.MS_PaketSoal PS ON PS.NoPaket=A.NoPaket " +
+            whereClause + " ORDER BY " + orderBy
 
         let fmtDt (v: Nullable<DateTime>) =
             if v.HasValue then v.Value.ToString("yyyy-MM-dd HH:mm") else ""
@@ -551,7 +571,7 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
     [<Authorize>]
     [<HttpGet>]
     [<Route("Applicants/Interview/List")>]
-    member this.ListInterview([<FromQuery>] inputStart: Nullable<DateTime>, [<FromQuery>] inputEnd: Nullable<DateTime>, [<FromQuery>] statusInterview: string) : IActionResult =
+    member this.ListInterview([<FromQuery>] inputStart: Nullable<DateTime>, [<FromQuery>] inputEnd: Nullable<DateTime>, [<FromQuery>] statusInterview: string, [<FromQuery>] noPeserta: string) : IActionResult =
         let conn = db :?> Microsoft.Data.SqlClient.SqlConnection
         use cmd = new Microsoft.Data.SqlClient.SqlCommand()
         cmd.Connection <- conn
@@ -566,6 +586,13 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
         | s when String.IsNullOrWhiteSpace(s) -> ()
         | s -> whereClause <- whereClause + " AND StatusInterview=@si "
                cmd.Parameters.AddWithValue("@si", s) |> ignore
+
+        match noPeserta with
+        | null -> ()
+        | s when String.IsNullOrWhiteSpace(s) -> ()
+        | s ->
+            whereClause <- whereClause + " AND (CONVERT(VARCHAR(50),NoPeserta)=@noPeserta OR TRY_CONVERT(BIGINT, CONVERT(VARCHAR(50),NoPeserta))=TRY_CONVERT(BIGINT, @noPeserta)) "
+            cmd.Parameters.AddWithValue("@noPeserta", s.Trim()) |> ignore
 
         cmd.CommandText <- "SELECT SeqNo, Batch, NoPeserta, NamaPeserta, WaktuInterview, Lokasi, StatusInterview, UndangInterviewKe, bKirim, WaktuKirim, WaktuTerbaca, UserInput, TimeInput, UserEdit, TimeEdit " +
                            "FROM WISECON_PSIKOTEST.dbo.VW_MASTER_PesertaInterview" + whereClause + " ORDER BY TimeInput DESC"
@@ -608,7 +635,7 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
     [<Authorize>]
     [<HttpGet>]
     [<Route("Applicants/Interview/Export")>]
-    member this.ExportInterview([<FromQuery>] inputStart: Nullable<DateTime>, [<FromQuery>] inputEnd: Nullable<DateTime>, [<FromQuery>] statusInterview: string, [<FromQuery>] sortField: string, [<FromQuery>] sortDir: Nullable<int>) : IActionResult =
+    member this.ExportInterview([<FromQuery>] inputStart: Nullable<DateTime>, [<FromQuery>] inputEnd: Nullable<DateTime>, [<FromQuery>] statusInterview: string, [<FromQuery>] sortField: string, [<FromQuery>] sortDir: Nullable<int>, [<FromQuery>] noPeserta: string) : IActionResult =
         let conn = db :?> Microsoft.Data.SqlClient.SqlConnection
         use cmd = new Microsoft.Data.SqlClient.SqlCommand()
         cmd.Connection <- conn
@@ -640,6 +667,13 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
         | s when String.IsNullOrWhiteSpace(s) -> ()
         | s -> whereClause <- whereClause + " AND I.StatusInterview=@si "
                cmd.Parameters.AddWithValue("@si", s) |> ignore
+
+        match noPeserta with
+        | null -> ()
+        | s when String.IsNullOrWhiteSpace(s) -> ()
+        | s ->
+            whereClause <- whereClause + " AND (CONVERT(VARCHAR(50),I.NoPeserta)=@noPeserta OR TRY_CONVERT(BIGINT, CONVERT(VARCHAR(50),I.NoPeserta))=TRY_CONVERT(BIGINT, @noPeserta)) "
+            cmd.Parameters.AddWithValue("@noPeserta", s.Trim()) |> ignore
 
         addLike "q_batch" "ISNULL(I.Batch,'')" "@q_batch"
         addLike "q_nomor" "CONVERT(VARCHAR(50),I.NoPeserta)" "@q_nomor"

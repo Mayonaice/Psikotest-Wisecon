@@ -89,6 +89,11 @@
         "Name": "sortDir",
         "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
         "IsRequired": false
+      },
+      {
+        "Name": "noPeserta",
+        "Type": "System.String",
+        "IsRequired": false
       }
     ],
     "ReturnTypes": []
@@ -113,6 +118,11 @@
       },
       {
         "Name": "statusInterview",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "noPeserta",
         "Type": "System.String",
         "IsRequired": false
       }
@@ -271,6 +281,11 @@
         "Name": "sortDir",
         "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
         "IsRequired": false
+      },
+      {
+        "Name": "noPeserta",
+        "Type": "System.String",
+        "IsRequired": false
       }
     ],
     "ReturnTypes": []
@@ -310,6 +325,11 @@
       },
       {
         "Name": "hasil",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "noPeserta",
         "Type": "System.String",
         "IsRequired": false
       }

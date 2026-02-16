@@ -1,4 +1,4 @@
-wwwroot\css\site.css
+wwwroot\DCT3_Standarisasi\Layout\notifications.css
 wwwroot\dct3\css\dct3-standard.css
 wwwroot\dct3\css\modal.css
 wwwroot\dct3\js\dct3-standard.js
@@ -36,7 +36,7 @@ wwwroot\DCT3_Standarisasi\assets\icons\Thumbs.db
 wwwroot\DCT3_Standarisasi\assets\icons\UploadNB.png
 wwwroot\DCT3_Standarisasi\assets\icons\ViewNB.png
 wwwroot\DCT3_Standarisasi\assets\icons\XNB.png
-wwwroot\DCT3_Standarisasi\Layout\notifications.css
+wwwroot\css\site.css
 wwwroot\DCT3_Standarisasi\Layout\notifications.js
 wwwroot\favicon.ico
 wwwroot\images\login-banner.png
@@ -102,7 +102,8 @@ wwwroot\lib\jquery\dist\jquery.slim.min.js
 wwwroot\lib\jquery\dist\jquery.slim.min.map
 wwwroot\lib\jquery\LICENSE.txt
 wwwroot\uploads\20251205040744_1d1faed7.png
-C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\wwwroot\css\site.css
+wwwroot\DCT3_Standarisasi\assets\icons\sendNB.png
+C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\wwwroot\DCT3_Standarisasi\Layout\notifications.css
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\wwwroot\favicon.ico
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\wwwroot\js\site.js
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\wwwroot\lib\bootstrap\dist\css\bootstrap-grid.css
@@ -172,5 +173,5 @@ C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\wwwroot\dct3\la
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\wwwroot\dct3\layout\notifications.js
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\wwwroot\DCT3_Standarisasi\assets\icons\AddNB.svg
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\wwwroot\DCT3_Standarisasi\assets\icons\RefreshNB.svg
-C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\wwwroot\DCT3_Standarisasi\Layout\notifications.css
+C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\wwwroot\css\site.css
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\wwwroot\DCT3_Standarisasi\Layout\notifications.js

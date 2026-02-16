@@ -23,6 +23,15 @@
       .date-formatted::before{ content: attr(data-display); position:absolute; left:.5rem; right:2.25rem; top:50%; transform:translateY(-50%); color:#111827; pointer-events:none; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
       .date-formatted::-webkit-datetime-edit{ color:transparent; }
       .date-formatted::-webkit-calendar-picker-indicator{ opacity:1; position:absolute; right:.5rem; top:50%; transform:translateY(-50%); margin:0; padding:0; cursor:pointer; }
+      details.user-menu-wrap > summary{ list-style:none; }
+      details.user-menu-wrap > summary::-webkit-details-marker{ display:none; }
+      details.user-menu-wrap .user-menu-panel{ display:none; }
+      details.user-menu-wrap[open] .user-menu-panel{ display:block; }
+      .dct-overlay input:disabled,
+      .dct-overlay select:disabled,
+      .dct-overlay textarea:disabled,
+      .dct-overlay input[readonly],
+      .dct-overlay textarea[readonly]{ background:#D1D5DB !important; color:#6B7280 !important; cursor:not-allowed; }
     </style>
 </head>
 <body class="min-h-screen">
@@ -31,13 +40,21 @@
         <div id="header-divider" class="absolute left-[20.4rem] top-0 bottom-0 w-px bg-white/20"></div>
         <button id="nav-toggle" class="ml-4 text-white/90 font-bold">☰</button>
         <div class="flex-1"></div>
-        <div class="pr-[60px] text-base font-semibold flex items-center gap-2">@empName <span class="text-white/80">▼</span></div>
+        <details class="user-menu-wrap relative pr-[60px]">
+            <summary class="text-base font-semibold flex items-center gap-2 select-none cursor-pointer">
+                <span>@empName</span>
+                <span class="text-white/80">▼</span>
+            </summary>
+            <div class="user-menu-panel absolute right-0 top-full mt-2 w-[10rem] rounded-md bg-white text-gray-900 shadow-lg">
+                <a id="logout-link-top" href="@Url.Action("Logout","Account")" class="block px-4 py-3 hover:bg-gray-100">Log Out</a>
+            </div>
+        </details>
     </header>
     <div class="flex">
         <aside id="navside" class="navside text-white w-[20.4rem] shrink-0 min-h-[calc(100vh-3rem)] transform transition-transform ease-in-out duration-300 translate-x-0">
             <div class="px-5 py-5 border-b border-gray-700">
                 <div class="text-[1.1rem] font-bold">@empCode</div>
-                <a id="logout-link" href="#" title="Logout" class="inline-block mt-2">
+                <a id="logout-link" href="@Url.Action("Logout","Account")" title="Logout" class="inline-block mt-2">
                     <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/shutdown.png")" alt="Logout" class="w-5 h-5" />
                 </a>
             </div>
@@ -76,14 +93,25 @@
           }
         });
         var logout = document.getElementById('logout-link');
+        var logoutTop = document.getElementById('logout-link-top');
+        var logoutUrl = '@Url.Action("Logout","Account")';
+        function doLogout(){
+          if(window.DCT3Modals){
+            DCT3Modals.open('confirmation', { message: 'Keluar dari sesi?', onYes: function(){ window.location.href = logoutUrl; } });
+          } else {
+            window.location.href = logoutUrl;
+          }
+        }
         if(logout){
           logout.addEventListener('click', function(e){
             e.preventDefault();
-            if(window.DCT3Modals){
-              DCT3Modals.open('confirmation', { message: 'Keluar dari sesi?', onYes: function(){ window.location.href = '@Url.Action("Logout","Account")'; } });
-            } else {
-              window.location.href = '@Url.Action("Logout","Account")';
-            }
+            doLogout();
+          });
+        }
+        if(logoutTop){
+          logoutTop.addEventListener('click', function(e){
+            e.preventDefault();
+            doLogout();
           });
         }
       })();

@@ -305,17 +305,14 @@
 
   <div id="modalOverlay" class="dct-overlay dct-hidden">
     <div id="modalContent" class="dct-modal">
-      <button id="modalClose" type="button" class="dct-close" title="Close">
-        <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/CloseNotification.png")" alt="Close" />
-      </button>
       <div class="dct-header">
         <img id="modalIcon" src="@Url.Content("~/DCT3_Standarisasi/assets/icons/Confirmation.png")" alt="Modal" />
         <div id="modalHeader" class="dct-title"></div>
       </div>
       <div id="modalBody" class="dct-body"></div>
       <div class="dct-actions">
-        <button id="modalCancel" class="dct-btn" type="button"><img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/XNB.png")" class="w-4 h-4" /> <span>Batal</span></button>
-        <button id="modalSave" class="dct-btn dct-btn-primary" type="button"><img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/Success.png")" class="w-4 h-4" /> <span>Simpan</span></button>
+        <button id="modalSave" class="dct-btn dct-btn-primary" type="button"><img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/sendNB.png")" class="w-4 h-4" /> <span>Simpan</span></button>
+        <button id="modalCancel" class="dct-btn" type="button"><img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/XNB.png")" class="w-4 h-4" /> <span>Close</span></button>
       </div>
     </div>
   </div>
@@ -369,6 +366,11 @@
   .modal-field.media-types .inline-flex{ white-space:nowrap; }
   #modalOverlay .dct-btn{ display:inline-flex; align-items:center; gap:8px; white-space:nowrap; }
   #modalOverlay .dct-btn img{ width:18px; height:18px; display:inline-block; }
+  #modalOverlay #modalContent{ background:#FFFFFF; }
+  #modalOverlay .dct-btn{ border:1px solid #d1d5db; background:#FFFFFF; }
+  #modalOverlay .dct-btn:hover{ background:#F9FAFB; }
+  #modalOverlay .dct-header{ border-bottom:1px solid #e5e7eb; padding-bottom:10px; }
+  #modalOverlay .dct-actions{ border-top:1px solid #e5e7eb; padding-top:10px; }
   </style>
 
   <script src="https://cdn.ckeditor.com/4.25.1/standard/ckeditor.js"></script>
@@ -406,8 +408,8 @@
         if (document.getElementById('jNoPaket')) { setupJawabanFormInteractions(); }
         var close = function(){ modalOverlay.style.display = 'none'; modalOverlay.classList.add('dct-hidden'); };
         if (modalClose) modalClose.onclick = close;
-        if (modalCancel){ modalCancel.innerHTML = '<img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/XNB.png")" class="w-4 h-4" /> <span>Batal</span>'; modalCancel.onclick = close; }
-        if (modalSave){ modalSave.innerHTML = '<img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/Success.png")" class="w-4 h-4" /> <span>Simpan</span>'; modalSave.onclick = function(){ if(onSave){ var r=onSave(); if(r && typeof r.then==='function'){ r.then(close).catch(close); } else { close(); } } else { close(); } }; }
+        if (modalCancel){ modalCancel.innerHTML = '<img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/XNB.png")" class="w-4 h-4" /> <span>Close</span>'; modalCancel.onclick = close; }
+        if (modalSave){ modalSave.innerHTML = '<img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/sendNB.png")" class="w-4 h-4" /> <span>Simpan</span>'; modalSave.onclick = function(){ if(onSave){ var r=onSave(); if(r && typeof r.then==='function'){ r.then(close).catch(close); } else { close(); } } else { close(); } }; }
       }
       function findByKey(arr, key, value){ for(var i=0;i<arr.length;i++){ if((''+arr[i][key])===(''+value)) return i; } return -1; }
       function paketForm(o){ var np=o.noPaket||''; var na=o.namaPaket||''; var to=o.toleransi||0; var st=o.status||'AKTIF'; var po=((o.posisi||'')||'DEV').toUpperCase(); var opts=['DEV','QA','SALES','HR','ADMIN']; return (

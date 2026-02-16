@@ -408,7 +408,6 @@ C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Debug\net10
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Debug\net10.0\rjsmrazor.dswa.cache.json
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Debug\net10.0\rjsmcshtml.dswa.cache.json
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Debug\net10.0\scopedcss\bundle\PsikotestWisesa.styles.css
-C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Debug\net10.0\compressed\qdjv32dj6m-{0}-t0gmivwktv-t0gmivwktv.gz
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Debug\net10.0\compressed\2y5hmwvfb9-{0}-61n19gt1b8-61n19gt1b8.gz
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Debug\net10.0\compressed\1h8j1yiiv8-{0}-xtxxf3hu2r-xtxxf3hu2r.gz
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Debug\net10.0\compressed\nqarsogwgd-{0}-bqjiyaj88i-bqjiyaj88i.gz
@@ -488,7 +487,6 @@ C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Debug\net10
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Debug\net10.0\compressed\yvbxt8dnhs-{0}-162tgtsl9b-162tgtsl9b.gz
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Debug\net10.0\compressed\x79xf3uqjv-{0}-adstios10u-adstios10u.gz
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Debug\net10.0\compressed\waaoxu35mb-{0}-8kmhw13v9o-8kmhw13v9o.gz
-C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Debug\net10.0\compressed\zut9pys375-{0}-fqjfi80fh0-fqjfi80fh0.gz
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Debug\net10.0\compressed\bnrteh1hhh-{0}-162tgtsl9b-162tgtsl9b.gz
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\bin\Debug\net10.0\dotnet-tools.json
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Debug\net10.0\compressed\2tzed0l43i-{0}-yuljbyeui7-yuljbyeui7.gz
@@ -501,3 +499,6 @@ C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\bin\Debug\net10
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\bin\Debug\net10.0\SixLabors.Fonts.dll
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\bin\Debug\net10.0\System.IO.Packaging.dll
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt
+C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Debug\net10.0\compressed\qdjv32dj6m-{0}-7ccyko0ilh-7ccyko0ilh.gz
+C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Debug\net10.0\compressed\zut9pys375-{0}-tpz7hn2v79-tpz7hn2v79.gz
+C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Debug\net10.0\PsikotestWisesa.sourcelink.json

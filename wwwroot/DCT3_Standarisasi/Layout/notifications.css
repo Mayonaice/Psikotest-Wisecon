@@ -18,3 +18,13 @@
 
 /* Compact spacing to match provided designs */
 .dct-modal .dct-actions .dct-btn { font-size: 14px; }
+
+.dct-overlay input:disabled,
+.dct-overlay select:disabled,
+.dct-overlay textarea:disabled,
+.dct-overlay input[readonly],
+.dct-overlay textarea[readonly] {
+  background: #D1D5DB !important;
+  color: #6B7280 !important;
+  cursor: not-allowed;
+}

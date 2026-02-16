@@ -3,6 +3,7 @@ namespace PsikotestWisesa.Controllers
 open System
 open System.Data
 open System.Security.Claims
+open System.Threading.Tasks
 open Microsoft.AspNetCore.Mvc
 open Microsoft.AspNetCore.Authentication
 open Microsoft.AspNetCore.Authentication.Cookies
@@ -77,6 +78,8 @@ type AccountController (db: IDbConnection) =
                     conn.Close()
             result
 
-    member this.Logout () : IActionResult =
-        this.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme) |> ignore
-        this.RedirectToAction("Login")
+    member this.Logout () : Task<IActionResult> =
+        task {
+            do! this.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme)
+            return this.RedirectToAction("Login") :> IActionResult
+        }

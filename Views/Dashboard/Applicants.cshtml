@@ -337,9 +337,6 @@
 
   <div id="invite-overlay" class="dct-overlay" aria-hidden="true">
     <div class="dct-modal invite-modal" role="dialog" aria-labelledby="invite-title" aria-modal="true">
-      <button type="button" class="dct-close" id="invite-close" title="Close">
-        <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/CloseNotification.png")" alt="Close" class="w-4 h-4" />
-      </button>
       <div class="dct-header">
         <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/Message.png")" alt="Undang" class="w-6 h-6" />
         <div id="invite-title" class="dct-title">Undang Peserta</div>
@@ -373,8 +370,8 @@
             <div class="invite-label">Batch</div>
             <div class="invite-field">
               <select id="invite-batchType" class="border border-gray-300 rounded-md px-2 py-1 w-full">
+                <option value="0" selected>NonBatch</option>
                 <option value="1">Batch</option>
-                <option value="0">NonBatch</option>
               </select>
             </div>
           </div>
@@ -382,7 +379,7 @@
           <div class="invite-row hidden" id="invite-batchRow">
             <div class="invite-label">Nama Batch</div>
             <div class="invite-field">
-              <input id="invite-batch" list="invite-batch-datalist" class="border border-gray-300 rounded-md px-2 py-1 w-full" />
+              <textarea id="invite-batch" rows="2" class="border border-gray-300 rounded-md px-2 py-1 w-full resize-none"></textarea>
             </div>
           </div>
 
@@ -416,17 +413,20 @@
         </div>
       </div>
       <div class="dct-actions">
-        <button type="button" class="dct-btn" data-action="cancel" id="invite-cancel">Close</button>
-        <button type="button" class="dct-btn dct-btn-primary" data-action="save" id="invite-save">Save & Kirim</button>
+        <button type="button" class="dct-btn dct-btn-primary" data-action="save" id="invite-save">
+          <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/sendNB.png")" alt="Send" class="w-4 h-4" />
+          <span>Save & Kirim</span>
+        </button>
+        <button type="button" class="dct-btn" data-action="cancel" id="invite-cancel">
+          <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/XNB.png")" alt="Close" class="w-4 h-4" />
+          <span>Close</span>
+        </button>
       </div>
     </div>
   </div>
 
   <div id="edit-overlay" class="dct-overlay" aria-hidden="true">
     <div class="dct-modal invite-modal" role="dialog" aria-labelledby="edit-title" aria-modal="true">
-      <button type="button" class="dct-close" id="edit-close" title="Close">
-        <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/CloseNotification.png")" alt="Close" class="w-4 h-4" />
-      </button>
       <div class="dct-header">
         <img id="edit-icon" src="@Url.Content("~/DCT3_Standarisasi/assets/icons/EditNB.png")" alt="Edit" class="w-6 h-6" />
         <div id="edit-title" class="dct-title">Edit</div>
@@ -492,8 +492,14 @@
         </div>
       </div>
       <div class="dct-actions">
-        <button type="button" class="dct-btn" data-action="cancel" id="edit-cancel">Close</button>
-        <button type="button" class="dct-btn dct-btn-primary" data-action="save" id="edit-save">Save</button>
+        <button type="button" class="dct-btn dct-btn-primary" data-action="save" id="edit-save">
+          <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/sendNB.png")" alt="Send" class="w-4 h-4" />
+          <span>Save</span>
+        </button>
+        <button type="button" class="dct-btn" data-action="cancel" id="edit-cancel">
+          <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/XNB.png")" alt="Close" class="w-4 h-4" />
+          <span>Close</span>
+        </button>
       </div>
     </div>
   </div>
@@ -541,6 +547,8 @@
   .tab-btn:active{ filter: brightness(0.97); }
   .hidden{ display:none !important; }
   .date-formatted{ position:relative; padding-right:2.25rem; }
+  #invite-overlay .dct-header, #edit-overlay .dct-header{ border-bottom:1px solid #e5e7eb; padding-bottom:10px; }
+  #invite-overlay .dct-actions, #edit-overlay .dct-actions{ border-top:1px solid #e5e7eb; padding-top:10px; }
   .date-formatted::before{ content: attr(data-display); position:absolute; left:.5rem; right:2.25rem; top:50%; transform:translateY(-50%); color:#111827; pointer-events:none; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .date-formatted::-webkit-datetime-edit{ color:transparent; }
   .date-formatted::-webkit-calendar-picker-indicator{ opacity:1; position:absolute; right:.5rem; top:50%; transform:translateY(-50%); margin:0; padding:0; cursor:pointer; }
@@ -550,6 +558,7 @@
   .spinner{ width:28px; height:28px; border:3px solid #d1d5db; border-top-color:#1E90FF; border-radius:50%; animation:spin .9s linear infinite; }
   @@keyframes spin{ to{ transform:rotate(360deg); } }
   .invite-modal{ width:520px; max-width:95vw; }
+  #invite-overlay .dct-modal, #edit-overlay .dct-modal{ background:#FFFFFF; }
   .invite-panel{ padding:2px 2px; }
   .invite-row{ display:grid; grid-template-columns: 140px 1fr; align-items:center; gap:10px; margin-bottom:10px; }
   .invite-row:last-child{ margin-bottom:0; }
@@ -558,8 +567,11 @@
   .invite-radio-inline{ display:flex; align-items:center; gap:16px; }
   .invite-radio-inline-item{ display:flex; align-items:center; gap:6px; cursor:pointer; }
   .invite-radio-inline-item input{ accent-color:#1E90FF; }
-  .invite-target-text{ font-size:13px; color:#111827; word-break:break-word; padding:7px 10px; border:1px solid #d1d5db; border-radius:6px; background:#fff; min-height:34px; }
+  .invite-target-text{ font-size:13px; color:#6B7280; word-break:break-word; padding:7px 10px; border:1px solid #d1d5db; border-radius:6px; background:#D1D5DB; min-height:34px; cursor:not-allowed; }
   .invite-modal .dct-actions{ display:flex; justify-content:flex-end !important; gap:10px; width:100%; }
+  #invite-overlay .dct-btn, #edit-overlay .dct-btn{ display:inline-flex; align-items:center; gap:8px; white-space:nowrap; border:1px solid #d1d5db; background:#FFFFFF; }
+  #invite-overlay .dct-btn img, #edit-overlay .dct-btn img{ width:18px; height:18px; display:inline-block; }
+  #invite-overlay .dct-btn:hover, #edit-overlay .dct-btn:hover{ background:#F9FAFB; }
   </style>
 
 <script>
@@ -600,16 +612,27 @@
 
     var inviteState = { ids: [], type: 'psikotest' };
 
+    function resetInviteForm(type){
+      if(inviteDate) inviteDate.value = '';
+      if(inviteTime) inviteTime.value = '';
+      if(inviteBatchType) inviteBatchType.value = '0';
+      if(inviteBatch) inviteBatch.value = '';
+      if(inviteLokasi) inviteLokasi.value = '';
+      if(invitePaket) invitePaket.value = '';
+      applyInviteType(type || 'psikotest');
+      updateBatchVisibility();
+    }
+
     function openInvite(ids, type){
       inviteState.ids = (ids || []).map(function(x){ return ''+x; }).filter(function(x){ return x; });
       inviteState.type = type || inviteState.type || 'psikotest';
+      resetInviteForm(inviteState.type);
       if(inviteTargetText){
         if(inviteState.ids.length === 1) inviteTargetText.textContent = inviteState.ids[0];
         else inviteTargetText.textContent = inviteState.ids.length + ' peserta (' + inviteState.ids.slice(0, 5).join(', ') + (inviteState.ids.length > 5 ? ', ...' : '') + ')';
       }
       var radios = document.querySelectorAll('input[name="inviteType"]');
       radios.forEach(function(r){ r.checked = (r.value === inviteState.type); });
-      applyInviteType(inviteState.type);
       ensurePaketSoal();
       ensureBatchList();
       if(inviteOverlay){ inviteOverlay.style.display = 'flex'; inviteOverlay.classList.remove('dct-hidden'); inviteOverlay.setAttribute('aria-hidden','false'); }
@@ -691,6 +714,20 @@
       else { alert(msg); }
     }
 
+    function showConfirm(msg, onYes){
+      if(window.DCT3Modals){
+        DCT3Modals.open('confirmation', {
+          title: 'Konfirmasi',
+          message: msg,
+          yesText: 'Ya',
+          noText: 'Tidak',
+          onYes: onYes
+        });
+        return;
+      }
+      if(confirm(msg) && typeof onYes === 'function') onYes();
+    }
+
     function postJson(url, body){
       return fetch(url, { method:'POST', credentials:'same-origin', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(body) })
         .then(function(r){
@@ -726,7 +763,12 @@
           showSuccess('Undangan Psikotest berhasil diproses');
           selectedPesertaIds.clear();
           var target = activeNoPeserta || (ids[0] ? (''+ids[0]) : '');
-          if(window.CustomEvent && target){ window.dispatchEvent(new CustomEvent('applicants:select', { detail: { noPeserta: target } })); }
+          if(target) window.__applicantsActiveNoPeserta = target;
+          if(target){
+            try{
+              if(typeof window.CustomEvent === 'function'){ window.dispatchEvent(new CustomEvent('applicants:select', { detail: { noPeserta: target } })); }
+            }catch(_){}
+          }
           applyFilters();
         }).catch(function(){ showError('Gagal menyimpan undangan Psikotest'); });
       } else {
@@ -744,7 +786,12 @@
           showSuccess('Undangan Interview berhasil diproses');
           selectedPesertaIds.clear();
           var target = activeNoPeserta || (ids[0] ? (''+ids[0]) : '');
-          if(window.CustomEvent && target){ window.dispatchEvent(new CustomEvent('applicants:select', { detail: { noPeserta: target } })); }
+          if(target) window.__applicantsActiveNoPeserta = target;
+          if(target){
+            try{
+              if(typeof window.CustomEvent === 'function'){ window.dispatchEvent(new CustomEvent('applicants:select', { detail: { noPeserta: target } })); }
+            }catch(_){}
+          }
           applyFilters();
         }).catch(function(){ showError('Gagal menyimpan undangan Interview'); });
       }
@@ -933,11 +980,14 @@
           var ignore = e.target.closest('.select-cell') || e.target.closest('.select-square') || e.target.closest('.msg-btn');
           if(ignore) return;
           activeNoPeserta = noPesertaStr;
+          window.__applicantsActiveNoPeserta = activeNoPeserta;
           document.querySelectorAll('#tblPeserta tbody tr.row-active').forEach(function(x){ x.classList.remove('row-active'); });
           tr.classList.add('row-active');
-          if(window.CustomEvent){
-            window.dispatchEvent(new CustomEvent('applicants:select', { detail: { noPeserta: r.nomor } }));
-          }
+          try{
+            if(typeof window.CustomEvent === 'function'){
+              window.dispatchEvent(new CustomEvent('applicants:select', { detail: { noPeserta: noPesertaStr } }));
+            }
+          }catch(_){}
         });
       });
       info.textContent = 'Showing '+(startIdx+1)+' to '+Math.min(startIdx+pageSize,total)+' of '+total+' entries';
@@ -1045,6 +1095,7 @@
     // Selection handled via select-square click, no default checkbox
     window.addEventListener('applicants:select', function(e){
       activeNoPeserta = (e && e.detail && e.detail.noPeserta!=null) ? (''+e.detail.noPeserta) : '';
+      if(activeNoPeserta) window.__applicantsActiveNoPeserta = activeNoPeserta;
       applyFilters();
     });
 
@@ -1055,7 +1106,9 @@
     }
     if(inviteClose) inviteClose.addEventListener('click', closeInvite);
     if(inviteCancel) inviteCancel.addEventListener('click', closeInvite);
-    if(inviteSave) inviteSave.addEventListener('click', saveInvite);
+    if(inviteSave) inviteSave.addEventListener('click', function(){
+      showConfirm('Yakin ingin save & kirim data ini?', saveInvite);
+    });
     document.querySelectorAll('input[name="inviteType"]').forEach(function(r){ r.addEventListener('change', function(){ applyInviteType(r.value); }); });
     if(inviteBatchType) inviteBatchType.addEventListener('change', updateBatchVisibility);
     updateBatchVisibility();
@@ -1070,6 +1123,28 @@
     var debug = true;
     var examData = [];
     var interviewData = [];
+    var activeNoPeserta = '';
+
+    function showConfirm(msg, onYes){
+      if(window.DCT3Modals){
+        DCT3Modals.open('confirmation', {
+          title: 'Konfirmasi',
+          message: msg,
+          yesText: 'Ya',
+          noText: 'Tidak',
+          onYes: onYes
+        });
+        return;
+      }
+      if(confirm(msg) && typeof onYes === 'function') onYes();
+    }
+
+    function normalizeNo(v){
+      var s = (''+(v==null?'':v)).trim();
+      if(!s) return '';
+      var t = s.replace(/^0+/, '');
+      return t ? t : '0';
+    }
 
     var iconMsg2 = '@Url.Content("~/DCT3_Standarisasi/assets/icons/Message.png")';
     var iconEdit = '@Url.Content("~/DCT3_Standarisasi/assets/icons/edit.png")';
@@ -1299,7 +1374,9 @@
     }
     if(editClose) editClose.addEventListener('click', closeEdit);
     if(editCancel) editCancel.addEventListener('click', closeEdit);
-    if(editSave) editSave.addEventListener('click', saveEdit);
+    if(editSave) editSave.addEventListener('click', function(){
+      showConfirm('Yakin ingin save & kirim data ini?', saveEdit);
+    });
 
     var ddUjianInputStart = document.getElementById('ujianInputStart');
     var ddUjianInputEnd = document.getElementById('ujianInputEnd');
@@ -1362,6 +1439,16 @@
 
     function applyUjian(){
       var sc=document.querySelector('#gridUjian .table-scroll'); if(sc) sc.classList.add('loading');
+      if(window.__applicantsActiveNoPeserta) activeNoPeserta = ''+window.__applicantsActiveNoPeserta;
+      var activeKey = normalizeNo(activeNoPeserta);
+      if(!activeNoPeserta){
+        examData = [];
+        var body0=document.querySelector('#tblUjian tbody'); if(body0) body0.innerHTML='';
+        infoUjian.textContent='Showing 0 to 0 of 0 entries';
+        renderPages(pageNumsUjian, 1, 1);
+        if(sc) sc.classList.remove('loading');
+        return Promise.resolve();
+      }
       var s1=ddUjianInputStart.value; var e1=ddUjianInputEnd.value; var s2=ddUjianDateStart.value; var e2=ddUjianDateEnd.value; var st=ddStatusPengerjaan.value; var hs=ddHasilPsikotest.value;
       var url='@Url.Content("~/Applicants/Ujian/List")'+
         '?inputStart='+(encodeURIComponent(s1||''))+
@@ -1369,7 +1456,8 @@
         '&ujianStart='+(encodeURIComponent(s2||''))+
         '&ujianEnd='+(encodeURIComponent(e2||''))+
         '&status='+(encodeURIComponent(st||''))+
-        '&hasil='+(encodeURIComponent(hs||''));
+        '&hasil='+(encodeURIComponent(hs||''))+
+        '&noPeserta='+(encodeURIComponent(activeNoPeserta||''));
       if(debug){ console.groupCollapsed('[Applicants] fetch ujian'); console.log('url', url); console.log('filters', { inputStart:s1, inputEnd:e1, ujianStart:s2, ujianEnd:e2, status:st, hasil:hs }); }
       return fetch(url,{ method:'GET', credentials:'same-origin' }).then(function(r){
         var status=r.status; var ok=r.ok; var ct=(r.headers&&r.headers.get)?(r.headers.get('content-type')||''):'';
@@ -1380,7 +1468,7 @@
           try{ return JSON.parse(t); }catch(e){ console.error('[Applicants] JSON parse error', e, 'sample', t.slice(0,200)); return []; }
         });
       }).then(function(rows){
-        examData = (rows||[]);
+        examData = (rows||[]).filter(function(x){ return normalizeNo(x && x.nomor) === activeKey; });
         updateSelectOptions(ddStatusPengerjaan, examData, 'status');
         if(debug){
           var t0 = examData[0] ? examData[0].timeInput : null;
@@ -1423,14 +1511,16 @@
         var body=document.querySelector('#tblUjian tbody'); body.innerHTML='';
         pageRows.forEach(function(r){
           var tr=document.createElement('tr');
-          var isBelum = eqText(r.status, 'Belum Ujian');
+          var isSelesai = eqText(r.status, 'Selesai Ujian');
+          var hasHasil = (''+(r.hasil||'')).trim() !== '';
+          var showView = isSelesai && hasHasil;
           var btnIconStyle = 'background-repeat:no-repeat;background-position:center;background-size:16px 16px;width:32px;height:28px;min-width:32px;padding:0;';
-          var aksi = isBelum
-            ? '<div class="inline-flex items-center gap-1">'+
+          var aksi = showView
+            ? '<button type="button" class="ujian-view-btn btn-flat rounded-md" title="View" style="background-image:url('+iconView+');'+btnIconStyle+'"></button>'
+            : '<div class="inline-flex items-center gap-1">'+
                 '<button type="button" class="ujian-edit-btn btn-flat rounded-md" title="Edit" style="background-image:url('+iconEdit+');'+btnIconStyle+'"></button>'+
                 '<button type="button" class="ujian-resend-btn btn-flat rounded-md" title="Resend" style="background-image:url('+iconResend+');'+btnIconStyle+'"></button>'+
-              '</div>'
-            : '<button type="button" class="ujian-view-btn btn-flat rounded-md" title="View" style="background-image:url('+iconView+');'+btnIconStyle+'"></button>';
+              '</div>';
           tr.innerHTML=
           '<td class="px-3 py-1 cell select-cell"><div class="select-square"></div></td>'+
           '<td class="px-1 py-1 cell">'+(r.num||'')+'</td>'+
@@ -1461,13 +1551,14 @@
           var btnResend = tr.querySelector('.ujian-resend-btn');
           if(btnResend) btnResend.addEventListener('click', function(e){
             e.stopPropagation();
-            if(!confirm('Kirim ulang undangan ujian untuk peserta ini?')) return;
-            if(!r.userId){ showError('User ID tidak ditemukan'); return; }
-            postJson('@Url.Content("~/Applicants/Ujian/Resend")', { UserID: r.userId, User: currentUser }).then(function(res){
-              if(!res.ok){ showError('Gagal resend undangan ujian'); return; }
-              showSuccess('Resend undangan ujian berhasil');
-              applyUjian();
-            }).catch(function(){ showError('Gagal resend undangan ujian'); });
+            showConfirm('Kirim ulang undangan ujian untuk peserta ini?', function(){
+              if(!r.userId){ showError('User ID tidak ditemukan'); return; }
+              postJson('@Url.Content("~/Applicants/Ujian/Resend")', { UserID: r.userId, User: currentUser }).then(function(res){
+                if(!res.ok){ showError('Gagal resend undangan ujian'); return; }
+                showSuccess('Resend undangan ujian berhasil');
+                applyUjian();
+              }).catch(function(){ showError('Gagal resend undangan ujian'); });
+            });
           });
           var btnView = tr.querySelector('.ujian-view-btn');
           if(btnView) btnView.addEventListener('click', function(e){ e.stopPropagation(); openUjianView(r); });
@@ -1482,11 +1573,22 @@
 
     function applyInterview(){
       var sc=document.querySelector('#gridInterview .table-scroll'); if(sc) sc.classList.add('loading');
+      if(window.__applicantsActiveNoPeserta) activeNoPeserta = ''+window.__applicantsActiveNoPeserta;
+      var activeKey = normalizeNo(activeNoPeserta);
+      if(!activeNoPeserta){
+        interviewData = [];
+        var body0=document.querySelector('#tblInterview tbody'); if(body0) body0.innerHTML='';
+        infoInterview.textContent='Showing 0 to 0 of 0 entries';
+        renderPages(pageNumsInterview, 1, 1);
+        if(sc) sc.classList.remove('loading');
+        return Promise.resolve();
+      }
       var s1=ddInterviewInputStart.value; var e1=ddInterviewInputEnd.value; var st=ddStatusInterview.value;
       var url='@Url.Content("~/Applicants/Interview/List")'+
         '?inputStart='+(encodeURIComponent(s1||''))+
         '&inputEnd='+(encodeURIComponent(e1||''))+
-        '&statusInterview='+(encodeURIComponent(st||''));
+        '&statusInterview='+(encodeURIComponent(st||''))+
+        '&noPeserta='+(encodeURIComponent(activeNoPeserta||''));
       if(debug){ console.groupCollapsed('[Applicants] fetch interview'); console.log('url', url); console.log('filters', { inputStart:s1, inputEnd:e1, statusInterview:st }); }
       return fetch(url,{ method:'GET', credentials:'same-origin' }).then(function(r){
         var status=r.status; var ok=r.ok; var ct=(r.headers&&r.headers.get)?(r.headers.get('content-type')||''):'';
@@ -1497,7 +1599,7 @@
           try{ return JSON.parse(t); }catch(e){ console.error('[Applicants] JSON parse error', e, 'sample', t.slice(0,200)); return []; }
         });
       }).then(function(rows){
-        interviewData=(rows||[]);
+        interviewData=(rows||[]).filter(function(x){ return normalizeNo(x && x.nomor) === activeKey; });
         updateSelectOptions(ddStatusInterview, interviewData, 'statusInterview');
         if(debug){
           var t0 = interviewData[0] ? interviewData[0].timeInput : null;
@@ -1571,13 +1673,14 @@
           var btnResend = tr.querySelector('.interview-resend-btn');
           if(btnResend) btnResend.addEventListener('click', function(e){
             e.stopPropagation();
-            if(!confirm('Kirim ulang undangan interview untuk peserta ini?')) return;
-            if(!r.seqNo){ showError('ID interview tidak ditemukan'); return; }
-            postJson('@Url.Content("~/Applicants/Interview/Resend")', { SeqNo: r.seqNo, User: currentUser }).then(function(res){
-              if(!res.ok){ showError('Gagal resend undangan interview'); return; }
-              showSuccess('Resend undangan interview berhasil');
-              applyInterview();
-            }).catch(function(){ showError('Gagal resend undangan interview'); });
+            showConfirm('Kirim ulang undangan interview untuk peserta ini?', function(){
+              if(!r.seqNo){ showError('ID interview tidak ditemukan'); return; }
+              postJson('@Url.Content("~/Applicants/Interview/Resend")', { SeqNo: r.seqNo, User: currentUser }).then(function(res){
+                if(!res.ok){ showError('Gagal resend undangan interview'); return; }
+                showSuccess('Resend undangan interview berhasil');
+                applyInterview();
+              }).catch(function(){ showError('Gagal resend undangan interview'); });
+            });
           });
         });
         infoInterview.textContent='Showing '+(start+1)+' to '+Math.min(start+pageSize,total)+' of '+total+' entries';
@@ -1638,6 +1741,7 @@
       var s1=ddUjianInputStart.value; var e1=ddUjianInputEnd.value; var s2=ddUjianDateStart.value; var e2=ddUjianDateEnd.value; var st=ddStatusPengerjaan.value; var hs=ddHasilPsikotest.value;
       var p=new URLSearchParams();
       p.set('inputStart', s1||''); p.set('inputEnd', e1||''); p.set('ujianStart', s2||''); p.set('ujianEnd', e2||''); p.set('status', st||''); p.set('hasil', hs||'');
+      p.set('noPeserta', activeNoPeserta||'');
       Object.keys(searchUjian).forEach(function(k){ var v=searchUjian[k]||''; if(v) p.set('q_'+k, v); });
       if(sortUjian.field) p.set('sortField', sortUjian.field);
       p.set('sortDir', ''+(sortUjian.dir||1));
@@ -1647,6 +1751,7 @@
       var s1=ddInterviewInputStart.value; var e1=ddInterviewInputEnd.value; var st=ddStatusInterview.value;
       var p=new URLSearchParams();
       p.set('inputStart', s1||''); p.set('inputEnd', e1||''); p.set('statusInterview', st||'');
+      p.set('noPeserta', activeNoPeserta||'');
       Object.keys(searchInterview).forEach(function(k){ var v=searchInterview[k]||''; if(v) p.set('q_'+k, v); });
       if(sortInterview.field) p.set('sortField', sortInterview.field);
       p.set('sortDir', ''+(sortInterview.dir||1));
@@ -1657,7 +1762,14 @@
 
     initDefaults();
     showUjian();
-    applyUjian();
-    applyInterview();
+
+    window.addEventListener('applicants:select', function(e){
+      activeNoPeserta = (e && e.detail && e.detail.noPeserta!=null) ? (''+e.detail.noPeserta) : '';
+      if(activeNoPeserta) window.__applicantsActiveNoPeserta = activeNoPeserta;
+      currentPageUjian = 1;
+      currentPageInterview = 1;
+      applyUjian();
+      applyInterview();
+    });
   })();
 </script>
