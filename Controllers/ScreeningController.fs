@@ -362,11 +362,11 @@ type ScreeningController (db: IDbConnection) =
             statusR.Close()
 
             let psiko = ResizeArray<obj>()
-            use cmdPs = new Microsoft.Data.SqlClient.SqlCommand("SELECT NoGroup, NilaiStandard, NilaiGroupResult FROM WISECON_PSIKOTEST.dbo.TR_PsikotestResult WHERE UserId = (SELECT TOP 1 UserId FROM WISECON_PSIKOTEST.dbo.MS_PesertaDtl WHERE NoPeserta = (SELECT NoPeserta FROM WISECON_PSIKOTEST.dbo.MS_Peserta WHERE ID=@id)) ORDER BY NoGroup", conn)
+            use cmdPs = new Microsoft.Data.SqlClient.SqlCommand("SELECT GroupSoal, NilaiStandard, NilaiGroupResult FROM WISECON_PSIKOTEST.dbo.TR_PsikotestResult WHERE UserId = (SELECT TOP 1 UserId FROM WISECON_PSIKOTEST.dbo.MS_PesertaDtl WHERE NoPeserta = (SELECT NoPeserta FROM WISECON_PSIKOTEST.dbo.MS_Peserta WHERE ID=@id)) ORDER BY GroupSoal", conn)
             cmdPs.Parameters.AddWithValue("@id", kodeBiodata) |> ignore
             use rdrPs = cmdPs.ExecuteReader()
             while rdrPs.Read() do
-                let noGroup = if rdrPs.IsDBNull(0) then 0 else rdrPs.GetInt32(0)
+                let noGroup = if rdrPs.IsDBNull(0) then "" else rdrPs.GetString(0)
                 let standar = if rdrPs.IsDBNull(1) then 0 else rdrPs.GetInt32(1)
                 let hasil = if rdrPs.IsDBNull(2) then 0 else rdrPs.GetInt32(2)
                 psiko.Add(box {| noGroup = noGroup; nilaiStandard = standar; nilaiGroupResult = hasil |})
