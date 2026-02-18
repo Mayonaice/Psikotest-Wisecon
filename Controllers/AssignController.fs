@@ -859,6 +859,12 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
             let assigned =
                 if rd2.Read() then true else false
             rd2.Close()
+            use cmdMsg = new Microsoft.Data.SqlClient.SqlCommand()
+            cmdMsg.Connection <- conn
+            cmdMsg.CommandType <- CommandType.StoredProcedure
+            cmdMsg.CommandText <- "dbo.Insert_MessageWhatsapp_Psikotest"
+            cmdMsg.Parameters.AddWithValue("@NoPeserta", req.NoPeserta) |> ignore
+            cmdMsg.ExecuteNonQuery() |> ignore
             this.Ok()
         finally
             conn.Close()
@@ -931,6 +937,12 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
                     let assigned =
                         if rd2.Read() then true else false
                     rd2.Close()
+                    use cmdMsg = new Microsoft.Data.SqlClient.SqlCommand()
+                    cmdMsg.Connection <- conn
+                    cmdMsg.CommandType <- CommandType.StoredProcedure
+                    cmdMsg.CommandText <- "dbo.Insert_MessageWhatsapp_Psikotest"
+                    cmdMsg.Parameters.AddWithValue("@NoPeserta", noPeserta) |> ignore
+                    cmdMsg.ExecuteNonQuery() |> ignore
                 this.Ok()
             finally
                 conn.Close()
@@ -1002,6 +1014,12 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
                 let ord = rdr.GetOrdinal("ID")
                 id <- if rdr.IsDBNull(ord) then 0L else Convert.ToInt64(rdr.GetValue(ord))
             rdr.Close()
+            use cmdMsg = new Microsoft.Data.SqlClient.SqlCommand()
+            cmdMsg.Connection <- conn
+            cmdMsg.CommandType <- CommandType.StoredProcedure
+            cmdMsg.CommandText <- "dbo.Insert_MessageWhatsapp_Interview"
+            cmdMsg.Parameters.AddWithValue("@NoPeserta", req.NoPeserta) |> ignore
+            cmdMsg.ExecuteNonQuery() |> ignore
             this.Ok()
         finally
             conn.Close()
@@ -1035,6 +1053,12 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
                     let ord = rdr.GetOrdinal("ID")
                     id <- if rdr.IsDBNull(ord) then 0L else Convert.ToInt64(rdr.GetValue(ord))
                 rdr.Close()
+                use cmdMsg = new Microsoft.Data.SqlClient.SqlCommand()
+                cmdMsg.Connection <- conn
+                cmdMsg.CommandType <- CommandType.StoredProcedure
+                cmdMsg.CommandText <- "dbo.Insert_MessageWhatsapp_Interview"
+                cmdMsg.Parameters.AddWithValue("@NoPeserta", noPeserta) |> ignore
+                cmdMsg.ExecuteNonQuery() |> ignore
             this.Ok()
         finally
             conn.Close()

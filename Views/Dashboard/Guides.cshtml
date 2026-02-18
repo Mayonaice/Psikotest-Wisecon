@@ -28,10 +28,6 @@
         <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/RefreshNB.svg")" alt="Refresh" class="w-4 h-4" />
         <span>Refresh</span>
       </button>
-      <button id="btnGAdd" class="btn-flat inline-flex items-center gap-2 px-2 py-1 rounded-md h-7">
-        <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/AddNB.svg")" alt="Add" class="w-4 h-4" />
-        <span>Tambah</span>
-      </button>
     </div>
   </div>
 
@@ -72,6 +68,12 @@
       <div class="table-loader"><div class="spinner"></div></div>
     </div>
     <div class="px-1 py-1 text-gray-600 text-xs relative flex items-center justify-center">
+      <div class="flex items-center gap-2 absolute left-2">
+        <button id="btnGAdd" class="btn-flat inline-flex items-center gap-2 px-2 py-1 rounded-md h-7">
+          <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/AddNB.svg")" alt="Add" class="w-4 h-4" />
+          <span>Add</span>
+        </button>
+      </div>
       <div class="flex items-center gap-4">
         <span>Show</span>
         <select id="pageSizeGuides" class="btn-flat px-2 py-1 rounded-md w-20">
@@ -140,6 +142,15 @@
     .table-scroll.loading .table-loader{ display:flex; }
     .spinner{ width:28px; height:28px; border:3px solid #d1d5db; border-top-color:#1E90FF; border-radius:50%; animation:spin .9s linear infinite; }
     @@keyframes spin{ to{ transform:rotate(360deg); } }
+    .row-edit-btn{ display:inline-flex; align-items:center; justify-content:center; gap:6px; padding-left:0.5rem !important; padding-right:0.5rem !important; vertical-align:middle; box-sizing:border-box; }
+    .row-edit-btn{ padding-top:0.25rem !important; padding-bottom:0.25rem !important; min-height:28px; border-radius:6px; }
+    .row-edit-btn{ width:32px; min-width:32px; height:28px; padding:0 !important; font-size:0; background-image:url('@Url.Content("~/DCT3_Standarisasi/assets/icons/EditNB.png")'); background-repeat:no-repeat; background-position:center; background-size:16px 16px; }
+    .row-edit-btn:focus, .row-edit-btn:hover, .row-edit-btn:active{ padding:0 !important; }
+    .row-edit-btn img{ width:16px !important; height:16px !important; display:none !important; }
+    .row-edit-btn.btn-flat{ border-color:#f7b900 !important; }
+    .row-edit-btn.btn-flat:hover{ border-color:#f7b900 !important; }
+    .row-edit-btn.icon-only{ width:32px; min-width:32px; height:28px; padding:0 !important; }
+    .row-edit-btn.icon-only:focus, .row-edit-btn.icon-only:hover, .row-edit-btn.icon-only:active{ padding:0 !important; }
     #modalContent .dct-actions{ justify-content:flex-end; }
     #modalOverlay .dct-btn{ display:inline-flex; align-items:center; gap:8px; white-space:nowrap; }
     #modalOverlay .dct-btn img{ width:18px; height:18px; display:inline-block; }
@@ -182,11 +193,11 @@
 
       function enableFallback(){ var tb=document.getElementById('dToolbar'); var rt=document.getElementById('gKeteranganRT'); var ta=document.getElementById('gKeterangan'); if(tb) tb.style.display='flex'; if(rt) rt.style.display='block'; if(ta) ta.style.display='none'; if(tb){ tb.querySelectorAll('button[data-cmd]').forEach(function(b){ b.addEventListener('click', function(){ var cmd=this.getAttribute('data-cmd'); if(cmd==='createLink'){ var href=prompt('Masukkan URL'); if(href) document.execCommand(cmd,false,href); } else if(cmd==='insertImage'){ var src=prompt('Masukkan URL gambar'); if(src) document.execCommand(cmd,false,src); } else { document.execCommand(cmd,false,null); } }); }); } }
 
-      function guideForm(o){ var sq=o.seqNo||''; var ket=o.keterangan||''; var akt=o.status==='AKTIF'; return (
+      function guideForm(o){ var sq=o.seqNo||''; var ket=o.keterangan||''; var akt=o.status==='AKTIF'; var non= o.status==='NONAKTIF'; return (
         '<div class="modal-form">'+
           '<div class="modal-label">Nomor Petunjuk:</div><div class="modal-field"><input id="gSeqNo" value="'+sq+'" readonly /></div>'+
           '<div class="modal-label">Keterangan Petunjuk:</div><div class="modal-field"><div id="dToolbar" class="rt-toolbar"><button type="button" data-cmd="bold" title="Bold"><b>B</b></button><button type="button" data-cmd="italic" title="Italic"><i>I</i></button><button type="button" data-cmd="underline" title="Underline"><u>U</u></button><button type="button" data-cmd="insertUnorderedList" title="Bullets">•</button><button type="button" data-cmd="insertOrderedList" title="Numbers">1.</button><button type="button" data-cmd="createLink" title="Link">🔗</button><button type="button" data-cmd="insertImage" title="Image">🖼️</button><button type="button" data-cmd="undo" title="Undo">↶</button><button type="button" data-cmd="redo" title="Redo">↷</button></div><textarea id="gKeterangan" class="w-full">'+ket+'</textarea><div id="gKeteranganRT" class="rt-area" contenteditable="true">'+ket+'</div></div>'+
-          '<div class="modal-label">Status:</div><div class="modal-field"><label class="inline-flex items-center gap-2"><input id="gAktif" type="checkbox"'+(akt?' checked':'')+' /> <span>Aktif/Nonaktif</span></label></div>'+
+          '<div class="modal-label">Status:</div><div class="modal-field"><div class="inline-flex items-center gap-4"><label class="inline-flex items-center gap-2"><input type="radio" name="gAktif" value="AKTIF"'+((akt || (!akt && !non))?' checked':'')+' /> <span>Aktif</span></label><label class="inline-flex items-center gap-2"><input type="radio" name="gAktif" value="NONAKTIF"'+(non?' checked':'')+' /> <span>Nonaktif</span></label></div></div>'+
         '</div>'
       ); }
 
@@ -201,9 +212,9 @@
       ddStart.addEventListener('change', function(){ currentPage=1; fetchGuides(); });
       ddEnd.addEventListener('change', function(){ currentPage=1; fetchGuides(); });
       btnRefresh.addEventListener('click', function(){ document.querySelectorAll('.col-search-guides').forEach(function(el){ el.value=''; }); search={}; sort={field:null,dir:1}; ddStatus.value=''; currentPage=1; fetchGuides(); });
-      btnAdd.addEventListener('click', function(){ var o={}; openModal('Tambah Petunjuk', guideForm(o), function(){ var seq=parseInt(document.getElementById('gSeqNo').value||'0',10)||0; var aktif=!!document.getElementById('gAktif').checked; var ket=''; if(window.CKEDITOR && CKEDITOR.instances && CKEDITOR.instances.gKeterangan){ ket = CKEDITOR.instances.gKeterangan.getData()||''; } else { ket = (document.getElementById('gKeteranganRT').innerHTML||'').trim(); } return fetch('@Url.Content("~/Guides/Modify")',{ method:'POST', headers:{ 'Content-Type':'application/json' }, credentials:'same-origin', body: JSON.stringify({ SeqNo:null, Keterangan:ket, bAktif:aktif, User:'@User.Identity?.Name' }) }).then(function(){ fetchGuides(); if(window.DCT3Modals){ DCT3Modals.open('success',{ message:'Data berhasil ditambah' }); } }).catch(function(){ if(window.DCT3Modals){ DCT3Modals.open('failed',{ message:'Gagal menambah data' }); } }); }); setTimeout(setupEditor, 100); });
+      btnAdd.addEventListener('click', function(){ var o={}; openModal('Tambah Petunjuk', guideForm(o), function(){ var seq=parseInt(document.getElementById('gSeqNo').value||'0',10)||0; var stEl=document.querySelector('input[name="gAktif"]:checked'); var aktif=stEl && stEl.value==='AKTIF'; var ket=''; if(window.CKEDITOR && CKEDITOR.instances && CKEDITOR.instances.gKeterangan){ ket = CKEDITOR.instances.gKeterangan.getData()||''; } else { ket = (document.getElementById('gKeteranganRT').innerHTML||'').trim(); } return fetch('@Url.Content("~/Guides/Modify")',{ method:'POST', headers:{ 'Content-Type':'application/json' }, credentials:'same-origin', body: JSON.stringify({ SeqNo:null, Keterangan:ket, bAktif:aktif, User:'@User.Identity?.Name' }) }).then(function(){ fetchGuides(); if(window.DCT3Modals){ DCT3Modals.open('success',{ message:'Data berhasil ditambah' }); } }).catch(function(){ if(window.DCT3Modals){ DCT3Modals.open('failed',{ message:'Gagal menambah data' }); } }); }); setTimeout(setupEditor, 100); });
 
-      document.querySelector('#tblGuides tbody').addEventListener('click', function(e){ var b=e.target.closest('.row-edit-btn'); if(!b){ if(window.DCT3Modals){ DCT3Modals.open('information',{ message:'Pilih baris untuk edit' }); } return; } var key= b.getAttribute('data-key'); var idx=raw.findIndex(function(x){ return (''+x.seqNo)===(''+key); }); if(idx<0) return; var obj=raw[idx]; openModal('Edit Petunjuk', guideForm(obj), function(){ var seq=parseInt(document.getElementById('gSeqNo').value||obj.seqNo||'0',10)||0; var aktif=!!document.getElementById('gAktif').checked; var ket=''; if(window.CKEDITOR && CKEDITOR.instances && CKEDITOR.instances.gKeterangan){ ket = CKEDITOR.instances.gKeterangan.getData()||''; } else { ket = (document.getElementById('gKeteranganRT').innerHTML||'').trim(); } return fetch('@Url.Content("~/Guides/Modify")',{ method:'POST', headers:{ 'Content-Type':'application/json' }, credentials:'same-origin', body: JSON.stringify({ SeqNo:seq, Keterangan:ket, bAktif:aktif, User:'@User.Identity?.Name' }) }).then(function(){ fetchGuides(); if(window.DCT3Modals){ DCT3Modals.open('success',{ message:'Data berhasil diubah' }); } }).catch(function(){ if(window.DCT3Modals){ DCT3Modals.open('failed',{ message:'Gagal mengubah data' }); } }); }); setTimeout(setupEditor, 100); });
+      document.querySelector('#tblGuides tbody').addEventListener('click', function(e){ var b=e.target.closest('.row-edit-btn'); if(!b){ if(window.DCT3Modals){ DCT3Modals.open('information',{ message:'Pilih baris untuk edit' }); } return; } var key= b.getAttribute('data-key'); var idx=raw.findIndex(function(x){ return (''+x.seqNo)===(''+key); }); if(idx<0) return; var obj=raw[idx]; openModal('Edit Petunjuk', guideForm(obj), function(){ var seq=parseInt(document.getElementById('gSeqNo').value||obj.seqNo||'0',10)||0; var stEl=document.querySelector('input[name="gAktif"]:checked'); var aktif=stEl && stEl.value==='AKTIF'; var ket=''; if(window.CKEDITOR && CKEDITOR.instances && CKEDITOR.instances.gKeterangan){ ket = CKEDITOR.instances.gKeterangan.getData()||''; } else { ket = (document.getElementById('gKeteranganRT').innerHTML||'').trim(); } return fetch('@Url.Content("~/Guides/Modify")',{ method:'POST', headers:{ 'Content-Type':'application/json' }, credentials:'same-origin', body: JSON.stringify({ SeqNo:seq, Keterangan:ket, bAktif:aktif, User:'@User.Identity?.Name' }) }).then(function(){ fetchGuides(); if(window.DCT3Modals){ DCT3Modals.open('success',{ message:'Data berhasil diubah' }); } }).catch(function(){ if(window.DCT3Modals){ DCT3Modals.open('failed',{ message:'Gagal mengubah data' }); } }); }); setTimeout(setupEditor, 100); });
 
       var modalOverlay = document.getElementById('modalOverlay');
       var modalHeader = document.getElementById('modalHeader');
@@ -212,7 +223,7 @@
       var modalSave = document.getElementById('modalSave');
       var modalIcon = document.getElementById('modalIcon');
       var modalClose = document.getElementById('modalClose');
-      function openModal(title, bodyHtml, onSave){ modalHeader.textContent = title||''; modalBody.innerHTML = bodyHtml||''; if (modalIcon) { var t=(title||'').toLowerCase(); var icon='@Url.Content("~/DCT3_Standarisasi/assets/icons/Confirmation.png")'; if(t.indexOf('tambah')>-1 || t.indexOf('add')>-1) icon='@Url.Content("~/DCT3_Standarisasi/assets/icons/AddNB.svg")'; if(t.indexOf('edit')>-1) icon='@Url.Content("~/DCT3_Standarisasi/assets/icons/EditNB.png")'; modalIcon.src=icon; } if(modalOverlay){ modalOverlay.classList.remove('dct-hidden'); modalOverlay.style.display='flex'; } var close=function(){ if(modalOverlay){ modalOverlay.style.display='none'; modalOverlay.classList.add('dct-hidden'); } }; if(modalClose) modalClose.onclick=close; if(modalCancel){ modalCancel.innerHTML='<img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/XNB.png")" class="w-4 h-4" /> <span>Close</span>'; modalCancel.onclick=close; } if(modalSave){ modalSave.innerHTML='<img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/sendNB.png")" class="w-4 h-4" /> <span>Simpan</span>'; modalSave.onclick=function(){ if(typeof onSave==='function'){ var r=onSave(); if(r && typeof r.then==='function'){ r.then(close).catch(close); } else { close(); } } else { close(); } }; } }
+      function openModal(title, bodyHtml, onSave){ modalHeader.textContent = title||''; modalBody.innerHTML = bodyHtml||''; if (modalIcon) { var t=(title||'').toLowerCase(); var icon='@Url.Content("~/DCT3_Standarisasi/assets/icons/Confirmation.png")'; if(t.indexOf('tambah')>-1 || t.indexOf('add')>-1) icon='@Url.Content("~/DCT3_Standarisasi/assets/icons/AddNB.svg")'; if(t.indexOf('edit')>-1) icon='@Url.Content("~/DCT3_Standarisasi/assets/icons/EditNB.png")'; modalIcon.src=icon; } if(modalOverlay){ modalOverlay.classList.remove('dct-hidden'); modalOverlay.style.display='flex'; } var close=function(){ if(modalOverlay){ modalOverlay.style.display='none'; modalOverlay.classList.add('dct-hidden'); } }; if(modalClose) modalClose.onclick=close; if(modalCancel){ modalCancel.innerHTML='<img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/XNB.png")" class="w-4 h-4" /> <span>Close</span>'; modalCancel.onclick=close; } if(modalSave){ modalSave.innerHTML='<img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/sendNB.png")" class="w-4 h-4" /> <span>Save</span>'; modalSave.onclick=function(){ if(typeof onSave==='function'){ var r=onSave(); if(r && typeof r.then==='function'){ r.then(close).catch(close); } else { close(); } } else { close(); } }; } }
       function hideModal(){ if(modalOverlay){ modalOverlay.style.display='none'; modalOverlay.classList.add('dct-hidden'); } }
 
       function initDates(){ var now=new Date(); var s=new Date(now.getFullYear(),0,1); var e=new Date(now.getFullYear(),11,31); var toISO=function(d){ return d.toISOString().slice(0,10); }; ddStart.value=toISO(s); ddEnd.value=toISO(e); }

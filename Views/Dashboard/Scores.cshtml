@@ -105,6 +105,10 @@
   .select-square{ display:inline-block; width:18px; height:18px; border:1px solid #d1d5db; border-radius:4px; background:#fff; cursor:pointer; }
   .select-square.selected{ background:#1E90FF; border-color:#1E90FF; }
   .search-cell input{ display:block; width:100%; }
+  #scoresPage input,
+  #scoresPage textarea,
+  #scoresPage select{ border:1px solid #4b5563; padding-top:6px; padding-bottom:2px; line-height:1.2; vertical-align:top; }
+  #scoresPage textarea{ padding-top:6px; }
   .tab-btn{ border:1px solid #111827; color:#fff; }
   .tab-personal{ background:#1E90FF; }
   .tab-experience{ background:#F4A026; }
@@ -112,9 +116,9 @@
   .tab-btn:hover{ filter: brightness(1.05); }
   .tab-btn:active{ filter: brightness(0.97); }
   .date-formatted{ position:relative; padding-right:2.25rem; }
-  .date-formatted::before{ content: attr(data-display); position:absolute; left:.5rem; right:2.25rem; top:50%; transform:translateY(-50%); color:#111827; pointer-events:none; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .date-formatted::before{ content: attr(data-display); position:absolute; left:.5rem; right:2.25rem; top:.45rem; transform:none; color:#111827; pointer-events:none; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .date-formatted::-webkit-datetime-edit{ color:transparent; }
-  .date-formatted::-webkit-calendar-picker-indicator{ opacity:1; position:absolute; right:.5rem; top:50%; transform:translateY(-50%); margin:0; padding:0; cursor:pointer; }
+  .date-formatted::-webkit-calendar-picker-indicator{ opacity:1; position:absolute; right:.5rem; top:.45rem; transform:none; margin:0; padding:0; cursor:pointer; }
   .table-scroll{ position:relative; }
   .table-loader{ position:absolute; inset:0; display:none; background:rgba(255,255,255,0.65); align-items:center; justify-content:center; z-index:10; }
   .table-scroll.loading .table-loader{ display:flex; }
@@ -123,7 +127,7 @@
   #modalContent .dct-actions{ justify-content:flex-end; }
   #modalContent.dct-modal{ width:auto; min-width:480px; max-width:95vw; display:inline-block; }
   .modal-form{ display:grid; grid-template-columns:160px 1fr; gap:8px 12px; }
-  .modal-label{ font-size:14px; align-self:center; }
+  .modal-label{ font-size:14px; align-self:flex-start; padding-top:6px; }
   .modal-field textarea{ min-height:120px; }
   #modalOverlay .dct-btn{ display:inline-flex; align-items:center; gap:8px; white-space:nowrap; }
   #modalOverlay .dct-btn img{ width:18px; height:18px; display:inline-block; }
@@ -333,7 +337,7 @@ function openModal(title, bodyHtml, onSave){
   }
 
   if(modalSave){
-    modalSave.innerHTML='<img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/sendNB.png")" class="w-4 h-4" /> <span>Simpan</span>';
+    modalSave.innerHTML='<img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/sendNB.png")" class="w-4 h-4" /> <span>Save</span>';
     modalSave.onclick=function(){
       if(typeof onSave==='function'){
         var r=onSave();

@@ -4,6 +4,7 @@ open System
 open System.Data
 open System.Text
 open System.Security.Cryptography
+open System.Collections.Concurrent
 open Microsoft.AspNetCore.Mvc
 open Microsoft.AspNetCore.Authorization
 open Microsoft.Extensions.Configuration
@@ -18,12 +19,17 @@ type ExamFinishRequest = { Token: string }
 [<CLIMutable>]
 type ExamSubmitAnswerRequest = { Token: string; NoGroup: int; NoUrut: int; JawabanDiPilih: int }
 
+[<CLIMutable>]
+type ExamGroupStartRequest = { Token: string; NoGroup: int }
+
 type ExamAnswer = { noJawaban: int; jawaban: string; poin: int }
 type ExamQuestion = { noUrut: int; judul: string; deskripsi: string; answers: ResizeArray<ExamAnswer> }
 type ExamGroup = { noGroup: int; namaGroup: string; minSoal: int; waktu: int; random: bool; isPrioritas: bool; questions: ResizeArray<ExamQuestion> }
 
 type ExamController (db: IDbConnection, advDb: SqlConnection, cfg: IConfiguration) =
     inherit Controller()
+
+    static let groupStartMap = ConcurrentDictionary<string, DateTime>()
 
     let decrypt64 (cipherTextBase64: string) (encryptionKey: string) =
         if String.IsNullOrWhiteSpace(cipherTextBase64) || String.IsNullOrWhiteSpace(encryptionKey) then
@@ -93,6 +99,15 @@ type ExamController (db: IDbConnection, advDb: SqlConnection, cfg: IConfiguratio
         let obj = cmd.ExecuteScalar()
         try Convert.ToInt32(obj) = 1 with _ -> false
 
+    member private this.getToleranceMinutes(conn: SqlConnection, noPaket: int64) =
+        use cmd = new SqlCommand()
+        cmd.Connection <- conn
+        cmd.CommandType <- CommandType.Text
+        cmd.CommandText <- "SELECT ISNULL(ToleransiWaktu,0) FROM WISECON_PSIKOTEST.dbo.MS_PaketSoal WHERE NoPaket=@p"
+        cmd.Parameters.AddWithValue("@p", noPaket) |> ignore
+        let obj = cmd.ExecuteScalar()
+        try Convert.ToInt32(obj) with _ -> 0
+
     member private this.getAssignment(conn: SqlConnection, userId: string, noPaket: int64) =
         use cmd = new SqlCommand()
         cmd.Connection <- conn
@@ -124,13 +139,26 @@ type ExamController (db: IDbConnection, advDb: SqlConnection, cfg: IConfiguratio
         else
             None
 
+    member private this.getGroupDurationMinutes(conn: SqlConnection, noPaket: int64, noGroup: int) =
+        use cmd = new SqlCommand()
+        cmd.Connection <- conn
+        cmd.CommandType <- CommandType.Text
+        cmd.CommandText <- "SELECT ISNULL(WaktuPengerjaan,0) FROM WISECON_PSIKOTEST.dbo.MS_PaketSoalGroup WHERE NoPaket=@p AND NoGroup=@g"
+        cmd.Parameters.AddWithValue("@p", noPaket) |> ignore
+        cmd.Parameters.AddWithValue("@g", noGroup) |> ignore
+        let obj = cmd.ExecuteScalar()
+        try Convert.ToInt32(obj) with _ -> 0
+
+    member private this.groupKey(userId: string, noPaket: int64, noGroup: int) =
+        userId + "|" + noPaket.ToString() + "|" + noGroup.ToString()
+
     member private this.finalizeExam(conn: SqlConnection, userId: string, noPaket: int64, idNoPeserta: int64, noPeserta: string) =
         use upd = new SqlCommand()
         upd.Connection <- conn
         upd.CommandType <- CommandType.Text
         upd.CommandText <-
             "UPDATE WISECON_PSIKOTEST.dbo.MS_PesertaDtl " +
-            "SET TimeEdit = GETDATE(), UserEdit=@u " +
+            "SET TimeEdit = GETDATE(), UserEdit=@u, block=1, Url=NULL " +
             "WHERE UserId=@u AND NoPaket=@p; " +
             "IF COL_LENGTH('WISECON_PSIKOTEST.dbo.MS_PesertaDtl','bKirim') IS NOT NULL " +
             "BEGIN " +
@@ -152,31 +180,10 @@ type ExamController (db: IDbConnection, advDb: SqlConnection, cfg: IConfiguratio
         delW.Parameters.AddWithValue("@u", userId) |> ignore
         delW.ExecuteNonQuery() |> ignore
 
-        advDb.Open()
-        try
-            use delA = new SqlCommand("DELETE FROM ADVPSIKOTEST.dbo.TR_PsikotestResult WHERE UserId=@u", advDb)
-            delA.Parameters.AddWithValue("@u", userId) |> ignore
-            delA.ExecuteNonQuery() |> ignore
-
-            use hitung = new SqlCommand("dbo.SP_HitungNilaiUjian", advDb)
-            hitung.CommandType <- CommandType.StoredProcedure
-            hitung.Parameters.AddWithValue("@UserId", userId) |> ignore
-            hitung.ExecuteNonQuery() |> ignore
-        finally
-            advDb.Close()
-
-        use insW = new SqlCommand()
-        insW.Connection <- conn
-        insW.CommandType <- CommandType.Text
-        insW.CommandText <-
-            "INSERT INTO WISECON_PSIKOTEST.dbo.TR_PsikotestResult " +
-            "(IdNoPeserta, NoPeserta, UserId, GroupSoal, NilaiStandard, NilaiGroupResult, UserInput, TimeInput, UserEdit, TimeEdit) " +
-            "SELECT @id, @np, @u, CAST(r.GroupSoal AS VARCHAR(50)), r.NilaiStandard, r.NilaiGroupResult, r.UserInput, r.TimeInput, r.UserEdit, r.TimeEdit " +
-            "FROM ADVPSIKOTEST.dbo.TR_PsikotestResult r WHERE r.UserId=@u"
-        insW.Parameters.AddWithValue("@id", idNoPeserta) |> ignore
-        insW.Parameters.AddWithValue("@np", noPeserta) |> ignore
-        insW.Parameters.AddWithValue("@u", userId) |> ignore
-        insW.ExecuteNonQuery() |> ignore
+        use hitung = new SqlCommand("dbo.SP_HitungNilaiUjian_Wisecon", conn)
+        hitung.CommandType <- CommandType.StoredProcedure
+        hitung.Parameters.AddWithValue("@UserId", userId) |> ignore
+        hitung.ExecuteNonQuery() |> ignore
 
     member private this.loadQuestions(conn: SqlConnection, noPaket: int64) =
         use cmd = new SqlCommand()
@@ -250,15 +257,21 @@ type ExamController (db: IDbConnection, advDb: SqlConnection, cfg: IConfiguratio
                             this.BadRequest("Akses ujian diblokir") :> IActionResult
                         else
                             let now = DateTime.Now
-                            let startAt =
-                                if startTest.HasValue then startTest.Value
-                                elif waktuTest.HasValue then waktuTest.Value
+                            let plannedTime =
+                                if waktuTest.HasValue then waktuTest.Value
                                 else waktuFromToken
-                            if now < startAt then
+                            let toleransi = this.getToleranceMinutes(conn, noPaket)
+                            let startWindow = plannedTime.AddMinutes(-float toleransi)
+                            let endWindow = plannedTime.AddMinutes(float toleransi)
+                            if not startTest.HasValue && (now < startWindow || now > endWindow) then
                                 this.BadRequest("Waktu ujian tidak valid") :> IActionResult
                             else
                                 try
                                     this.finalizeExam(conn, userId, noPaket, idNoPeserta, noPeserta)
+                                    let keyPrefix = userId + "|" + noPaket.ToString() + "|"
+                                    for kv in groupStartMap do
+                                        if kv.Key.StartsWith(keyPrefix, StringComparison.Ordinal) then
+                                            groupStartMap.TryRemove(kv.Key) |> ignore
                                     this.Ok(box {| ok = true |}) :> IActionResult
                                 with ex ->
                                     this.BadRequest(ex.Message) :> IActionResult
@@ -291,41 +304,132 @@ type ExamController (db: IDbConnection, advDb: SqlConnection, cfg: IConfiguratio
                             if this.hasFinalResult(conn, userId) then
                                 this.BadRequest("Ujian sudah selesai") :> IActionResult
                             else
-                                let startAt =
-                                    if startTest.HasValue then startTest.Value
-                                    elif waktuTest.HasValue then waktuTest.Value
+                                let plannedTime =
+                                    if waktuTest.HasValue then waktuTest.Value
                                     else waktuFromToken
-                                let endAt = startAt.AddHours(1.0)
-                                if now < startAt then
+                                let toleransi = this.getToleranceMinutes(conn, noPaket)
+                                let startWindow = plannedTime.AddMinutes(-float toleransi)
+                                let endWindow = plannedTime.AddMinutes(float toleransi)
+                                if not startTest.HasValue && (now < startWindow || now > endWindow) then
                                     this.BadRequest("Waktu ujian tidak valid") :> IActionResult
-                                elif now > endAt.AddSeconds(5.0) then
-                                    try
-                                        this.finalizeExam(conn, userId, noPaket, idNoPeserta, noPeserta)
-                                        this.StatusCode(410, "Waktu ujian sudah habis, ujian difinalisasi") :> IActionResult
-                                    with ex ->
-                                        this.BadRequest(ex.Message) :> IActionResult
                                 else
-                                    use cmdTipe = new SqlCommand()
-                                    cmdTipe.Connection <- conn
-                                    cmdTipe.CommandType <- CommandType.Text
-                                    cmdTipe.CommandText <- "SELECT ISNULL(Tipe,'PG') FROM WISECON_PSIKOTEST.dbo.MS_PaketSoalGroup WHERE NoPaket=@p AND NoGroup=@g"
-                                    cmdTipe.Parameters.AddWithValue("@p", noPaket) |> ignore
-                                    cmdTipe.Parameters.AddWithValue("@g", req.NoGroup) |> ignore
-                                    let tipeObj = cmdTipe.ExecuteScalar()
-                                    let tipe = if isNull tipeObj then "PG" else Convert.ToString(tipeObj)
-                                    if String.Equals(tipe, "PG", StringComparison.OrdinalIgnoreCase) then
-                                        use chk = new SqlCommand()
-                                        chk.Connection <- conn
-                                        chk.CommandType <- CommandType.Text
-                                        chk.CommandText <- "SELECT CASE WHEN EXISTS (SELECT 1 FROM WISECON_PSIKOTEST.dbo.MS_PaketSoalGroupDtlJawaban WHERE NoPaket=@p AND NoGroup=@g AND NoUrut=@u AND NoJawaban=@j) THEN 1 ELSE 0 END"
-                                        chk.Parameters.AddWithValue("@p", noPaket) |> ignore
-                                        chk.Parameters.AddWithValue("@g", req.NoGroup) |> ignore
-                                        chk.Parameters.AddWithValue("@u", req.NoUrut) |> ignore
-                                        chk.Parameters.AddWithValue("@j", req.JawabanDiPilih) |> ignore
-                                        let okObj = chk.ExecuteScalar()
-                                        let ok = try Convert.ToInt32(okObj) = 1 with _ -> false
-                                        if not ok then
-                                            this.BadRequest("Pilihan jawaban tidak valid") :> IActionResult
+                                    let duration = this.getGroupDurationMinutes(conn, noPaket, req.NoGroup)
+                                    if duration > 0 then
+                                        let key = this.groupKey(userId, noPaket, req.NoGroup)
+                                        let startAt =
+                                            match groupStartMap.TryGetValue(key) with
+                                            | true, v -> v
+                                            | _ ->
+                                                let v = DateTime.Now
+                                                groupStartMap.[key] <- v
+                                                v
+                                        let endAt = startAt.AddMinutes(float duration)
+                                        if now > endAt.AddSeconds(5.0) then
+                                            this.StatusCode(410, "Waktu group sudah habis") :> IActionResult
+                                        else
+                                            use cmdTipe = new SqlCommand()
+                                            cmdTipe.Connection <- conn
+                                            cmdTipe.CommandType <- CommandType.Text
+                                            cmdTipe.CommandText <- "SELECT ISNULL(Tipe,'PG') FROM WISECON_PSIKOTEST.dbo.MS_PaketSoalGroup WHERE NoPaket=@p AND NoGroup=@g"
+                                            cmdTipe.Parameters.AddWithValue("@p", noPaket) |> ignore
+                                            cmdTipe.Parameters.AddWithValue("@g", req.NoGroup) |> ignore
+                                            let tipeObj = cmdTipe.ExecuteScalar()
+                                            let tipe = if isNull tipeObj then "PG" else Convert.ToString(tipeObj)
+                                            if String.Equals(tipe, "PG", StringComparison.OrdinalIgnoreCase) then
+                                                use chk = new SqlCommand()
+                                                chk.Connection <- conn
+                                                chk.CommandType <- CommandType.Text
+                                                chk.CommandText <- "SELECT CASE WHEN EXISTS (SELECT 1 FROM WISECON_PSIKOTEST.dbo.MS_PaketSoalGroupDtlJawaban WHERE NoPaket=@p AND NoGroup=@g AND NoUrut=@u AND NoJawaban=@j) THEN 1 ELSE 0 END"
+                                                chk.Parameters.AddWithValue("@p", noPaket) |> ignore
+                                                chk.Parameters.AddWithValue("@g", req.NoGroup) |> ignore
+                                                chk.Parameters.AddWithValue("@u", req.NoUrut) |> ignore
+                                                chk.Parameters.AddWithValue("@j", req.JawabanDiPilih) |> ignore
+                                                let okObj = chk.ExecuteScalar()
+                                                let ok = try Convert.ToInt32(okObj) = 1 with _ -> false
+                                                if not ok then
+                                                    this.BadRequest("Pilihan jawaban tidak valid") :> IActionResult
+                                                else
+                                                    advDb.Open()
+                                                    try
+                                                        try
+                                                            use sp = new SqlCommand("dbo.SP_SubmitJawaban", advDb)
+                                                            sp.CommandType <- CommandType.StoredProcedure
+                                                            sp.Parameters.AddWithValue("@NoPeserta", idNoPeserta) |> ignore
+                                                            sp.Parameters.AddWithValue("@User", userId) |> ignore
+                                                            sp.Parameters.AddWithValue("@Tipe", tipe) |> ignore
+                                                            sp.Parameters.AddWithValue("@NoPaket", Convert.ToInt32(noPaket)) |> ignore
+                                                            sp.Parameters.AddWithValue("@NoGroup", req.NoGroup) |> ignore
+                                                            sp.Parameters.AddWithValue("@NoUrut", req.NoUrut) |> ignore
+                                                            sp.Parameters.AddWithValue("@JawabanDiPilih", req.JawabanDiPilih) |> ignore
+                                                            sp.Parameters.AddWithValue("@JmlSalah", 0uy) |> ignore
+                                                            sp.ExecuteNonQuery() |> ignore
+                                                            this.Ok(box {| ok = true |}) :> IActionResult
+                                                        with ex ->
+                                                            this.BadRequest(ex.Message) :> IActionResult
+                                                    finally
+                                                        advDb.Close()
+                                            else
+                                                advDb.Open()
+                                                try
+                                                    try
+                                                        use sp = new SqlCommand("dbo.SP_SubmitJawaban", advDb)
+                                                        sp.CommandType <- CommandType.StoredProcedure
+                                                        sp.Parameters.AddWithValue("@NoPeserta", idNoPeserta) |> ignore
+                                                        sp.Parameters.AddWithValue("@User", userId) |> ignore
+                                                        sp.Parameters.AddWithValue("@Tipe", tipe) |> ignore
+                                                        sp.Parameters.AddWithValue("@NoPaket", Convert.ToInt32(noPaket)) |> ignore
+                                                        sp.Parameters.AddWithValue("@NoGroup", req.NoGroup) |> ignore
+                                                        sp.Parameters.AddWithValue("@NoUrut", req.NoUrut) |> ignore
+                                                        sp.Parameters.AddWithValue("@JawabanDiPilih", req.JawabanDiPilih) |> ignore
+                                                        sp.Parameters.AddWithValue("@JmlSalah", 0uy) |> ignore
+                                                        sp.ExecuteNonQuery() |> ignore
+                                                        this.Ok(box {| ok = true |}) :> IActionResult
+                                                    with ex ->
+                                                        this.BadRequest(ex.Message) :> IActionResult
+                                                finally
+                                                    advDb.Close()
+                                    else
+                                        use cmdTipe = new SqlCommand()
+                                        cmdTipe.Connection <- conn
+                                        cmdTipe.CommandType <- CommandType.Text
+                                        cmdTipe.CommandText <- "SELECT ISNULL(Tipe,'PG') FROM WISECON_PSIKOTEST.dbo.MS_PaketSoalGroup WHERE NoPaket=@p AND NoGroup=@g"
+                                        cmdTipe.Parameters.AddWithValue("@p", noPaket) |> ignore
+                                        cmdTipe.Parameters.AddWithValue("@g", req.NoGroup) |> ignore
+                                        let tipeObj = cmdTipe.ExecuteScalar()
+                                        let tipe = if isNull tipeObj then "PG" else Convert.ToString(tipeObj)
+                                        if String.Equals(tipe, "PG", StringComparison.OrdinalIgnoreCase) then
+                                            use chk = new SqlCommand()
+                                            chk.Connection <- conn
+                                            chk.CommandType <- CommandType.Text
+                                            chk.CommandText <- "SELECT CASE WHEN EXISTS (SELECT 1 FROM WISECON_PSIKOTEST.dbo.MS_PaketSoalGroupDtlJawaban WHERE NoPaket=@p AND NoGroup=@g AND NoUrut=@u AND NoJawaban=@j) THEN 1 ELSE 0 END"
+                                            chk.Parameters.AddWithValue("@p", noPaket) |> ignore
+                                            chk.Parameters.AddWithValue("@g", req.NoGroup) |> ignore
+                                            chk.Parameters.AddWithValue("@u", req.NoUrut) |> ignore
+                                            chk.Parameters.AddWithValue("@j", req.JawabanDiPilih) |> ignore
+                                            let okObj = chk.ExecuteScalar()
+                                            let ok = try Convert.ToInt32(okObj) = 1 with _ -> false
+                                            if not ok then
+                                                this.BadRequest("Pilihan jawaban tidak valid") :> IActionResult
+                                            else
+                                                advDb.Open()
+                                                try
+                                                    try
+                                                        use sp = new SqlCommand("dbo.SP_SubmitJawaban", advDb)
+                                                        sp.CommandType <- CommandType.StoredProcedure
+                                                        sp.Parameters.AddWithValue("@NoPeserta", idNoPeserta) |> ignore
+                                                        sp.Parameters.AddWithValue("@User", userId) |> ignore
+                                                        sp.Parameters.AddWithValue("@Tipe", tipe) |> ignore
+                                                        sp.Parameters.AddWithValue("@NoPaket", Convert.ToInt32(noPaket)) |> ignore
+                                                        sp.Parameters.AddWithValue("@NoGroup", req.NoGroup) |> ignore
+                                                        sp.Parameters.AddWithValue("@NoUrut", req.NoUrut) |> ignore
+                                                        sp.Parameters.AddWithValue("@JawabanDiPilih", req.JawabanDiPilih) |> ignore
+                                                        sp.Parameters.AddWithValue("@JmlSalah", 0uy) |> ignore
+                                                        sp.ExecuteNonQuery() |> ignore
+                                                        this.Ok(box {| ok = true |}) :> IActionResult
+                                                    with ex ->
+                                                        this.BadRequest(ex.Message) :> IActionResult
+                                                finally
+                                                    advDb.Close()
                                         else
                                             advDb.Open()
                                             try
@@ -346,26 +450,34 @@ type ExamController (db: IDbConnection, advDb: SqlConnection, cfg: IConfiguratio
                                                     this.BadRequest(ex.Message) :> IActionResult
                                             finally
                                                 advDb.Close()
-                                    else
-                                        advDb.Open()
-                                        try
-                                            try
-                                                use sp = new SqlCommand("dbo.SP_SubmitJawaban", advDb)
-                                                sp.CommandType <- CommandType.StoredProcedure
-                                                sp.Parameters.AddWithValue("@NoPeserta", idNoPeserta) |> ignore
-                                                sp.Parameters.AddWithValue("@User", userId) |> ignore
-                                                sp.Parameters.AddWithValue("@Tipe", tipe) |> ignore
-                                                sp.Parameters.AddWithValue("@NoPaket", Convert.ToInt32(noPaket)) |> ignore
-                                                sp.Parameters.AddWithValue("@NoGroup", req.NoGroup) |> ignore
-                                                sp.Parameters.AddWithValue("@NoUrut", req.NoUrut) |> ignore
-                                                sp.Parameters.AddWithValue("@JawabanDiPilih", req.JawabanDiPilih) |> ignore
-                                                sp.Parameters.AddWithValue("@JmlSalah", 0uy) |> ignore
-                                                sp.ExecuteNonQuery() |> ignore
-                                                this.Ok(box {| ok = true |}) :> IActionResult
-                                            with ex ->
-                                                this.BadRequest(ex.Message) :> IActionResult
-                                        finally
-                                            advDb.Close()
+                finally
+                    conn.Close()
+
+    [<AllowAnonymous>]
+    [<HttpPost>]
+    [<Route("Exam/GroupStart")>]
+    member this.GroupStart([<FromBody>] req: ExamGroupStartRequest) : IActionResult =
+        let encKey = getEncryptionKey ()
+        if String.IsNullOrWhiteSpace(encKey) then
+            this.BadRequest("Konfigurasi EncryptionKey belum diset") :> IActionResult
+        else
+            let tokenEnc = norm req.Token
+            let tokenEncFixed = Uri.UnescapeDataString(tokenEnc).Replace(" ", "+")
+            let plain = decrypt64 tokenEncFixed encKey
+            match tryParseToken plain with
+            | None -> this.BadRequest("Token tidak valid") :> IActionResult
+            | Some(userId, noPaket, _, _, _) ->
+                let conn = db :?> SqlConnection
+                conn.Open()
+                try
+                    match this.getAssignment(conn, userId, noPaket) with
+                    | None -> this.BadRequest("Data ujian tidak ditemukan") :> IActionResult
+                    | Some(_, _, _, _, _, _, _, isBlocked, _, _, _) ->
+                        if isBlocked then this.BadRequest("Akses ujian diblokir") :> IActionResult
+                        else
+                            let key = this.groupKey(userId, noPaket, req.NoGroup)
+                            groupStartMap.[key] <- DateTime.Now
+                            this.Ok(box {| ok = true |}) :> IActionResult
                 finally
                     conn.Close()
 
@@ -428,11 +540,14 @@ type ExamController (db: IDbConnection, advDb: SqlConnection, cfg: IConfiguratio
                                     this.ViewData.["Token"] <- req.Token
                                     this.View("Index") :> IActionResult
                                 else
-                                    let waktu = if startTest.HasValue then startTest.Value elif waktuTest.HasValue then waktuTest.Value else waktuFromToken
-                                    let startAt = waktu
-                                    let endAt = waktu.AddHours(1.0)
+                                    let plannedTime =
+                                        if waktuTest.HasValue then waktuTest.Value
+                                        else waktuFromToken
+                                    let toleransi = this.getToleranceMinutes(conn, noPaket)
+                                    let startWindow = plannedTime.AddMinutes(-float toleransi)
+                                    let endWindow = plannedTime.AddMinutes(float toleransi)
                                     let now = DateTime.Now
-                                    if now < startAt || now > endAt then
+                                    if not startTest.HasValue && (now < startWindow || now > endWindow) then
                                         this.ViewData.["ErrorMessage"] <- "Waktu ujian tidak valid"
                                         this.ViewData.["Token"] <- req.Token
                                         this.View("Index") :> IActionResult
@@ -450,18 +565,17 @@ type ExamController (db: IDbConnection, advDb: SqlConnection, cfg: IConfiguratio
                                         cmdStart.Parameters.AddWithValue("@p", noPaket) |> ignore
                                         let startObj = cmdStart.ExecuteScalar()
                                         let startAt2 =
-                                            if isNull startObj then startAt
+                                            if isNull startObj then now
                                             else
                                                 try Convert.ToDateTime(startObj)
-                                                with _ -> startAt
-                                        let endAt2 = startAt2.AddHours(1.0)
+                                                with _ -> now
                                         this.ViewData.["Token"] <- req.Token
                                         this.ViewData.["UserId"] <- userId
                                         this.ViewData.["NoPaket"] <- noPaket
                                         this.ViewData.["NoPeserta"] <- noPeserta
                                         this.ViewData.["NamaPaket"] <- namaPaket
                                         this.ViewData.["StartAtIso"] <- startAt2.ToString("yyyy-MM-ddTHH:mm:ss")
-                                        this.ViewData.["EndAtIso"] <- endAt2.ToString("yyyy-MM-ddTHH:mm:ss")
+                                        this.ViewData.["EndAtIso"] <- startAt2.ToString("yyyy-MM-ddTHH:mm:ss")
                                         this.ViewData.["QuestionsJson"] <- System.Text.Json.JsonSerializer.Serialize(q)
                                         this.View("Test") :> IActionResult
                 finally

@@ -2,10 +2,12 @@ namespace PsikotestWisesa.Controllers
 
 open System
 open System.Data
+open System.IO
 open Microsoft.AspNetCore.Mvc
 open Microsoft.AspNetCore.Authorization
 open Microsoft.AspNetCore.Http
 open Microsoft.AspNetCore.Hosting
+open ClosedXML.Excel
 
 [<CLIMutable>]
 type PaketRequest = {
@@ -63,6 +65,7 @@ type CopyDtlRequest = {
 
 [<CLIMutable>]
 type JawabanRequest = {
+    SeqNo: Nullable<int64>
     NoPaket: int64
     NoGroup: int64
     NoUrut: int64
@@ -78,19 +81,6 @@ type JawabanRequest = {
 
 [<CLIMutable>]
 type DeleteJawabanRequest = { SeqNo: int64 }
-
-[<CLIMutable>]
-type NormaRequest = {
-    SeqNo: Nullable<int64>
-    NoGroup: int64
-    LabelNorma: string
-    BatasAtas: Nullable<int>
-    BatasBawah: Nullable<int>
-    User: string
-}
-
-[<CLIMutable>]
-type DeleteNormaRequest = { SeqNo: int64 }
 
 [<ApiController>]
 type QuestionsController (db: System.Data.IDbConnection) =
@@ -193,8 +183,7 @@ type QuestionsController (db: System.Data.IDbConnection) =
         cmd.Parameters.AddWithValue("@IsPrioritas", req.IsPrioritas) |> ignore
         cmd.Parameters.AddWithValue("@bAktif", req.bAktif) |> ignore
         cmd.Parameters.AddWithValue("@User", (if isNull req.User then "" else req.User)) |> ignore
-        let act = if req.NoGroup.HasValue && req.NoGroup.Value > 0L then "EDIT" else "ADD"
-        cmd.Parameters.AddWithValue("@Act", act) |> ignore
+        cmd.Parameters.AddWithValue("@Act", "ADD") |> ignore
         conn.Open()
         try
             use rdr = cmd.ExecuteReader()
@@ -225,6 +214,33 @@ type QuestionsController (db: System.Data.IDbConnection) =
                 let code = if rdr.IsDBNull(0) then "" else rdr.GetString(0)
                 let name = if rdr.IsDBNull(1) then code else rdr.GetString(1)
                 rows.Add(box {| code = code; name = name |})
+            this.Ok(rows)
+        finally
+            conn.Close()
+
+    [<Authorize>]
+    [<HttpGet>]
+    [<Route("Questions/Petunjuk/List")>]
+    member this.ListPetunjuk () : IActionResult =
+        let conn = db :?> Microsoft.Data.SqlClient.SqlConnection
+        use cmd = new Microsoft.Data.SqlClient.SqlCommand()
+        cmd.Connection <- conn
+        cmd.CommandType <- CommandType.Text
+        cmd.CommandText <- "SELECT SeqNo, Keterangan FROM WISECON_PSIKOTEST.dbo.MS_Petunjuk WHERE bAktif=0 ORDER BY SeqNo"
+        conn.Open()
+        try
+            use rdr = cmd.ExecuteReader()
+            let rows = ResizeArray<obj>()
+            while rdr.Read() do
+                let seqNo =
+                    let v = rdr.GetValue(0)
+                    match v with
+                    | :? int64 as x -> x
+                    | :? int32 as x -> int64 x
+                    | :? int as x -> int64 x
+                    | _ -> try Convert.ToInt64(v) with _ -> 0L
+                let ket = if rdr.IsDBNull(1) then "" else rdr.GetString(1)
+                rows.Add(box {| seqNo = seqNo; keterangan = ket |})
             this.Ok(rows)
         finally
             conn.Close()
@@ -315,8 +331,7 @@ type QuestionsController (db: System.Data.IDbConnection) =
         cmd.Parameters.AddWithValue("@UrlMedia", (if isNull req.UrlMedia then "" else req.UrlMedia)) |> ignore
         cmd.Parameters.AddWithValue("@TipeMedia", (if isNull req.TipeMedia then "NOMEDIA" else req.TipeMedia)) |> ignore
         cmd.Parameters.AddWithValue("@User", (if isNull req.User then "" else req.User)) |> ignore
-        let act = if req.SeqNo.HasValue && req.SeqNo.Value > 0L then "EDIT" else "ADD"
-        cmd.Parameters.AddWithValue("@Act", act) |> ignore
+        cmd.Parameters.AddWithValue("@Act", "ADD") |> ignore
         conn.Open()
         try
             use rdr = cmd.ExecuteReader()
@@ -391,6 +406,7 @@ type QuestionsController (db: System.Data.IDbConnection) =
         cmd.Connection <- conn
         cmd.CommandText <- "WISECON_PSIKOTEST.dbo.SP_PaketSoalGroupDtlJawaban"
         cmd.CommandType <- CommandType.StoredProcedure
+        cmd.Parameters.AddWithValue("@SeqNo", (if req.SeqNo.HasValue then req.SeqNo.Value else 0L)) |> ignore
         cmd.Parameters.AddWithValue("@NoPaket", req.NoPaket) |> ignore
         cmd.Parameters.AddWithValue("@NoGroup", req.NoGroup) |> ignore
         cmd.Parameters.AddWithValue("@NoUrut", req.NoUrut) |> ignore
@@ -435,112 +451,6 @@ type QuestionsController (db: System.Data.IDbConnection) =
                 else
                     let _ = cmd.ExecuteNonQuery()
                     ()
-            this.Ok()
-        finally
-            conn.Close()
-
-    [<Authorize>]
-    [<HttpGet>]
-    [<Route("Questions/Norma/List")>]
-    member this.ListNorma ([<FromQuery>] noGroup: int64) : IActionResult =
-        let conn = db :?> Microsoft.Data.SqlClient.SqlConnection
-        use cmd = new Microsoft.Data.SqlClient.SqlCommand()
-        cmd.Connection <- conn
-        cmd.CommandType <- CommandType.Text
-        cmd.CommandText <- "SELECT SeqNo, Nama, BatasAtas, BatasBawah, UserInput, TimeInput FROM WISECON_PSIKOTEST.dbo.MS_NormaDtl WHERE NoGroup=@g ORDER BY SeqNo"
-        cmd.Parameters.AddWithValue("@g", noGroup) |> ignore
-        conn.Open()
-        try
-            use rdr = cmd.ExecuteReader()
-            let rows = ResizeArray<obj>()
-            while rdr.Read() do
-                let seqNo = rdr.GetInt64(0)
-                let nama = if rdr.IsDBNull(1) then "" else rdr.GetString(1)
-                let atas = if rdr.IsDBNull(2) then 0 else rdr.GetInt32(2)
-                let bawah = if rdr.IsDBNull(3) then 0 else rdr.GetInt32(3)
-                let userInput = if rdr.IsDBNull(4) then "" else rdr.GetString(4)
-                let timeInput = if rdr.IsDBNull(5) then DateTime.MinValue else rdr.GetDateTime(5)
-                rows.Add(box {| seqNo = string seqNo; label = nama; atas = atas; bawah = bawah; userInput = userInput; time = timeInput |})
-            this.Ok(rows)
-        finally
-            conn.Close()
-
-    [<Authorize>]
-    [<HttpPost>]
-    [<Route("Questions/Norma/Modify")>]
-    member this.ModifyNorma ([<FromBody>] req: NormaRequest) : IActionResult =
-        let conn = db :?> Microsoft.Data.SqlClient.SqlConnection
-        conn.Open()
-        try
-            use chk = new Microsoft.Data.SqlClient.SqlCommand()
-            chk.Connection <- conn
-            chk.CommandType <- CommandType.Text
-            chk.CommandText <- "SELECT SUM(CASE WHEN name='UserEdit' THEN 1 ELSE 0 END) AS HasUserEdit, SUM(CASE WHEN name='TimeEdit' THEN 1 ELSE 0 END) AS HasTimeEdit FROM sys.columns WHERE object_id = OBJECT_ID('WISECON_PSIKOTEST.dbo.MS_NormaDtl')"
-            use chkRdr = chk.ExecuteReader()
-            let mutable hasUserEdit = false
-            let mutable hasTimeEdit = false
-            if chkRdr.Read() then
-                let a = try chkRdr.GetInt32(0) with _ -> 0
-                let b = try chkRdr.GetInt32(1) with _ -> 0
-                hasUserEdit <- a > 0
-                hasTimeEdit <- b > 0
-            chkRdr.Close()
-
-            let seqNo =
-                if req.SeqNo.HasValue && req.SeqNo.Value > 0L then
-                    use cmd = new Microsoft.Data.SqlClient.SqlCommand()
-                    cmd.Connection <- conn
-                    cmd.CommandType <- CommandType.Text
-                    let editCols =
-                        match hasUserEdit, hasTimeEdit with
-                        | true, true -> ", UserEdit=@u, TimeEdit=GETDATE()"
-                        | true, false -> ", UserEdit=@u"
-                        | false, true -> ", TimeEdit=GETDATE()"
-                        | false, false -> ""
-                    cmd.CommandText <- "UPDATE WISECON_PSIKOTEST.dbo.MS_NormaDtl SET Nama=@n, BatasAtas=@a, BatasBawah=@b" + editCols + " WHERE SeqNo=@s; SELECT @s"
-                    cmd.Parameters.AddWithValue("@n", (if isNull req.LabelNorma then "" else req.LabelNorma)) |> ignore
-                    cmd.Parameters.AddWithValue("@a", (if req.BatasAtas.HasValue then req.BatasAtas.Value else 0)) |> ignore
-                    cmd.Parameters.AddWithValue("@b", (if req.BatasBawah.HasValue then req.BatasBawah.Value else 0)) |> ignore
-                    cmd.Parameters.AddWithValue("@u", (if isNull req.User then "" else req.User)) |> ignore
-                    cmd.Parameters.AddWithValue("@s", req.SeqNo.Value) |> ignore
-                    let v = cmd.ExecuteScalar()
-                    if isNull v then 0L else Convert.ToInt64(v)
-                else
-                    use getMax = new Microsoft.Data.SqlClient.SqlCommand()
-                    getMax.Connection <- conn
-                    getMax.CommandType <- CommandType.Text
-                    getMax.CommandText <- "SELECT ISNULL(MAX(SeqNo),0)+1 FROM WISECON_PSIKOTEST.dbo.MS_NormaDtl"
-                    let nextObj = getMax.ExecuteScalar()
-                    let nextSeq = if isNull nextObj then 1L else Convert.ToInt64(nextObj)
-                    use ins = new Microsoft.Data.SqlClient.SqlCommand()
-                    ins.Connection <- conn
-                    ins.CommandType <- CommandType.Text
-                    ins.CommandText <- "INSERT INTO WISECON_PSIKOTEST.dbo.MS_NormaDtl (SeqNo, Nama, NoGroup, BatasAtas, BatasBawah, UserInput, TimeInput) VALUES (@s, @n, @g, @a, @b, @u, GETDATE()); SELECT @s"
-                    ins.Parameters.AddWithValue("@s", nextSeq) |> ignore
-                    ins.Parameters.AddWithValue("@n", (if isNull req.LabelNorma then "" else req.LabelNorma)) |> ignore
-                    ins.Parameters.AddWithValue("@g", req.NoGroup) |> ignore
-                    ins.Parameters.AddWithValue("@a", (if req.BatasAtas.HasValue then req.BatasAtas.Value else 0)) |> ignore
-                    ins.Parameters.AddWithValue("@b", (if req.BatasBawah.HasValue then req.BatasBawah.Value else 0)) |> ignore
-                    ins.Parameters.AddWithValue("@u", (if isNull req.User then "" else req.User)) |> ignore
-                    let v = ins.ExecuteScalar()
-                    if isNull v then nextSeq else Convert.ToInt64(v)
-            this.Ok(box {| SeqNo = seqNo |})
-        finally
-            conn.Close()
-
-    [<Authorize>]
-    [<HttpPost>]
-    [<Route("Questions/Norma/Delete")>]
-    member this.DeleteNorma ([<FromBody>] req: DeleteNormaRequest) : IActionResult =
-        let conn = db :?> Microsoft.Data.SqlClient.SqlConnection
-        use cmd = new Microsoft.Data.SqlClient.SqlCommand()
-        cmd.Connection <- conn
-        cmd.CommandType <- CommandType.Text
-        cmd.CommandText <- "DELETE FROM WISECON_PSIKOTEST.dbo.MS_NormaDtl WHERE SeqNo=@s"
-        cmd.Parameters.AddWithValue("@s", req.SeqNo) |> ignore
-        conn.Open()
-        try
-            let _ = cmd.ExecuteNonQuery()
             this.Ok()
         finally
             conn.Close()
@@ -705,3 +615,382 @@ type QuestionsController (db: System.Data.IDbConnection) =
             file.CopyTo(fs)
             let url = "/uploads/" + name
             this.Ok(box {| url = url; fileName = name |})
+
+    [<Authorize>]
+    [<HttpGet>]
+    [<Route("Questions/Template/Detail")>]
+    member this.TemplateDetail() : IActionResult =
+        let q = this.HttpContext.Request.Query
+        let noPaket = if q.ContainsKey("noPaket") then q.["noPaket"].ToString() else ""
+        let noGroup = if q.ContainsKey("noGroup") then q.["noGroup"].ToString() else ""
+        use wb = new XLWorkbook()
+        let ws = wb.AddWorksheet("Template")
+        ws.Cell(1,1).Value <- "NoPaket"
+        ws.Cell(1,2).Value <- "NoGroup"
+        ws.Cell(1,3).Value <- "Judul"
+        ws.Cell(1,4).Value <- "Deskripsi"
+        ws.Cell(2,1).Value <- noPaket
+        ws.Cell(2,2).Value <- noGroup
+        ws.Cell(2,3).Value <- "Pertanyaan 1"
+        ws.Cell(2,4).Value <- "Deskripsi 1"
+        ws.Cell(3,1).Value <- noPaket
+        ws.Cell(3,2).Value <- noGroup
+        ws.Cell(3,3).Value <- "Pertanyaan 2"
+        ws.Cell(3,4).Value <- "Deskripsi 2"
+        let header = ws.Range(1,1,1,4)
+        header.Style.Fill.BackgroundColor <- XLColor.FromHtml("#FDE68A")
+        header.Style.Font.Bold <- true
+        let body = ws.Range(1,1,3,4)
+        body.Style.Border.OutsideBorder <- XLBorderStyleValues.Thin
+        body.Style.Border.InsideBorder <- XLBorderStyleValues.Thin
+        ws.Columns().AdjustToContents() |> ignore
+        use ms = new MemoryStream()
+        wb.SaveAs(ms)
+        this.File(ms.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Template_Import_Pertanyaan.xlsx")
+
+    [<Authorize>]
+    [<HttpGet>]
+    [<Route("Questions/Template/Answer")>]
+    member this.TemplateAnswer() : IActionResult =
+        let q = this.HttpContext.Request.Query
+        let noPaket = if q.ContainsKey("noPaket") then q.["noPaket"].ToString() else ""
+        let noGroup = if q.ContainsKey("noGroup") then q.["noGroup"].ToString() else ""
+        let noSoal = if q.ContainsKey("noSoal") then q.["noSoal"].ToString() else ""
+        use wb = new XLWorkbook()
+        let ws = wb.AddWorksheet("Template")
+        ws.Cell(1,1).Value <- "NoPaket"
+        ws.Cell(1,2).Value <- "NoGroup"
+        ws.Cell(1,3).Value <- "NoSoal"
+        ws.Cell(1,4).Value <- "Jawaban"
+        ws.Cell(1,5).Value <- "Poin"
+        ws.Cell(2,1).Value <- noPaket
+        ws.Cell(2,2).Value <- noGroup
+        ws.Cell(2,3).Value <- noSoal
+        ws.Cell(2,4).Value <- "Jawaban 1"
+        ws.Cell(2,5).Value <- 10
+        ws.Cell(3,1).Value <- noPaket
+        ws.Cell(3,2).Value <- noGroup
+        ws.Cell(3,3).Value <- noSoal
+        ws.Cell(3,4).Value <- "Jawaban 2"
+        ws.Cell(3,5).Value <- 0
+        let header = ws.Range(1,1,1,5)
+        header.Style.Fill.BackgroundColor <- XLColor.FromHtml("#FDE68A")
+        header.Style.Font.Bold <- true
+        let body = ws.Range(1,1,3,5)
+        body.Style.Border.OutsideBorder <- XLBorderStyleValues.Thin
+        body.Style.Border.InsideBorder <- XLBorderStyleValues.Thin
+        ws.Columns().AdjustToContents() |> ignore
+        use ms = new MemoryStream()
+        wb.SaveAs(ms)
+        this.File(ms.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Template_Import_Jawaban.xlsx")
+
+    [<Authorize>]
+    [<HttpPost>]
+    [<Route("Questions/Import/Detail/Preview")>]
+    member this.ImportDetailPreview([<FromForm>] file: IFormFile, [<FromForm>] noPaket: Nullable<int64>, [<FromForm>] noGroup: Nullable<int64>) : IActionResult =
+        if isNull file || file.Length <= 0L then
+            this.BadRequest(box {| error = "File kosong" |})
+        else
+            let ext = Path.GetExtension(file.FileName)
+            if not (String.Equals(ext, ".xlsx", StringComparison.OrdinalIgnoreCase)) then
+                this.BadRequest(box {| error = "Format file harus XLSX" |})
+            else
+                use wb = new XLWorkbook(file.OpenReadStream())
+                let ws = wb.Worksheets.Worksheet(1)
+                let h1 = ws.Cell(1,1).GetString().Trim()
+                let h2 = ws.Cell(1,2).GetString().Trim()
+                let h3 = ws.Cell(1,3).GetString().Trim()
+                let h4 = ws.Cell(1,4).GetString().Trim()
+                if not (String.Equals(h1, "NoPaket", StringComparison.OrdinalIgnoreCase) &&
+                        String.Equals(h2, "NoGroup", StringComparison.OrdinalIgnoreCase) &&
+                        String.Equals(h3, "Judul", StringComparison.OrdinalIgnoreCase) &&
+                        String.Equals(h4, "Deskripsi", StringComparison.OrdinalIgnoreCase)) then
+                    this.BadRequest(box {| error = "Header kolom harus: NoPaket, NoGroup, Judul, Deskripsi" |})
+                else
+                    let lastRow =
+                        let r = ws.LastRowUsed()
+                        if isNull r then 1 else r.RowNumber()
+                    let mutable count = 0
+                    let defPaket = if noPaket.HasValue then noPaket.Value else 0L
+                    let defGroup = if noGroup.HasValue then noGroup.Value else 0L
+                    for i in 2 .. lastRow do
+                        let npStr = ws.Cell(i,1).GetString().Trim()
+                        let ngStr = ws.Cell(i,2).GetString().Trim()
+                        let judul = ws.Cell(i,3).GetString().Trim()
+                        let deskripsi = ws.Cell(i,4).GetString().Trim()
+                        let noPaketRow =
+                            match Int64.TryParse(npStr) with
+                            | true, v -> v
+                            | _ -> defPaket
+                        let noGroupRow =
+                            match Int64.TryParse(ngStr) with
+                            | true, v -> v
+                            | _ -> defGroup
+                        if noPaketRow > 0L && noGroupRow > 0L && not (String.IsNullOrWhiteSpace(judul) && String.IsNullOrWhiteSpace(deskripsi)) then
+                            count <- count + 1
+                    this.Ok(box {| count = count |})
+
+    [<Authorize>]
+    [<HttpPost>]
+    [<Route("Questions/Import/Detail")>]
+    member this.ImportDetail([<FromForm>] file: IFormFile, [<FromForm>] noPaket: Nullable<int64>, [<FromForm>] noGroup: Nullable<int64>) : IActionResult =
+        if isNull file || file.Length <= 0L then
+            this.BadRequest(box {| error = "File kosong" |})
+        else
+            let ext = Path.GetExtension(file.FileName)
+            if not (String.Equals(ext, ".xlsx", StringComparison.OrdinalIgnoreCase)) then
+                this.BadRequest(box {| error = "Format file harus XLSX" |})
+            else
+                use wb = new XLWorkbook(file.OpenReadStream())
+                let ws = wb.Worksheets.Worksheet(1)
+                let h1 = ws.Cell(1,1).GetString().Trim()
+                let h2 = ws.Cell(1,2).GetString().Trim()
+                let h3 = ws.Cell(1,3).GetString().Trim()
+                let h4 = ws.Cell(1,4).GetString().Trim()
+                if not (String.Equals(h1, "NoPaket", StringComparison.OrdinalIgnoreCase) &&
+                        String.Equals(h2, "NoGroup", StringComparison.OrdinalIgnoreCase) &&
+                        String.Equals(h3, "Judul", StringComparison.OrdinalIgnoreCase) &&
+                        String.Equals(h4, "Deskripsi", StringComparison.OrdinalIgnoreCase)) then
+                    this.BadRequest(box {| error = "Header kolom harus: NoPaket, NoGroup, Judul, Deskripsi" |})
+                else
+                    let lastRow =
+                        let r = ws.LastRowUsed()
+                        if isNull r then 1 else r.RowNumber()
+                    let conn = db :?> Microsoft.Data.SqlClient.SqlConnection
+                    conn.Open()
+                    try
+                        use tran = conn.BeginTransaction()
+                        try
+                            let mutable count = 0
+                            let user = if isNull this.User || isNull this.User.Identity || isNull this.User.Identity.Name then "" else this.User.Identity.Name
+                            let maxMap = System.Collections.Generic.Dictionary<string,int>()
+                            let defPaket = if noPaket.HasValue then noPaket.Value else 0L
+                            let defGroup = if noGroup.HasValue then noGroup.Value else 0L
+                            for i in 2 .. lastRow do
+                                let npStr = ws.Cell(i,1).GetString().Trim()
+                                let ngStr = ws.Cell(i,2).GetString().Trim()
+                                let judul = ws.Cell(i,3).GetString().Trim()
+                                let deskripsi = ws.Cell(i,4).GetString().Trim()
+                                let noPaketRow =
+                                    match Int64.TryParse(npStr) with
+                                    | true, v -> v
+                                    | _ -> defPaket
+                                let noGroupRow =
+                                    match Int64.TryParse(ngStr) with
+                                    | true, v -> v
+                                    | _ -> defGroup
+                                if noPaketRow > 0L && noGroupRow > 0L && not (String.IsNullOrWhiteSpace(judul) && String.IsNullOrWhiteSpace(deskripsi)) then
+                                    let key = string noPaketRow + ":" + string noGroupRow
+                                    let mutable maxUrut = 0
+                                    if maxMap.ContainsKey(key) then
+                                        maxUrut <- maxMap.[key]
+                                    else
+                                        use maxCmd = new Microsoft.Data.SqlClient.SqlCommand()
+                                        maxCmd.Connection <- conn
+                                        maxCmd.Transaction <- tran
+                                        maxCmd.CommandType <- CommandType.Text
+                                        maxCmd.CommandText <- "SELECT ISNULL(MAX(NoUrut),0) FROM WISECON_PSIKOTEST.dbo.MS_PaketSoalGroupDtl WHERE NoPaket=@p AND NoGroup=@g"
+                                        maxCmd.Parameters.AddWithValue("@p", noPaketRow) |> ignore
+                                        maxCmd.Parameters.AddWithValue("@g", noGroupRow) |> ignore
+                                        let r = maxCmd.ExecuteScalar()
+                                        maxUrut <- if isNull r then 0 else (try Convert.ToInt32(r) with _ -> 0)
+                                    let nextUrut = maxUrut + 1
+                                    maxMap.[key] <- nextUrut
+                                    use cmd = new Microsoft.Data.SqlClient.SqlCommand()
+                                    cmd.Connection <- conn
+                                    cmd.Transaction <- tran
+                                    cmd.CommandText <- "WISECON_PSIKOTEST.dbo.SP_PaketSoalGroupDtl"
+                                    cmd.CommandType <- CommandType.StoredProcedure
+                                    cmd.Parameters.AddWithValue("@SeqNo", 0L) |> ignore
+                                    cmd.Parameters.AddWithValue("@NoPaket", noPaketRow) |> ignore
+                                    cmd.Parameters.AddWithValue("@NoGroup", noGroupRow) |> ignore
+                                    cmd.Parameters.AddWithValue("@NoUrut", nextUrut) |> ignore
+                                    cmd.Parameters.AddWithValue("@Judul", judul) |> ignore
+                                    cmd.Parameters.AddWithValue("@Deskripsi", deskripsi) |> ignore
+                                    cmd.Parameters.AddWithValue("@IsDownload", 0) |> ignore
+                                    cmd.Parameters.AddWithValue("@bAktif", 1) |> ignore
+                                    cmd.Parameters.AddWithValue("@MediaFileName", "NOMEDIA") |> ignore
+                                    cmd.Parameters.AddWithValue("@UrlMedia", "") |> ignore
+                                    cmd.Parameters.AddWithValue("@TipeMedia", "NOMEDIA") |> ignore
+                                    cmd.Parameters.AddWithValue("@User", user) |> ignore
+                                    cmd.Parameters.AddWithValue("@Act", "ADD") |> ignore
+                                    use rdr = cmd.ExecuteReader()
+                                    rdr.Close()
+                                    count <- count + 1
+                            tran.Commit()
+                            this.Ok(box {| count = count |})
+                        with ex ->
+                            tran.Rollback()
+                            this.BadRequest(box {| error = ex.Message |})
+                    finally
+                        conn.Close()
+
+    [<Authorize>]
+    [<HttpPost>]
+    [<Route("Questions/Import/Answer/Preview")>]
+    member this.ImportAnswerPreview([<FromForm>] file: IFormFile, [<FromForm>] noPaket: Nullable<int64>, [<FromForm>] noGroup: Nullable<int64>, [<FromForm>] noSoal: Nullable<int64>) : IActionResult =
+        if isNull file || file.Length <= 0L then
+            this.BadRequest(box {| error = "File kosong" |})
+        else
+            let ext = Path.GetExtension(file.FileName)
+            if not (String.Equals(ext, ".xlsx", StringComparison.OrdinalIgnoreCase)) then
+                this.BadRequest(box {| error = "Format file harus XLSX" |})
+            else
+                use wb = new XLWorkbook(file.OpenReadStream())
+                let ws = wb.Worksheets.Worksheet(1)
+                let h1 = ws.Cell(1,1).GetString().Trim()
+                let h2 = ws.Cell(1,2).GetString().Trim()
+                let h3 = ws.Cell(1,3).GetString().Trim()
+                let h4 = ws.Cell(1,4).GetString().Trim()
+                let h5 = ws.Cell(1,5).GetString().Trim()
+                if not (String.Equals(h1, "NoPaket", StringComparison.OrdinalIgnoreCase) &&
+                        String.Equals(h2, "NoGroup", StringComparison.OrdinalIgnoreCase) &&
+                        String.Equals(h3, "NoSoal", StringComparison.OrdinalIgnoreCase) &&
+                        String.Equals(h4, "Jawaban", StringComparison.OrdinalIgnoreCase) &&
+                        String.Equals(h5, "Poin", StringComparison.OrdinalIgnoreCase)) then
+                    this.BadRequest(box {| error = "Header kolom harus: NoPaket, NoGroup, NoSoal, Jawaban, Poin" |})
+                else
+                    let lastRow =
+                        let r = ws.LastRowUsed()
+                        if isNull r then 1 else r.RowNumber()
+                    let mutable count = 0
+                    let defPaket = if noPaket.HasValue then noPaket.Value else 0L
+                    let defGroup = if noGroup.HasValue then noGroup.Value else 0L
+                    let defSoal = if noSoal.HasValue then noSoal.Value else 0L
+                    for i in 2 .. lastRow do
+                        let npStr = ws.Cell(i,1).GetString().Trim()
+                        let ngStr = ws.Cell(i,2).GetString().Trim()
+                        let nsStr = ws.Cell(i,3).GetString().Trim()
+                        let jawaban = ws.Cell(i,4).GetString().Trim()
+                        let poinText = ws.Cell(i,5).GetString().Trim()
+                        let noPaketRow =
+                            match Int64.TryParse(npStr) with
+                            | true, v -> v
+                            | _ -> defPaket
+                        let noGroupRow =
+                            match Int64.TryParse(ngStr) with
+                            | true, v -> v
+                            | _ -> defGroup
+                        let noSoalRow =
+                            match Int64.TryParse(nsStr) with
+                            | true, v -> v
+                            | _ -> defSoal
+                        let poin =
+                            if String.IsNullOrWhiteSpace(poinText) then 0
+                            else
+                                match Int32.TryParse(poinText) with
+                                | true, v -> v
+                                | _ -> 0
+                        if noPaketRow > 0L && noGroupRow > 0L && noSoalRow > 0L && not (String.IsNullOrWhiteSpace(jawaban) && poin = 0) then
+                            count <- count + 1
+                    this.Ok(box {| count = count |})
+
+    [<Authorize>]
+    [<HttpPost>]
+    [<Route("Questions/Import/Answer")>]
+    member this.ImportAnswer([<FromForm>] file: IFormFile, [<FromForm>] noPaket: Nullable<int64>, [<FromForm>] noGroup: Nullable<int64>, [<FromForm>] noSoal: Nullable<int64>) : IActionResult =
+        if isNull file || file.Length <= 0L then
+            this.BadRequest(box {| error = "File kosong" |})
+        else
+            let ext = Path.GetExtension(file.FileName)
+            if not (String.Equals(ext, ".xlsx", StringComparison.OrdinalIgnoreCase)) then
+                this.BadRequest(box {| error = "Format file harus XLSX" |})
+            else
+                use wb = new XLWorkbook(file.OpenReadStream())
+                let ws = wb.Worksheets.Worksheet(1)
+                let h1 = ws.Cell(1,1).GetString().Trim()
+                let h2 = ws.Cell(1,2).GetString().Trim()
+                let h3 = ws.Cell(1,3).GetString().Trim()
+                let h4 = ws.Cell(1,4).GetString().Trim()
+                let h5 = ws.Cell(1,5).GetString().Trim()
+                if not (String.Equals(h1, "NoPaket", StringComparison.OrdinalIgnoreCase) &&
+                        String.Equals(h2, "NoGroup", StringComparison.OrdinalIgnoreCase) &&
+                        String.Equals(h3, "NoSoal", StringComparison.OrdinalIgnoreCase) &&
+                        String.Equals(h4, "Jawaban", StringComparison.OrdinalIgnoreCase) &&
+                        String.Equals(h5, "Poin", StringComparison.OrdinalIgnoreCase)) then
+                    this.BadRequest(box {| error = "Header kolom harus: NoPaket, NoGroup, NoSoal, Jawaban, Poin" |})
+                else
+                    let lastRow =
+                        let r = ws.LastRowUsed()
+                        if isNull r then 1 else r.RowNumber()
+                    let conn = db :?> Microsoft.Data.SqlClient.SqlConnection
+                    conn.Open()
+                    try
+                        use tran = conn.BeginTransaction()
+                        try
+                            let mutable count = 0
+                            let user = if isNull this.User || isNull this.User.Identity || isNull this.User.Identity.Name then "" else this.User.Identity.Name
+                            let maxMap = System.Collections.Generic.Dictionary<string,int>()
+                            let defPaket = if noPaket.HasValue then noPaket.Value else 0L
+                            let defGroup = if noGroup.HasValue then noGroup.Value else 0L
+                            let defSoal = if noSoal.HasValue then noSoal.Value else 0L
+                            for i in 2 .. lastRow do
+                                let npStr = ws.Cell(i,1).GetString().Trim()
+                                let ngStr = ws.Cell(i,2).GetString().Trim()
+                                let nsStr = ws.Cell(i,3).GetString().Trim()
+                                let jawaban = ws.Cell(i,4).GetString().Trim()
+                                let poinText = ws.Cell(i,5).GetString().Trim()
+                                let noPaketRow =
+                                    match Int64.TryParse(npStr) with
+                                    | true, v -> v
+                                    | _ -> defPaket
+                                let noGroupRow =
+                                    match Int64.TryParse(ngStr) with
+                                    | true, v -> v
+                                    | _ -> defGroup
+                                let noUrutRow =
+                                    match Int64.TryParse(nsStr) with
+                                    | true, v -> v
+                                    | _ -> defSoal
+                                let poin =
+                                    if String.IsNullOrWhiteSpace(poinText) then 0
+                                    else
+                                        match Int32.TryParse(poinText) with
+                                        | true, v -> v
+                                        | _ -> 0
+                                if noPaketRow > 0L && noGroupRow > 0L && noUrutRow > 0L && not (String.IsNullOrWhiteSpace(jawaban) && poin = 0) then
+                                    let key = string noPaketRow + ":" + string noGroupRow + ":" + string noUrutRow
+                                    let mutable maxJawaban = 0
+                                    if maxMap.ContainsKey(key) then
+                                        maxJawaban <- maxMap.[key]
+                                    else
+                                        use maxCmd = new Microsoft.Data.SqlClient.SqlCommand()
+                                        maxCmd.Connection <- conn
+                                        maxCmd.Transaction <- tran
+                                        maxCmd.CommandType <- CommandType.Text
+                                        maxCmd.CommandText <- "SELECT ISNULL(MAX(NoJawaban),0) FROM WISECON_PSIKOTEST.dbo.MS_PaketSoalGroupDtlJawaban WHERE NoPaket=@p AND NoGroup=@g AND NoUrut=@u"
+                                        maxCmd.Parameters.AddWithValue("@p", noPaketRow) |> ignore
+                                        maxCmd.Parameters.AddWithValue("@g", noGroupRow) |> ignore
+                                        maxCmd.Parameters.AddWithValue("@u", noUrutRow) |> ignore
+                                        let r = maxCmd.ExecuteScalar()
+                                        maxJawaban <- if isNull r then 0 else (try Convert.ToInt32(r) with _ -> 0)
+                                    let nextJawaban = maxJawaban + 1
+                                    maxMap.[key] <- nextJawaban
+                                    use cmd = new Microsoft.Data.SqlClient.SqlCommand()
+                                    cmd.Connection <- conn
+                                    cmd.Transaction <- tran
+                                    cmd.CommandText <- "WISECON_PSIKOTEST.dbo.SP_PaketSoalGroupDtlJawaban"
+                                    cmd.CommandType <- CommandType.StoredProcedure
+                                    cmd.Parameters.AddWithValue("@SeqNo", 0L) |> ignore
+                                    cmd.Parameters.AddWithValue("@NoPaket", noPaketRow) |> ignore
+                                    cmd.Parameters.AddWithValue("@NoGroup", noGroupRow) |> ignore
+                                    cmd.Parameters.AddWithValue("@NoUrut", noUrutRow) |> ignore
+                                    cmd.Parameters.AddWithValue("@NoJawaban", nextJawaban) |> ignore
+                                    cmd.Parameters.AddWithValue("@PoinJawaban", poin) |> ignore
+                                    cmd.Parameters.AddWithValue("@Jawaban", jawaban) |> ignore
+                                    cmd.Parameters.AddWithValue("@UrlMedia", "") |> ignore
+                                    cmd.Parameters.AddWithValue("@MediaFileName", "NOMEDIA") |> ignore
+                                    cmd.Parameters.AddWithValue("@TipeMedia", "NOMEDIA") |> ignore
+                                    cmd.Parameters.AddWithValue("@TextMedia", "") |> ignore
+                                    cmd.Parameters.AddWithValue("@User", user) |> ignore
+                                    cmd.Parameters.AddWithValue("@Act", "ADD") |> ignore
+                                    use rdr = cmd.ExecuteReader()
+                                    rdr.Close()
+                                    count <- count + 1
+                            tran.Commit()
+                            this.Ok(box {| count = count |})
+                        with ex ->
+                            tran.Rollback()
+                            this.BadRequest(box {| error = ex.Message |})
+                    finally
+                        conn.Close()

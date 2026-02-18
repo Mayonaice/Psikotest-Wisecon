@@ -116,7 +116,7 @@
           }
         }
       },
-      "FSharp.Core/10.0.101": {
+      "FSharp.Core/10.0.200-servicing.26103.119": {
         "type": "package",
         "compile": {
           "lib/netstandard2.1/FSharp.Core.dll": {
@@ -901,15 +901,15 @@
         "lib/netstandard2.0/ExcelNumberFormat.xml"
       ]
     },
-    "FSharp.Core/10.0.101": {
-      "sha512": "mrS3J7cLtvXM3u3CmiaFq8oyBdlevzZY1VAAAbFk1gUDQtDEjUOybN5XpQglx5wAgJ0wLdDl6OSSfS7ZDFNcpA==",
+    "FSharp.Core/10.0.200-servicing.26103.119": {
+      "sha512": "S/SswaF6Ds7HJP9BqAR5hV7npGL3wHVHXEA5x0m11fbaBc/BYEU3gk9+Ginp8YZ99p9XKYsqdfvg6aCJb/xkIQ==",
       "type": "package",
-      "path": "fsharp.core/10.0.101",
+      "path": "fsharp.core/10.0.200-servicing.26103.119",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "Icon.png",
-        "fsharp.core.10.0.101.nupkg.sha512",
+        "fsharp.core.10.0.200-servicing.26103.119.nupkg.sha512",
         "fsharp.core.nuspec",
         "lib/netstandard2.0/FSharp.Core.dll",
         "lib/netstandard2.0/FSharp.Core.xml",
@@ -1829,29 +1829,29 @@
   "projectFileDependencyGroups": {
     "net10.0": [
       "ClosedXML >= 0.104.2",
-      "FSharp.Core >= 10.0.101",
+      "FSharp.Core >= 10.0.200-servicing.26103.119",
       "Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation >= 10.0.0",
       "Microsoft.Data.SqlClient >= 5.2.0"
     ]
   },
   "packageFolders": {
-    "C:\\Users\\WS24003426\\.nuget\\packages\\": {},
+    "C:\\Users\\vadod\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\WS24003426\\source\\repos\\PsikotestWisesa\\PsikotestWisesa\\PsikotestWisesa.fsproj",
+      "projectUniqueName": "C:\\Users\\vadod\\source\\repos\\PsikotestWisesa\\PsikotestWisesa\\PsikotestWisesa.fsproj",
       "projectName": "PsikotestWisesa",
-      "projectPath": "C:\\Users\\WS24003426\\source\\repos\\PsikotestWisesa\\PsikotestWisesa\\PsikotestWisesa.fsproj",
-      "packagesPath": "C:\\Users\\WS24003426\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\WS24003426\\source\\repos\\PsikotestWisesa\\PsikotestWisesa\\obj\\",
+      "projectPath": "C:\\Users\\vadod\\source\\repos\\PsikotestWisesa\\PsikotestWisesa\\PsikotestWisesa.fsproj",
+      "packagesPath": "C:\\Users\\vadod\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\vadod\\source\\repos\\PsikotestWisesa\\PsikotestWisesa\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\WS24003426\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\vadod\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -1860,8 +1860,7 @@
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-        "C:\\Program Files\\dotnet\\library-packs": {},
-        "C:\\Program Files\\dotnet\\sdk\\10.0.101\\FSharp\\library-packs": {},
+        "C:\\Program Files\\dotnet\\sdk\\10.0.200-preview.0.26103.119\\FSharp\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -1875,7 +1874,7 @@
         "auditLevel": "low",
         "auditMode": "all"
       },
-      "SdkAnalysisLevel": "10.0.100"
+      "SdkAnalysisLevel": "10.0.200"
     },
     "frameworks": {
       "net10.0": {
@@ -1889,7 +1888,7 @@
           "FSharp.Core": {
             "include": "Runtime, Compile, Build, Native, Analyzers, BuildTransitive",
             "target": "Package",
-            "version": "[10.0.101, )",
+            "version": "[10.0.200-servicing.26103.119, )",
             "generatePathProperty": true
           },
           "Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation": {
@@ -1922,7 +1921,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.101/PortableRuntimeIdentifierGraph.json",
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.200-preview.0.26103.119/PortableRuntimeIdentifierGraph.json",
         "packagesToPrune": {
           "Microsoft.AspNetCore": "(,10.0.32767]",
           "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",

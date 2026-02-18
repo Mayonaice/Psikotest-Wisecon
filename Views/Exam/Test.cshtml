@@ -81,8 +81,6 @@
 
     <script>
         const token = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(token));
-        const endAtIso = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(endAtIso));
-        const startAtIso = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(startAtIso));
         const groups = @Html.Raw(questionsJson);
 
         function pad2(n){ return String(n).padStart(2,'0'); }
@@ -91,23 +89,15 @@
             const s = Math.max(0, totalSec%60);
             return pad2(m)+':'+pad2(s);
         }
-        function nowMs(){ return new Date().getTime(); }
-        function parseIso(s){ const d = new Date(s); return isNaN(d.getTime()) ? null : d; }
-
-        const endAt = parseIso(endAtIso);
-        const startAt = parseIso(startAtIso);
-        let finishing = false;
-
-        function tick(){
-            if(!endAt){ return; }
-            const sec = Math.floor((endAt.getTime() - nowMs())/1000);
-            document.getElementById('timerText').textContent = fmtMMSS(sec);
-            if(sec <= 0){
-                finish();
-            }
+        function fmtDateTime(d){
+            if(!d) return '-';
+            return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()) + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds());
         }
-        setInterval(tick, 1000);
-        tick();
+        function nowMs(){ return new Date().getTime(); }
+        let finishing = false;
+        let groupStartMs = null;
+        let groupEndMs = null;
+        let movingGroup = false;
 
         const state = {
             groupIndex: 0,
@@ -136,9 +126,9 @@
                 if(res.ok){
                     setSaveStatus('Tersimpan');
                 }else{
-                    if(!finishing && (res.status === 410 || res.status === 409)){
-                        setSaveStatus('Waktu habis, memfinalisasi...');
-                        finish();
+                    if(!finishing && res.status === 410){
+                        setSaveStatus('Waktu group habis');
+                        moveToNextGroup();
                         return;
                     }
                     const t = await res.text();
@@ -206,6 +196,7 @@
             state.groupIndex = idx;
             state.questionIndex = 0;
             loadSaved();
+            startGroupTimer();
             render();
         }
 
@@ -299,6 +290,63 @@
             sel.addEventListener('change', (e) => setGroup(parseInt(e.target.value, 10) || 0));
         }
 
+        function updateStartEnd(){
+            const startEl = document.getElementById('startAt');
+            const endEl = document.getElementById('endAt');
+            if(startEl) startEl.textContent = groupStartMs ? fmtDateTime(new Date(groupStartMs)) : '-';
+            if(endEl) endEl.textContent = groupEndMs ? fmtDateTime(new Date(groupEndMs)) : '-';
+        }
+
+        async function notifyGroupStart(noGroup){
+            try{
+                await fetch(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Url.Content("~/Exam/GroupStart"))), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token, noGroup })
+                });
+            }catch{}
+        }
+
+        function startGroupTimer(){
+            const g = groups[state.groupIndex];
+            const durMin = g && g.waktu ? parseInt(g.waktu, 10) : 0;
+            groupStartMs = nowMs();
+            groupEndMs = durMin > 0 ? (groupStartMs + (durMin * 60 * 1000)) : null;
+            updateStartEnd();
+            updateTimer();
+            if(g && g.noGroup){
+                notifyGroupStart(g.noGroup);
+            }
+            movingGroup = false;
+        }
+
+        function updateTimer(){
+            const el = document.getElementById('timerText');
+            if(!el) return;
+            if(!groupEndMs){
+                el.textContent = '--:--';
+                return;
+            }
+            const sec = Math.ceil((groupEndMs - nowMs())/1000);
+            if(sec <= 0){
+                el.textContent = '00:00';
+                moveToNextGroup();
+            }else{
+                el.textContent = fmtMMSS(sec);
+            }
+        }
+
+        function moveToNextGroup(){
+            if(finishing || movingGroup) return;
+            movingGroup = true;
+            const next = state.groupIndex + 1;
+            if(next < groups.length){
+                setGroup(next);
+            }else{
+                finish();
+            }
+        }
+
         async function finish(){
             if(finishing) return;
             finishing = true;
@@ -335,8 +383,8 @@
 
         prepareGroups();
         initGroupSelect();
-        loadSaved();
-        render();
+        setGroup(0);
+        setInterval(updateTimer, 1000);
     </script>
 </body>
 </html>

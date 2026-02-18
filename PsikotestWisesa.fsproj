@@ -17,6 +17,7 @@
     <Compile Include="Controllers/ExamController.fs" />
     <Compile Include="Controllers/ScoresController.fs" />
     <Compile Include="Controllers/ParametersController.fs" />
+    <Compile Include="Controllers/ScreeningController.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 

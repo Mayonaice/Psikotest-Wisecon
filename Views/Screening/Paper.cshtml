@@ -1,0 +1,289 @@
+@{
+    ViewData["Title"] = "Nilai Screening";
+    Layout = "_DashboardLayout";
+}
+<div class="px-0 py-0 text-[#111827]">
+  <h1 class="text-3xl font-semibold text-[#1E90FF]">Nilai Screening</h1>
+  <div class="mt-3 bg-white border border-gray-200 rounded-xl p-4">
+    <div class="grid grid-cols-2 gap-4 text-sm">
+      <div>
+        <div class="flex gap-2"><span class="w-32 text-gray-500">Nama</span><span id="bioName"></span></div>
+        <div class="flex gap-2"><span class="w-32 text-gray-500">Email</span><span id="bioEmail"></span></div>
+        <div class="flex gap-2"><span class="w-32 text-gray-500">Posisi</span><span id="bioJob"></span></div>
+      </div>
+      <div>
+        <div class="flex gap-2"><span class="w-32 text-gray-500">Telepon</span><span id="bioPhone"></span></div>
+        <div class="flex gap-2"><span class="w-32 text-gray-500">Pendidikan</span><span id="bioEdu"></span></div>
+        <div class="flex gap-2"><span class="w-32 text-gray-500">Status</span><span id="bioStatus"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-4 flex gap-2">
+    <button id="tabBtnInterview" class="px-4 py-2 rounded-md bg-[#1E90FF] text-white">Interview</button>
+    <button id="tabBtnPsikotest" class="px-4 py-2 rounded-md bg-gray-200 text-gray-800">Psikotest</button>
+  </div>
+
+  <div id="tabInterview" class="mt-4 bg-white border border-gray-200 rounded-xl p-4">
+    <div class="text-lg font-semibold mb-2">Data Pribadi</div>
+    <div id="personalList" class="space-y-3"></div>
+
+    <div class="text-lg font-semibold mt-6 mb-2">Pengalaman Kerja</div>
+    <div id="experienceList" class="space-y-3"></div>
+
+    <div class="text-lg font-semibold mt-6 mb-2">Kepribadian</div>
+    <div id="personalityList" class="space-y-3"></div>
+
+    <div class="mt-6 grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm text-gray-700">Hasil Interview</label>
+        <select id="hasilInterview" class="border border-gray-300 rounded-md px-2 py-1 w-full">
+          <option value="">Pilih</option>
+          <option value="Lulus">Lulus</option>
+          <option value="Tidak Lulus">Tidak Lulus</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm text-gray-700">Remarks</label>
+        <textarea id="remarksInterview" class="border border-gray-300 rounded-md px-2 py-1 w-full" rows="3"></textarea>
+      </div>
+    </div>
+    <div class="mt-4">
+      <label class="block text-sm text-gray-700">Upload Hasil Interview</label>
+      <input id="fileInterview" type="file" class="border border-gray-300 rounded-md px-2 py-1 w-full" />
+      <a id="downloadInterview" class="text-sm text-blue-600 underline mt-2 inline-block" target="_blank" href="#" style="display:none;">Download File</a>
+    </div>
+    <div class="mt-6">
+      <button id="saveInterview" class="px-4 py-2 rounded-md bg-[#1E90FF] text-white">Simpan Interview</button>
+    </div>
+  </div>
+
+  <div id="tabPsikotest" class="mt-4 bg-white border border-gray-200 rounded-xl p-4 hidden">
+    <div class="text-lg font-semibold mb-2">Hasil Psikotest</div>
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm border">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="border px-2 py-1">Group</th>
+            <th class="border px-2 py-1">Nilai Standar</th>
+            <th class="border px-2 py-1">Nilai Hasil</th>
+          </tr>
+        </thead>
+        <tbody id="psikotestTable"></tbody>
+      </table>
+    </div>
+    <div class="mt-4 grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm text-gray-700">Hasil Psikotest</label>
+        <select id="hasilPsikotest" class="border border-gray-300 rounded-md px-2 py-1 w-full">
+          <option value="">Pilih</option>
+          <option value="Lulus">Lulus</option>
+          <option value="Tidak Lulus">Tidak Lulus</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm text-gray-700">Upload Hasil Psikotest</label>
+        <input id="filePsikotest" type="file" class="border border-gray-300 rounded-md px-2 py-1 w-full" />
+        <a id="downloadPsikotest" class="text-sm text-blue-600 underline mt-2 inline-block" target="_blank" href="#" style="display:none;">Download File</a>
+      </div>
+    </div>
+    <div class="mt-6">
+      <button id="savePsikotest" class="px-4 py-2 rounded-md bg-[#1E90FF] text-white">Simpan Psikotest</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const biodata = @Html.Raw(ViewData["BiodataJson"]);
+  const personal = @Html.Raw(ViewData["PersonalJson"]);
+  const experience = @Html.Raw(ViewData["ExperienceJson"]);
+  const personality = @Html.Raw(ViewData["PersonalityJson"]);
+  const personalRes = @Html.Raw(ViewData["PersonalResultJson"]);
+  const experienceRes = @Html.Raw(ViewData["ExperienceResultJson"]);
+  const personalityRes = @Html.Raw(ViewData["PersonalityResultJson"]);
+  const statusData = @Html.Raw(ViewData["StatusJson"]);
+  const psikotest = @Html.Raw(ViewData["PsikotestJson"]);
+
+  document.getElementById("bioName").textContent = biodata.name || "";
+  document.getElementById("bioEmail").textContent = biodata.email || "";
+  document.getElementById("bioJob").textContent = biodata.job || "";
+  document.getElementById("bioPhone").textContent = biodata.phone || "";
+  document.getElementById("bioEdu").textContent = biodata.pendidikan || "";
+  document.getElementById("bioStatus").textContent = biodata.statusScreening || "";
+
+  function mapBy(list, key) {
+    const m = new Map();
+    list.forEach(x => m.set(x[key], x));
+    return m;
+  }
+  const personalMap = mapBy(personalRes, "msSeqNo");
+  const experienceMap = mapBy(experienceRes, "msSeqNo");
+  const personalityMap = mapBy(personalityRes, "msSeqNo");
+
+  function renderInterviewList(list, map, containerId, prefix) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = "";
+    list.forEach(item => {
+      const res = map.get(item.msSeqNo) || {};
+      const wrap = document.createElement("div");
+      wrap.className = "border border-gray-200 rounded-md p-3";
+      wrap.innerHTML = `
+        <div class="text-sm text-gray-700 mb-2">${item.question}</div>
+        <textarea class="border border-gray-300 rounded-md px-2 py-1 w-full mb-2" rows="2" data-ms="${item.msSeqNo}" data-kind="${prefix}" data-field="answer">${res.answer || ""}</textarea>
+        <input type="text" class="border border-gray-300 rounded-md px-2 py-1 w-full" placeholder="Remark" data-ms="${item.msSeqNo}" data-kind="${prefix}" data-field="remark" value="${res.remark || ""}" />
+      `;
+      container.appendChild(wrap);
+    });
+  }
+
+  function renderPersonality(list, map, containerId) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = "";
+    list.forEach(item => {
+      const res = map.get(item.msSeqNo) || {};
+      const wrap = document.createElement("div");
+      wrap.className = "border border-gray-200 rounded-md p-3";
+      wrap.innerHTML = `
+        <div class="text-sm text-gray-700 mb-1">${item.aspek}</div>
+        <div class="text-xs text-gray-500 mb-2">${item.uraian}</div>
+        <input type="number" class="border border-gray-300 rounded-md px-2 py-1 w-full" data-ms="${item.msSeqNo}" data-kind="personality" value="${res.nilai || ""}" />
+      `;
+      container.appendChild(wrap);
+    });
+  }
+
+  renderInterviewList(personal, personalMap, "personalList", "personal");
+  renderInterviewList(experience, experienceMap, "experienceList", "experience");
+  renderPersonality(personality, personalityMap, "personalityList");
+
+  document.getElementById("hasilInterview").value = statusData.hasilInterview || "";
+  document.getElementById("remarksInterview").value = statusData.remarks || "";
+  if (statusData.interviewFile) {
+    const link = document.getElementById("downloadInterview");
+    link.href = `/Screening/Biodata/Interview/Download?kodeBiodata=${biodata.seqNo}`;
+    link.style.display = "inline-block";
+  }
+
+  const tbody = document.getElementById("psikotestTable");
+  tbody.innerHTML = "";
+  psikotest.forEach(row => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="border px-2 py-1 text-center">${row.noGroup}</td>
+      <td class="border px-2 py-1 text-center">${row.nilaiStandard}</td>
+      <td class="border px-2 py-1 text-center">${row.nilaiGroupResult}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+  document.getElementById("hasilPsikotest").value = statusData.hasilPsikotest || "";
+  if (statusData.psikotestFile) {
+    const link = document.getElementById("downloadPsikotest");
+    link.href = `/Screening/Biodata/Psikotest/Download?kodeBiodata=${biodata.seqNo}`;
+    link.style.display = "inline-block";
+  }
+
+  document.getElementById("tabBtnInterview").addEventListener("click", () => {
+    document.getElementById("tabInterview").classList.remove("hidden");
+    document.getElementById("tabPsikotest").classList.add("hidden");
+    document.getElementById("tabBtnInterview").classList.add("bg-[#1E90FF]", "text-white");
+    document.getElementById("tabBtnInterview").classList.remove("bg-gray-200", "text-gray-800");
+    document.getElementById("tabBtnPsikotest").classList.add("bg-gray-200", "text-gray-800");
+    document.getElementById("tabBtnPsikotest").classList.remove("bg-[#1E90FF]", "text-white");
+  });
+  document.getElementById("tabBtnPsikotest").addEventListener("click", () => {
+    document.getElementById("tabPsikotest").classList.remove("hidden");
+    document.getElementById("tabInterview").classList.add("hidden");
+    document.getElementById("tabBtnPsikotest").classList.add("bg-[#1E90FF]", "text-white");
+    document.getElementById("tabBtnPsikotest").classList.remove("bg-gray-200", "text-gray-800");
+    document.getElementById("tabBtnInterview").classList.add("bg-gray-200", "text-gray-800");
+    document.getElementById("tabBtnInterview").classList.remove("bg-[#1E90FF]", "text-white");
+  });
+
+  function collectInterview(prefix) {
+    const answers = [];
+    document.querySelectorAll(`[data-kind="${prefix}"][data-field="answer"]`).forEach(el => {
+      const ms = parseInt(el.getAttribute("data-ms"), 10);
+      const remarkEl = document.querySelector(`[data-kind="${prefix}"][data-field="remark"][data-ms="${ms}"]`);
+      answers.push({
+        msSeqNo: ms,
+        question: "",
+        answer: el.value || "",
+        remark: remarkEl ? remarkEl.value || "" : ""
+      });
+    });
+    return answers;
+  }
+
+  function collectPersonality() {
+    const out = [];
+    document.querySelectorAll(`[data-kind="personality"]`).forEach(el => {
+      const ms = parseInt(el.getAttribute("data-ms"), 10);
+      const val = el.value === "" ? 0 : parseInt(el.value, 10);
+      const item = personality.find(p => p.msSeqNo === ms) || {};
+      out.push({
+        msSeqNo: ms,
+        aspek: item.aspek || "",
+        uraian: item.uraian || "",
+        nilai: isNaN(val) ? 0 : val
+      });
+    });
+    return out;
+  }
+
+  document.getElementById("saveInterview").addEventListener("click", async () => {
+    const hasil = document.getElementById("hasilInterview").value;
+    const file = document.getElementById("fileInterview").files[0];
+    if (!hasil) {
+      alert("Hasil interview wajib diisi");
+      return;
+    }
+    if (!file && !statusData.interviewFile) {
+      alert("File hasil interview wajib diupload");
+      return;
+    }
+    const payload = {
+      personal: collectInterview("personal"),
+      experience: collectInterview("experience"),
+      personality: collectPersonality()
+    };
+    const fd = new FormData();
+    fd.append("seqNo", biodata.seqNo);
+    fd.append("hasilInterview", hasil);
+    fd.append("remarks", document.getElementById("remarksInterview").value || "");
+    fd.append("answers", JSON.stringify(payload));
+    if (file) fd.append("file", file);
+    const res = await fetch("/Screening/Biodata/Interview/Save", { method: "POST", body: fd });
+    const json = await res.json();
+    if (!res.ok) {
+      alert(json.error || "Gagal menyimpan");
+      return;
+    }
+    alert("Berhasil menyimpan interview");
+    location.reload();
+  });
+
+  document.getElementById("savePsikotest").addEventListener("click", async () => {
+    const hasil = document.getElementById("hasilPsikotest").value;
+    const file = document.getElementById("filePsikotest").files[0];
+    if (!hasil) {
+      alert("Hasil psikotest wajib diisi");
+      return;
+    }
+    if (!file && !statusData.psikotestFile) {
+      alert("File hasil psikotest wajib diupload");
+      return;
+    }
+    const fd = new FormData();
+    fd.append("seqNo", biodata.seqNo);
+    fd.append("hasilPsikotest", hasil);
+    if (file) fd.append("file", file);
+    const res = await fetch("/Screening/Biodata/Psikotest/Save", { method: "POST", body: fd });
+    const json = await res.json();
+    if (!res.ok) {
+      alert(json.error || "Gagal menyimpan");
+      return;
+    }
+    alert("Berhasil menyimpan psikotest");
+    location.reload();
+  });
+</script>
