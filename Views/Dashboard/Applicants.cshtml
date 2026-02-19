@@ -1512,8 +1512,7 @@
         pageRows.forEach(function(r){
           var tr=document.createElement('tr');
           var isSelesai = eqText(r.status, 'Selesai Ujian');
-          var hasHasil = (''+(r.hasil||'')).trim() !== '';
-          var showView = isSelesai && hasHasil;
+          var showView = isSelesai;
           var btnIconStyle = 'background-repeat:no-repeat;background-position:center;background-size:16px 16px;width:32px;height:28px;min-width:32px;padding:0;';
           var aksi = showView
             ? '<button type="button" class="ujian-view-btn btn-flat rounded-md" title="View" style="background-image:url('+iconView+');'+btnIconStyle+'"></button>'

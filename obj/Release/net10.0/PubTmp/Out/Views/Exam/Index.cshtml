@@ -1,0 +1,48 @@
+@{
+    Layout = null;
+    var token = (ViewData["Token"] as string) ?? "";
+    var err = (ViewData["ErrorMessage"] as string) ?? "";
+}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Identifikasi Data</title>
+    <base href="@Url.Content("~/")">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-[#F6E7DE]">
+    <div class="min-h-screen flex items-center justify-center px-4 py-8">
+        <div class="w-full max-w-[920px] bg-[#F6E7DE] rounded-[18px] border border-black/10 shadow-[0_8px_30px_rgba(0,0,0,0.08)] px-6 sm:px-10 py-10">
+            <div class="text-center">
+                <h1 class="text-3xl sm:text-4xl font-extrabold tracking-wide text-black">Identifikasi Data</h1>
+                <div class="mt-4 inline-block bg-[#FFD9C6] px-6 py-3 rounded-xl text-[#C01818] font-semibold leading-snug">
+                    Silahkan isi data KTP &amp; Email saudara/i<br />
+                    sesuai dengan data diri anda
+                </div>
+            </div>
+
+            <div class="mt-10 flex justify-center">
+                <form asp-controller="Exam" asp-action="Login" method="post" class="w-full max-w-[420px] space-y-4">
+                    <input type="hidden" name="Token" value="@token" />
+                    <input name="NoKTP" inputmode="numeric" autocomplete="off" placeholder="No KTP"
+                           class="w-full h-11 rounded-full border border-gray-300 bg-white text-center text-base outline-none focus:ring-2 focus:ring-[#1E90FF]" />
+                    <input name="Email" type="email" autocomplete="email" placeholder="Email"
+                           class="w-full h-11 rounded-full border border-gray-300 bg-white text-center text-base outline-none focus:ring-2 focus:ring-[#1E90FF]" />
+
+                    @if (!string.IsNullOrWhiteSpace(err))
+                    {
+                        <div class="text-center text-red-700 font-semibold">@err</div>
+                    }
+
+                    <button type="submit"
+                            class="w-full h-12 rounded-lg border-2 border-black bg-white text-xl font-semibold tracking-wide hover:bg-black hover:text-white transition">
+                        SUBMIT
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,390 @@
+@{
+    Layout = null;
+    var token = (ViewData["Token"] as string) ?? "";
+    var namaPaket = (ViewData["NamaPaket"] as string) ?? "";
+    var startAtIso = (ViewData["StartAtIso"] as string) ?? "";
+    var endAtIso = (ViewData["EndAtIso"] as string) ?? "";
+    var questionsJson = (ViewData["QuestionsJson"] as string) ?? "[]";
+}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ujian Psikotest</title>
+    <base href="@Url.Content("~/")">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .nav-dot { width: 30px; height: 30px; border-radius: 9999px; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; }
+        .nav-unanswered { background: #D1D5DB; color: #ffffff; }
+        .nav-current { background: #FBBF24; color: #111827; }
+        .nav-answered { background: #38BDF8; color: #ffffff; }
+    </style>
+</head>
+<body class="min-h-screen bg-[#E5E7EB]">
+    <form id="finishForm" method="post" action="@Url.Content("~/Exam/Finish")">
+        <input type="hidden" name="Token" value="@token" />
+    </form>
+
+    <div class="w-full bg-[#2F86C8] py-3 px-3 sm:px-6">
+        <div class="max-w-6xl mx-auto flex items-center gap-3 text-white">
+            <div class="bg-[#2A78B1] rounded-lg px-4 py-2 font-extrabold tracking-wide" id="paketLabel">@namaPaket</div>
+            <div class="ml-auto flex items-center gap-3">
+                <div class="text-[11px] sm:text-xs font-semibold bg-white/15 rounded-md px-2 py-1" id="saveStatus"></div>
+                <div class="text-xs sm:text-sm font-semibold bg-white/15 rounded-md px-2 py-1">
+                    <span id="timerText">00:00</span>
+                </div>
+                <div class="text-xs sm:text-sm font-semibold bg-white/15 rounded-md px-2 py-1">
+                    <span id="ujianKeText">Ujian ke-1 dari 1</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-6xl mx-auto px-3 sm:px-6 py-4">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            <div class="lg:col-span-9">
+                <div class="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
+                    <div class="flex items-start gap-3">
+                        <div class="text-xl sm:text-2xl font-extrabold" id="soalNo">Soal No. 1</div>
+                        <div class="ml-auto">
+                            <select id="groupSelect" class="border border-gray-300 rounded-md px-2 py-1 text-sm"></select>
+                        </div>
+                    </div>
+                    <div class="mt-2 text-base sm:text-lg text-gray-900" id="soalText"></div>
+                    <div class="mt-5 space-y-3" id="jawabanWrap"></div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-3">
+                <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                    <div class="bg-[#2F86C8] text-white font-bold px-4 py-2">Navigasi</div>
+                    <div class="p-4">
+                        <div class="grid grid-cols-5 gap-2" id="navWrap"></div>
+                        <div class="mt-4 space-y-2 text-sm">
+                            <div class="flex items-center gap-2"><span class="nav-dot nav-unanswered"></span><span>Belum Terjawab</span></div>
+                            <div class="flex items-center gap-2"><span class="nav-dot nav-current"></span><span>Sedang dikerjakan</span></div>
+                            <div class="flex items-center gap-2"><span class="nav-dot nav-answered"></span><span>Terjawab</span></div>
+                        </div>
+                        <button type="button" id="finishBtn" class="mt-6 w-full bg-[#F97316] hover:bg-[#EA580C] text-white font-bold py-2 rounded-lg">
+                            Akhiri Sesi
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="mt-3 text-xs text-gray-600">
+            <span>Mulai:</span> <span id="startAt">@startAtIso</span> <span class="mx-2">•</span>
+            <span>Berakhir:</span> <span id="endAt">@endAtIso</span>
+        </div>
+    </div>
+
+    <script>
+        const token = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(token));
+        const groups = @Html.Raw(questionsJson);
+
+        function pad2(n){ return String(n).padStart(2,'0'); }
+        function fmtMMSS(totalSec){
+            const m = Math.max(0, Math.floor(totalSec/60));
+            const s = Math.max(0, totalSec%60);
+            return pad2(m)+':'+pad2(s);
+        }
+        function fmtDateTime(d){
+            if(!d) return '-';
+            return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()) + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds());
+        }
+        function nowMs(){ return new Date().getTime(); }
+        let finishing = false;
+        let groupStartMs = null;
+        let groupEndMs = null;
+        let movingGroup = false;
+
+        const state = {
+            groupIndex: 0,
+            questionIndex: 0,
+            answers: {}
+        };
+
+        let saveTimer = null;
+        let pendingSave = null;
+
+        function setSaveStatus(text){
+            const el = document.getElementById('saveStatus');
+            if(!el) return;
+            el.textContent = text || '';
+        }
+
+        async function submitAnswer(noGroup, noUrut, jawaban){
+            const payload = { token, noGroup, noUrut, jawabanDiPilih: jawaban };
+            try{
+                setSaveStatus('Menyimpan...');
+                const res = await fetch(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Url.Content("~/Exam/Answer"))), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if(res.ok){
+                    setSaveStatus('Tersimpan');
+                }else{
+                    if(!finishing && res.status === 410){
+                        setSaveStatus('Waktu group habis');
+                        moveToNextGroup();
+                        return;
+                    }
+                    const t = await res.text();
+                    setSaveStatus(t ? ('Gagal: ' + t) : 'Gagal menyimpan');
+                }
+            }catch{
+                setSaveStatus('Gagal menyimpan');
+            }
+        }
+
+        function hashSeed(str){
+            let h = 2166136261;
+            for(let i=0;i<str.length;i++){
+                h ^= str.charCodeAt(i);
+                h = Math.imul(h, 16777619);
+            }
+            return (h >>> 0);
+        }
+        function mulberry32(a){
+            return function(){
+                let t = a += 0x6D2B79F5;
+                t = Math.imul(t ^ (t >>> 15), t | 1);
+                t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+                return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+            }
+        }
+        function shuffleInPlace(arr, seed){
+            const rnd = mulberry32(seed);
+            for(let i=arr.length-1;i>0;i--){
+                const j = Math.floor(rnd() * (i+1));
+                const tmp = arr[i];
+                arr[i] = arr[j];
+                arr[j] = tmp;
+            }
+        }
+        function prepareGroups(){
+            if(!Array.isArray(groups)) return;
+            for(const g of groups){
+                if(!g || !Array.isArray(g.questions)) continue;
+                const seed = hashSeed(token + ':g=' + g.noGroup);
+                const qs = g.questions.slice();
+                if(g.random){
+                    shuffleInPlace(qs, seed);
+                }
+                const take = (g.minSoal && g.minSoal > 0 && g.minSoal < qs.length) ? g.minSoal : qs.length;
+                g.questions = qs.slice(0, take);
+            }
+        }
+
+        function keyFor(){
+            const g = groups[state.groupIndex];
+            return 'psikotest:' + token + ':g=' + g.noGroup;
+        }
+        function loadSaved(){
+            try{
+                const raw = localStorage.getItem(keyFor());
+                state.answers = raw ? JSON.parse(raw) : {};
+            }catch{ state.answers = {}; }
+        }
+        function save(){
+            try{ localStorage.setItem(keyFor(), JSON.stringify(state.answers)); }catch{}
+        }
+
+        function setGroup(idx){
+            state.groupIndex = idx;
+            state.questionIndex = 0;
+            loadSaved();
+            startGroupTimer();
+            render();
+        }
+
+        function setQuestion(idx){
+            state.questionIndex = idx;
+            render();
+        }
+
+        function render(){
+            if(!groups || !groups.length){
+                document.getElementById('soalNo').textContent = 'Soal';
+                document.getElementById('soalText').textContent = 'Tidak ada data soal untuk paket ini';
+                document.getElementById('jawabanWrap').innerHTML = '';
+                document.getElementById('navWrap').innerHTML = '';
+                return;
+            }
+            const g = groups[state.groupIndex];
+            if(!g || !Array.isArray(g.questions) || g.questions.length === 0){
+                document.getElementById('ujianKeText').textContent = 'Ujian ke-' + (state.groupIndex+1) + ' dari ' + groups.length;
+                document.getElementById('paketLabel').textContent = g && g.namaGroup ? g.namaGroup : @Html.Raw(System.Text.Json.JsonSerializer.Serialize(namaPaket));
+                document.getElementById('soalNo').textContent = 'Soal';
+                document.getElementById('soalText').textContent = 'Tidak ada soal pada group ini';
+                document.getElementById('jawabanWrap').innerHTML = '';
+                document.getElementById('navWrap').innerHTML = '';
+                return;
+            }
+            const totalGroups = groups.length;
+            document.getElementById('ujianKeText').textContent = 'Ujian ke-' + (state.groupIndex+1) + ' dari ' + totalGroups;
+            document.getElementById('paketLabel').textContent = g.namaGroup || @Html.Raw(System.Text.Json.JsonSerializer.Serialize(namaPaket));
+
+            const q = g.questions[state.questionIndex];
+            document.getElementById('soalNo').textContent = 'Soal No. ' + (state.questionIndex + 1);
+            document.getElementById('soalText').textContent = (q.deskripsi || q.judul || '').trim();
+
+            const jawabanWrap = document.getElementById('jawabanWrap');
+            jawabanWrap.innerHTML = '';
+            const saved = state.answers[q.noUrut];
+            for(const a of q.answers){
+                const id = 'opt_' + g.noGroup + '_' + q.noUrut + '_' + a.noJawaban;
+                const row = document.createElement('label');
+                row.className = 'flex items-center gap-3 border border-gray-200 rounded-lg px-3 py-2 cursor-pointer hover:bg-gray-50';
+                const input = document.createElement('input');
+                input.type = 'radio';
+                input.name = 'ans_' + g.noGroup + '_' + q.noUrut;
+                input.id = id;
+                input.value = a.noJawaban;
+                input.checked = (saved == a.noJawaban);
+                input.addEventListener('change', () => {
+                    state.answers[q.noUrut] = a.noJawaban;
+                    save();
+                    renderNav();
+                    if(saveTimer) clearTimeout(saveTimer);
+                    pendingSave = { noGroup: g.noGroup, noUrut: q.noUrut, jawaban: a.noJawaban };
+                    saveTimer = setTimeout(() => submitAnswer(g.noGroup, q.noUrut, a.noJawaban), 300);
+                });
+                const txt = document.createElement('div');
+                txt.className = 'text-sm sm:text-base text-gray-900';
+                txt.textContent = a.jawaban;
+                row.appendChild(input);
+                row.appendChild(txt);
+                jawabanWrap.appendChild(row);
+            }
+
+            renderNav();
+        }
+
+        function renderNav(){
+            const g = groups[state.groupIndex];
+            const navWrap = document.getElementById('navWrap');
+            navWrap.innerHTML = '';
+            g.questions.forEach((q, i) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'nav-dot ' + (i === state.questionIndex ? 'nav-current' : (state.answers[q.noUrut] ? 'nav-answered' : 'nav-unanswered'));
+                btn.textContent = (i+1);
+                btn.addEventListener('click', () => setQuestion(i));
+                navWrap.appendChild(btn);
+            });
+        }
+
+        function initGroupSelect(){
+            const sel = document.getElementById('groupSelect');
+            sel.innerHTML = '';
+            groups.forEach((g, i) => {
+                const opt = document.createElement('option');
+                opt.value = String(i);
+                opt.textContent = (g.namaGroup || ('Group ' + g.noGroup));
+                sel.appendChild(opt);
+            });
+            sel.value = String(state.groupIndex);
+            sel.addEventListener('change', (e) => setGroup(parseInt(e.target.value, 10) || 0));
+        }
+
+        function updateStartEnd(){
+            const startEl = document.getElementById('startAt');
+            const endEl = document.getElementById('endAt');
+            if(startEl) startEl.textContent = groupStartMs ? fmtDateTime(new Date(groupStartMs)) : '-';
+            if(endEl) endEl.textContent = groupEndMs ? fmtDateTime(new Date(groupEndMs)) : '-';
+        }
+
+        async function notifyGroupStart(noGroup){
+            try{
+                await fetch(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Url.Content("~/Exam/GroupStart"))), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token, noGroup })
+                });
+            }catch{}
+        }
+
+        function startGroupTimer(){
+            const g = groups[state.groupIndex];
+            const durMin = g && g.waktu ? parseInt(g.waktu, 10) : 0;
+            groupStartMs = nowMs();
+            groupEndMs = durMin > 0 ? (groupStartMs + (durMin * 60 * 1000)) : null;
+            updateStartEnd();
+            updateTimer();
+            if(g && g.noGroup){
+                notifyGroupStart(g.noGroup);
+            }
+            movingGroup = false;
+        }
+
+        function updateTimer(){
+            const el = document.getElementById('timerText');
+            if(!el) return;
+            if(!groupEndMs){
+                el.textContent = '--:--';
+                return;
+            }
+            const sec = Math.ceil((groupEndMs - nowMs())/1000);
+            if(sec <= 0){
+                el.textContent = '00:00';
+                moveToNextGroup();
+            }else{
+                el.textContent = fmtMMSS(sec);
+            }
+        }
+
+        function moveToNextGroup(){
+            if(finishing || movingGroup) return;
+            movingGroup = true;
+            const next = state.groupIndex + 1;
+            if(next < groups.length){
+                setGroup(next);
+            }else{
+                finish();
+            }
+        }
+
+        async function finish(){
+            if(finishing) return;
+            finishing = true;
+            document.getElementById('finishBtn').disabled = true;
+            try{
+                if(saveTimer && pendingSave){
+                    clearTimeout(saveTimer);
+                    saveTimer = null;
+                    const p = pendingSave;
+                    pendingSave = null;
+                    await submitAnswer(p.noGroup, p.noUrut, p.jawaban);
+                }
+                const form = document.getElementById('finishForm');
+                const fd = new FormData(form);
+                const res = await fetch(form.action, { method: 'POST', body: fd });
+                if(res.ok){
+                    try{
+                        for(const g of (groups || [])){
+                            const k = 'psikotest:' + token + ':g=' + g.noGroup;
+                            localStorage.removeItem(k);
+                        }
+                    }catch{}
+                    window.location.href = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Url.Content("~/Exam?Token="))) + encodeURIComponent(token);
+                }else{
+                    document.getElementById('finishBtn').disabled = false;
+                    finishing = false;
+                }
+            }catch{
+                document.getElementById('finishBtn').disabled = false;
+                finishing = false;
+            }
+        }
+        document.getElementById('finishBtn').addEventListener('click', finish);
+
+        prepareGroups();
+        initGroupSelect();
+        setGroup(0);
+        setInterval(updateTimer, 1000);
+    </script>
+</body>
+</html>

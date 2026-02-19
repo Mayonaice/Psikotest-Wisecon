@@ -64,19 +64,16 @@
       <div class="dct-header">
         <img id="modalIcon" src="@Url.Content("~/DCT3_Standarisasi/assets/icons/Confirmation.png")" alt="Icon" class="w-5 h-5" />
         <div id="modalHeader" class="dct-title">Parameter</div>
-        <button id="modalClose" class="btn-flat px-2 py-1 rounded-md">
-          <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/XNB.png")" alt="Close" class="w-4 h-4" />
-        </button>
       </div>
       <div id="modalBody" class="dct-body"></div>
       <div class="dct-actions">
+        <button id="modalSave" class="btn-flat inline-flex items-center gap-2 px-2 py-1 rounded-md">
+          <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/sendNB.png")" class="w-4 h-4" />
+          <span>Simpan</span>
+        </button>
         <button id="modalCancel" class="btn-flat inline-flex items-center gap-2 px-2 py-1 rounded-md">
           <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/XNB.png")" class="w-4 h-4" />
-          <span>Batal</span>
-        </button>
-        <button id="modalSave" class="btn-flat inline-flex items-center gap-2 px-2 py-1 rounded-md">
-          <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/Success.png")" class="w-4 h-4" />
-          <span>Simpan</span>
+          <span>Close</span>
         </button>
       </div>
     </div>
@@ -103,6 +100,9 @@
     .modal-form{ display:grid; grid-template-columns:160px 1fr; gap:8px 12px; }
     .modal-label{ font-size:14px; align-self:center; }
     .modal-field textarea{ min-height:160px; }
+    #modalOverlay #modalContent{ background:#FFFFFF; }
+    #modalOverlay .dct-header{ border-bottom:1px solid #e5e7eb; padding-bottom:10px; }
+    #modalOverlay .dct-actions{ border-top:1px solid #e5e7eb; padding-top:10px; }
   </style>
 
   <script>

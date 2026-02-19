@@ -27,44 +27,20 @@ open Microsoft.AspNetCore.Http
 type AutoFinalizeUjianService(cfg: IConfiguration) =
     inherit BackgroundService()
 
-    member private this.getNonIdentityColumns(conn: SqlConnection, dbName: string) =
-        use cmd = new SqlCommand()
-        cmd.Connection <- conn
-        cmd.CommandType <- CommandType.Text
-        cmd.CommandText <-
-            "SELECT c.name " +
-            "FROM " + dbName + ".sys.columns c " +
-            "WHERE c.object_id = OBJECT_ID('" + dbName + ".dbo.TR_PsikotestResult') AND c.is_identity=0"
-        use rdr = cmd.ExecuteReader()
-        let cols = ResizeArray<string>()
-        while rdr.Read() do
-            cols.Add(rdr.GetString(0))
-        rdr.Close()
-        cols |> Seq.toList
-
-    member private this.syncResults(conn: SqlConnection, userId: string) =
-        let wiseCols = this.getNonIdentityColumns(conn, "WISECON_PSIKOTEST") |> Set.ofList
-        let advCols = this.getNonIdentityColumns(conn, "ADVPSIKOTEST") |> Set.ofList
-        let cols = Set.intersect wiseCols advCols |> Set.toList
-        if cols.Length > 0 then
-            use del = new SqlCommand("DELETE FROM WISECON_PSIKOTEST.dbo.TR_PsikotestResult WHERE UserId=@u", conn)
-            del.Parameters.AddWithValue("@u", userId) |> ignore
-            del.ExecuteNonQuery() |> ignore
-
-            let colsSql = String.Join(", ", cols |> List.map (fun c -> "[" + c + "]"))
-            use ins = new SqlCommand()
-            ins.Connection <- conn
-            ins.CommandType <- CommandType.Text
-            ins.CommandText <- "INSERT INTO WISECON_PSIKOTEST.dbo.TR_PsikotestResult (" + colsSql + ") SELECT " + colsSql + " FROM ADVPSIKOTEST.dbo.TR_PsikotestResult WHERE UserId=@u"
-            ins.Parameters.AddWithValue("@u", userId) |> ignore
-            ins.ExecuteNonQuery() |> ignore
+    member private this.recalculateResults(conn: SqlConnection, userId: string) =
+        use del = new SqlCommand("DELETE FROM WISECON_PSIKOTEST.dbo.TR_PsikotestResult WHERE UserId=@u OR NoPeserta = (SELECT TOP 1 NoPeserta FROM WISECON_PSIKOTEST.dbo.MS_PesertaDtl WHERE UserId=@u) OR IdNoPeserta = (SELECT TOP 1 ID FROM WISECON_PSIKOTEST.dbo.MS_Peserta WHERE NoPeserta = (SELECT TOP 1 NoPeserta FROM WISECON_PSIKOTEST.dbo.MS_PesertaDtl WHERE UserId=@u))", conn)
+        del.Parameters.AddWithValue("@u", userId) |> ignore
+        del.ExecuteNonQuery() |> ignore
+        use hitung = new SqlCommand("dbo.SP_HitungNilaiUjian", conn)
+        hitung.CommandType <- CommandType.StoredProcedure
+        hitung.Parameters.AddWithValue("@UserId", userId) |> ignore
+        hitung.ExecuteNonQuery() |> ignore
 
     override this.ExecuteAsync(stoppingToken: CancellationToken) : Task =
         task {
             while not stoppingToken.IsCancellationRequested do
                 try
                     let connStr = cfg.GetConnectionString("DefaultConnection")
-                    let advConnStr = cfg.GetConnectionString("AdvPsikotestConnection")
                     use conn = new SqlConnection(connStr)
                     conn.Open()
 
@@ -72,22 +48,25 @@ type AutoFinalizeUjianService(cfg: IConfiguration) =
                     cmd.Connection <- conn
                     cmd.CommandType <- CommandType.Text
                     cmd.CommandText <-
-                        "SELECT TOP 50 UserId, NoPaket " +
+                        "SELECT TOP 50 D.UserId, D.NoPaket, D.NoPeserta " +
                         "FROM WISECON_PSIKOTEST.dbo.MS_PesertaDtl D " +
                         "WHERE D.StartTest IS NOT NULL AND DATEADD(HOUR, 1, D.StartTest) <= GETDATE() " +
-                        "AND NOT EXISTS (SELECT 1 FROM WISECON_PSIKOTEST.dbo.TR_PsikotestResult r WHERE r.UserId = D.UserId) " +
+                        "AND D.TimeInput = (SELECT MAX(D2.TimeInput) FROM WISECON_PSIKOTEST.dbo.MS_PesertaDtl D2 WHERE D2.NoPeserta = D.NoPeserta) " +
+                        "AND EXISTS (SELECT 1 FROM WISECON_PSIKOTEST.dbo.TR_Psikotest T WHERE T.UserId = D.UserId) " +
+                        "AND NOT EXISTS (SELECT 1 FROM WISECON_PSIKOTEST.dbo.TR_PsikotestResult r WHERE r.IdNoPeserta = (SELECT TOP 1 ID FROM WISECON_PSIKOTEST.dbo.MS_Peserta P WHERE P.NoPeserta = D.NoPeserta)) " +
                         "ORDER BY D.StartTest"
 
                     use rdr = cmd.ExecuteReader()
-                    let rows = ResizeArray<string * int64>()
+                    let rows = ResizeArray<string * int64 * string>()
                     while rdr.Read() do
                         let userId = if rdr.IsDBNull(0) then "" else rdr.GetString(0)
                         let noPaket = if rdr.IsDBNull(1) then 0L else Convert.ToInt64(rdr.GetValue(1))
-                        if not (String.IsNullOrWhiteSpace(userId)) && noPaket > 0L then
-                            rows.Add((userId, noPaket))
+                        let noPeserta = if rdr.IsDBNull(2) then "" else rdr.GetString(2)
+                        if not (String.IsNullOrWhiteSpace(userId)) && noPaket > 0L && not (String.IsNullOrWhiteSpace(noPeserta)) then
+                            rows.Add((userId, noPaket, noPeserta))
                     rdr.Close()
 
-                    for (userId, noPaket) in rows do
+                    for (userId, noPaket, noPeserta) in rows do
                         try
                             use upd = new SqlCommand()
                             upd.Connection <- conn
@@ -95,12 +74,14 @@ type AutoFinalizeUjianService(cfg: IConfiguration) =
                             upd.CommandText <-
                                 "UPDATE WISECON_PSIKOTEST.dbo.MS_PesertaDtl " +
                                 "SET TimeEdit = GETDATE(), UserEdit='SYSTEM' " +
-                                "WHERE UserId=@u AND NoPaket=@p " +
+                                "WHERE UserId=@u AND NoPaket=@p AND NoPeserta=@n " +
                                 "AND StartTest IS NOT NULL AND DATEADD(HOUR, 1, StartTest) <= GETDATE() " +
-                                "AND NOT EXISTS (SELECT 1 FROM WISECON_PSIKOTEST.dbo.TR_PsikotestResult r WHERE r.UserId = @u); " +
+                                "AND TimeInput = (SELECT MAX(D2.TimeInput) FROM WISECON_PSIKOTEST.dbo.MS_PesertaDtl D2 WHERE D2.NoPeserta = @n) " +
+                                "AND NOT EXISTS (SELECT 1 FROM WISECON_PSIKOTEST.dbo.TR_PsikotestResult r WHERE r.IdNoPeserta = (SELECT TOP 1 ID FROM WISECON_PSIKOTEST.dbo.MS_Peserta P WHERE P.NoPeserta = @n)); " +
                                 "SELECT @@ROWCOUNT;"
                             upd.Parameters.AddWithValue("@u", userId) |> ignore
                             upd.Parameters.AddWithValue("@p", noPaket) |> ignore
+                            upd.Parameters.AddWithValue("@n", noPeserta) |> ignore
                             let claimed = try Convert.ToInt32(upd.ExecuteScalar()) with _ -> 0
                             if claimed > 0 then
                                 use upd2 = new SqlCommand()
@@ -119,22 +100,7 @@ type AutoFinalizeUjianService(cfg: IConfiguration) =
                                 upd2.Parameters.AddWithValue("@p", noPaket) |> ignore
                                 upd2.ExecuteNonQuery() |> ignore
 
-                                use delW = new SqlCommand("DELETE FROM WISECON_PSIKOTEST.dbo.TR_PsikotestResult WHERE UserId=@u", conn)
-                                delW.Parameters.AddWithValue("@u", userId) |> ignore
-                                delW.ExecuteNonQuery() |> ignore
-
-                                use adv = new SqlConnection(advConnStr)
-                                adv.Open()
-                                use delA = new SqlCommand("DELETE FROM ADVPSIKOTEST.dbo.TR_PsikotestResult WHERE UserId=@u", adv)
-                                delA.Parameters.AddWithValue("@u", userId) |> ignore
-                                delA.ExecuteNonQuery() |> ignore
-
-                                use hitung = new SqlCommand("dbo.SP_HitungNilaiUjian", adv)
-                                hitung.CommandType <- CommandType.StoredProcedure
-                                hitung.Parameters.AddWithValue("@UserId", userId) |> ignore
-                                hitung.ExecuteNonQuery() |> ignore
-
-                                this.syncResults(conn, userId)
+                                this.recalculateResults(conn, userId)
                         with _ ->
                             ()
                 with _ ->
@@ -169,8 +135,6 @@ module Program =
 
         let connStr = builder.Configuration.GetConnectionString("DefaultConnection")
         builder.Services.AddScoped<IDbConnection>(fun _ -> new SqlConnection(connStr) :> IDbConnection)
-        let advConnStr = builder.Configuration.GetConnectionString("AdvPsikotestConnection")
-        builder.Services.AddScoped<SqlConnection>(fun _ -> new SqlConnection(advConnStr))
         builder.Services.AddHostedService<AutoFinalizeUjianService>()
 
         let app = builder.Build()

@@ -39,7 +39,7 @@
       "PsikotestWisesa/1.0.0": {
         "dependencies": {
           "ClosedXML": "0.104.2",
-          "FSharp.Core": "10.0.101",
+          "FSharp.Core": "10.0.200-servicing.26103.119",
           "Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation": "10.0.0",
           "Microsoft.Data.SqlClient": "5.2.0",
           "Microsoft.AspNetCore.Antiforgery": "10.0.0.0",
@@ -457,11 +457,11 @@
           "lib/netstandard2.0/ExcelNumberFormat.dll": {}
         }
       },
-      "FSharp.Core/10.0.101": {
+      "FSharp.Core/10.0.200-servicing.26103.119": {
         "runtime": {
           "lib/netstandard2.1/FSharp.Core.dll": {
             "assemblyVersion": "10.0.0.0",
-            "fileVersion": "10.1.125.57005"
+            "fileVersion": "10.2.26.10419"
           }
         },
         "resources": {
@@ -2919,12 +2919,12 @@
       "path": "excelnumberformat/1.1.0",
       "hashPath": "excelnumberformat.1.1.0.nupkg.sha512"
     },
-    "FSharp.Core/10.0.101": {
+    "FSharp.Core/10.0.200-servicing.26103.119": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-mrS3J7cLtvXM3u3CmiaFq8oyBdlevzZY1VAAAbFk1gUDQtDEjUOybN5XpQglx5wAgJ0wLdDl6OSSfS7ZDFNcpA==",
-      "path": "fsharp.core/10.0.101",
-      "hashPath": "fsharp.core.10.0.101.nupkg.sha512"
+      "sha512": "sha512-S/SswaF6Ds7HJP9BqAR5hV7npGL3wHVHXEA5x0m11fbaBc/BYEU3gk9+Ginp8YZ99p9XKYsqdfvg6aCJb/xkIQ==",
+      "path": "fsharp.core/10.0.200-servicing.26103.119",
+      "hashPath": "fsharp.core.10.0.200-servicing.26103.119.nupkg.sha512"
     },
     "Microsoft.AspNetCore.Mvc.Razor.Extensions/6.0.0": {
       "type": "package",

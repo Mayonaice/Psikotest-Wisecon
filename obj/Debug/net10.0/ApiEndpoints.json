@@ -1094,6 +1094,16 @@
         "IsRequired": false
       },
       {
+        "Name": "strengthWeakness",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "likeDislike",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
         "Name": "answers",
         "Type": "System.String",
         "IsRequired": false
@@ -1152,6 +1162,11 @@
       {
         "Name": "kodeBiodata",
         "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "noPeserta",
+        "Type": "System.String",
         "IsRequired": false
       }
     ],

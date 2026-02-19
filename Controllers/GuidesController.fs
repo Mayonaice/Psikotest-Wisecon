@@ -14,14 +14,14 @@ type PetunjukRequest = {
 }
 
 [<ApiController>]
-type GuidesController (db: IDbConnection, adv: Microsoft.Data.SqlClient.SqlConnection) =
+type GuidesController (db: IDbConnection) =
     inherit Controller()
 
     [<Authorize>]
     [<HttpGet>]
     [<Route("Guides/List")>]
     member this.List([<FromQuery>] start: Nullable<DateTime>, [<FromQuery>] endd: Nullable<DateTime>, [<FromQuery>] status: string) : IActionResult =
-        let conn = adv
+        let conn = db :?> Microsoft.Data.SqlClient.SqlConnection
         use cmd = new Microsoft.Data.SqlClient.SqlCommand()
         cmd.Connection <- conn
         cmd.CommandType <- CommandType.Text
@@ -36,7 +36,7 @@ type GuidesController (db: IDbConnection, adv: Microsoft.Data.SqlClient.SqlConne
         | s when s.Equals("AKTIF", StringComparison.OrdinalIgnoreCase) -> whereClause <- whereClause + " AND ISNULL(bAktif,0)=1 "
         | s when s.Equals("NONAKTIF", StringComparison.OrdinalIgnoreCase) -> whereClause <- whereClause + " AND ISNULL(bAktif,0)=0 "
         | _ -> ()
-        cmd.CommandText <- "SELECT SeqNo, Keterangan, CASE WHEN bAktif=1 THEN 'AKTIF' ELSE 'NONAKTIF' END AS Status, UserInput, TimeInput, UserEdit, TimeEdit FROM ADVPSIKOTEST.dbo.MS_Petunjuk" + whereClause + " ORDER BY SeqNo"
+        cmd.CommandText <- "SELECT SeqNo, Keterangan, CASE WHEN bAktif=1 THEN 'AKTIF' ELSE 'NONAKTIF' END AS Status, UserInput, TimeInput, UserEdit, TimeEdit FROM WISECON_PSIKOTEST.dbo.MS_Petunjuk" + whereClause + " ORDER BY SeqNo"
         conn.Open()
         try
             use rdr = cmd.ExecuteReader()
@@ -64,11 +64,11 @@ type GuidesController (db: IDbConnection, adv: Microsoft.Data.SqlClient.SqlConne
     [<HttpGet>]
     [<Route("Guides/Get")>]
     member this.GetOne([<FromQuery>] seqNo: int64) : IActionResult =
-        let conn = adv
+        let conn = db :?> Microsoft.Data.SqlClient.SqlConnection
         use cmd = new Microsoft.Data.SqlClient.SqlCommand()
         cmd.Connection <- conn
         cmd.CommandType <- CommandType.Text
-        cmd.CommandText <- "SELECT SeqNo, REPLACE(Keterangan, '''', '\''') Keterangan, bAktif, UserInput, TimeInput, UserEdit, TimeEdit FROM ADVPSIKOTEST.dbo.MS_Petunjuk WHERE SeqNo=@s"
+        cmd.CommandText <- "SELECT SeqNo, REPLACE(Keterangan, '''', '\''') Keterangan, bAktif, UserInput, TimeInput, UserEdit, TimeEdit FROM WISECON_PSIKOTEST.dbo.MS_Petunjuk WHERE SeqNo=@s"
         cmd.Parameters.AddWithValue("@s", seqNo) |> ignore
         conn.Open()
         try
@@ -96,11 +96,11 @@ type GuidesController (db: IDbConnection, adv: Microsoft.Data.SqlClient.SqlConne
     [<HttpPost>]
     [<Route("Guides/Modify")>]
     member this.Modify([<FromBody>] req: PetunjukRequest) : IActionResult =
-        let conn = adv
+        let conn = db :?> Microsoft.Data.SqlClient.SqlConnection
         use cmd = new Microsoft.Data.SqlClient.SqlCommand()
         cmd.Connection <- conn
         cmd.CommandType <- CommandType.StoredProcedure
-        cmd.CommandText <- "ADVPSIKOTEST.dbo.SP_Petunjuk"
+        cmd.CommandText <- "dbo.SP_Petunjuk"
         cmd.CommandTimeout <- 120
         let seq = if req.SeqNo.HasValue then int req.SeqNo.Value else 0
         let ket = if isNull req.Keterangan then "" else req.Keterangan
@@ -121,4 +121,3 @@ type GuidesController (db: IDbConnection, adv: Microsoft.Data.SqlClient.SqlConne
             this.Ok()
         finally
             conn.Close()
-

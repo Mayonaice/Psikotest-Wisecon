@@ -26,7 +26,7 @@ type ExamAnswer = { noJawaban: int; jawaban: string; poin: int }
 type ExamQuestion = { noUrut: int; judul: string; deskripsi: string; answers: ResizeArray<ExamAnswer> }
 type ExamGroup = { noGroup: int; namaGroup: string; minSoal: int; waktu: int; random: bool; isPrioritas: bool; questions: ResizeArray<ExamQuestion> }
 
-type ExamController (db: IDbConnection, advDb: SqlConnection, cfg: IConfiguration) =
+type ExamController (db: IDbConnection, cfg: IConfiguration) =
     inherit Controller()
 
     static let groupStartMap = ConcurrentDictionary<string, DateTime>()
@@ -176,11 +176,13 @@ type ExamController (db: IDbConnection, advDb: SqlConnection, cfg: IConfiguratio
         upd.Parameters.AddWithValue("@p", noPaket) |> ignore
         upd.ExecuteNonQuery() |> ignore
 
-        use delW = new SqlCommand("DELETE FROM WISECON_PSIKOTEST.dbo.TR_PsikotestResult WHERE UserId=@u", conn)
+        use delW = new SqlCommand("DELETE FROM WISECON_PSIKOTEST.dbo.TR_PsikotestResult WHERE UserId=@u OR NoPeserta=@n OR IdNoPeserta=@id", conn)
         delW.Parameters.AddWithValue("@u", userId) |> ignore
+        delW.Parameters.AddWithValue("@n", noPeserta) |> ignore
+        delW.Parameters.AddWithValue("@id", idNoPeserta) |> ignore
         delW.ExecuteNonQuery() |> ignore
 
-        use hitung = new SqlCommand("dbo.SP_HitungNilaiUjian_Wisecon", conn)
+        use hitung = new SqlCommand("dbo.SP_HitungNilaiUjian", conn)
         hitung.CommandType <- CommandType.StoredProcedure
         hitung.Parameters.AddWithValue("@UserId", userId) |> ignore
         hitung.ExecuteNonQuery() |> ignore
@@ -349,30 +351,8 @@ type ExamController (db: IDbConnection, advDb: SqlConnection, cfg: IConfiguratio
                                                 if not ok then
                                                     this.BadRequest("Pilihan jawaban tidak valid") :> IActionResult
                                                 else
-                                                    advDb.Open()
                                                     try
-                                                        try
-                                                            use sp = new SqlCommand("dbo.SP_SubmitJawaban", advDb)
-                                                            sp.CommandType <- CommandType.StoredProcedure
-                                                            sp.Parameters.AddWithValue("@NoPeserta", idNoPeserta) |> ignore
-                                                            sp.Parameters.AddWithValue("@User", userId) |> ignore
-                                                            sp.Parameters.AddWithValue("@Tipe", tipe) |> ignore
-                                                            sp.Parameters.AddWithValue("@NoPaket", Convert.ToInt32(noPaket)) |> ignore
-                                                            sp.Parameters.AddWithValue("@NoGroup", req.NoGroup) |> ignore
-                                                            sp.Parameters.AddWithValue("@NoUrut", req.NoUrut) |> ignore
-                                                            sp.Parameters.AddWithValue("@JawabanDiPilih", req.JawabanDiPilih) |> ignore
-                                                            sp.Parameters.AddWithValue("@JmlSalah", 0uy) |> ignore
-                                                            sp.ExecuteNonQuery() |> ignore
-                                                            this.Ok(box {| ok = true |}) :> IActionResult
-                                                        with ex ->
-                                                            this.BadRequest(ex.Message) :> IActionResult
-                                                    finally
-                                                        advDb.Close()
-                                            else
-                                                advDb.Open()
-                                                try
-                                                    try
-                                                        use sp = new SqlCommand("dbo.SP_SubmitJawaban", advDb)
+                                                        use sp = new SqlCommand("dbo.SP_SubmitJawaban", conn)
                                                         sp.CommandType <- CommandType.StoredProcedure
                                                         sp.Parameters.AddWithValue("@NoPeserta", idNoPeserta) |> ignore
                                                         sp.Parameters.AddWithValue("@User", userId) |> ignore
@@ -386,8 +366,22 @@ type ExamController (db: IDbConnection, advDb: SqlConnection, cfg: IConfiguratio
                                                         this.Ok(box {| ok = true |}) :> IActionResult
                                                     with ex ->
                                                         this.BadRequest(ex.Message) :> IActionResult
-                                                finally
-                                                    advDb.Close()
+                                            else
+                                                try
+                                                    use sp = new SqlCommand("dbo.SP_SubmitJawaban", conn)
+                                                    sp.CommandType <- CommandType.StoredProcedure
+                                                    sp.Parameters.AddWithValue("@NoPeserta", idNoPeserta) |> ignore
+                                                    sp.Parameters.AddWithValue("@User", userId) |> ignore
+                                                    sp.Parameters.AddWithValue("@Tipe", tipe) |> ignore
+                                                    sp.Parameters.AddWithValue("@NoPaket", Convert.ToInt32(noPaket)) |> ignore
+                                                    sp.Parameters.AddWithValue("@NoGroup", req.NoGroup) |> ignore
+                                                    sp.Parameters.AddWithValue("@NoUrut", req.NoUrut) |> ignore
+                                                    sp.Parameters.AddWithValue("@JawabanDiPilih", req.JawabanDiPilih) |> ignore
+                                                    sp.Parameters.AddWithValue("@JmlSalah", 0uy) |> ignore
+                                                    sp.ExecuteNonQuery() |> ignore
+                                                    this.Ok(box {| ok = true |}) :> IActionResult
+                                                with ex ->
+                                                    this.BadRequest(ex.Message) :> IActionResult
                                     else
                                         use cmdTipe = new SqlCommand()
                                         cmdTipe.Connection <- conn
@@ -411,30 +405,8 @@ type ExamController (db: IDbConnection, advDb: SqlConnection, cfg: IConfiguratio
                                             if not ok then
                                                 this.BadRequest("Pilihan jawaban tidak valid") :> IActionResult
                                             else
-                                                advDb.Open()
                                                 try
-                                                    try
-                                                        use sp = new SqlCommand("dbo.SP_SubmitJawaban", advDb)
-                                                        sp.CommandType <- CommandType.StoredProcedure
-                                                        sp.Parameters.AddWithValue("@NoPeserta", idNoPeserta) |> ignore
-                                                        sp.Parameters.AddWithValue("@User", userId) |> ignore
-                                                        sp.Parameters.AddWithValue("@Tipe", tipe) |> ignore
-                                                        sp.Parameters.AddWithValue("@NoPaket", Convert.ToInt32(noPaket)) |> ignore
-                                                        sp.Parameters.AddWithValue("@NoGroup", req.NoGroup) |> ignore
-                                                        sp.Parameters.AddWithValue("@NoUrut", req.NoUrut) |> ignore
-                                                        sp.Parameters.AddWithValue("@JawabanDiPilih", req.JawabanDiPilih) |> ignore
-                                                        sp.Parameters.AddWithValue("@JmlSalah", 0uy) |> ignore
-                                                        sp.ExecuteNonQuery() |> ignore
-                                                        this.Ok(box {| ok = true |}) :> IActionResult
-                                                    with ex ->
-                                                        this.BadRequest(ex.Message) :> IActionResult
-                                                finally
-                                                    advDb.Close()
-                                        else
-                                            advDb.Open()
-                                            try
-                                                try
-                                                    use sp = new SqlCommand("dbo.SP_SubmitJawaban", advDb)
+                                                    use sp = new SqlCommand("dbo.SP_SubmitJawaban", conn)
                                                     sp.CommandType <- CommandType.StoredProcedure
                                                     sp.Parameters.AddWithValue("@NoPeserta", idNoPeserta) |> ignore
                                                     sp.Parameters.AddWithValue("@User", userId) |> ignore
@@ -448,8 +420,22 @@ type ExamController (db: IDbConnection, advDb: SqlConnection, cfg: IConfiguratio
                                                     this.Ok(box {| ok = true |}) :> IActionResult
                                                 with ex ->
                                                     this.BadRequest(ex.Message) :> IActionResult
-                                            finally
-                                                advDb.Close()
+                                        else
+                                            try
+                                                use sp = new SqlCommand("dbo.SP_SubmitJawaban", conn)
+                                                sp.CommandType <- CommandType.StoredProcedure
+                                                sp.Parameters.AddWithValue("@NoPeserta", idNoPeserta) |> ignore
+                                                sp.Parameters.AddWithValue("@User", userId) |> ignore
+                                                sp.Parameters.AddWithValue("@Tipe", tipe) |> ignore
+                                                sp.Parameters.AddWithValue("@NoPaket", Convert.ToInt32(noPaket)) |> ignore
+                                                sp.Parameters.AddWithValue("@NoGroup", req.NoGroup) |> ignore
+                                                sp.Parameters.AddWithValue("@NoUrut", req.NoUrut) |> ignore
+                                                sp.Parameters.AddWithValue("@JawabanDiPilih", req.JawabanDiPilih) |> ignore
+                                                sp.Parameters.AddWithValue("@JmlSalah", 0uy) |> ignore
+                                                sp.ExecuteNonQuery() |> ignore
+                                                this.Ok(box {| ok = true |}) :> IActionResult
+                                            with ex ->
+                                                this.BadRequest(ex.Message) :> IActionResult
                 finally
                     conn.Close()
 

@@ -293,7 +293,7 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
             "A.WaktuTest, " +
             "A.StartTest, " +
             "A.bKirim, " +
-            "A.WaktuKirim, " +
+            "WA.TimeInput AS WaktuKirim, " +
             "NULL AS WaktuTerbaca, " +
             "A.UserInput, " +
             "A.TimeInput, " +
@@ -302,6 +302,7 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
             "FROM WISECON_PSIKOTEST.dbo.VW_MASTER_PesertaDtl A " +
             "LEFT JOIN WISECON_PSIKOTEST.dbo.VW_MASTER_Peserta P ON P.NoPeserta=A.NoPeserta " +
             "LEFT JOIN WISECON_PSIKOTEST.dbo.MS_PaketSoal PS ON PS.NoPaket=A.NoPaket " +
+            "OUTER APPLY (SELECT TOP 1 TimeInput FROM WISECON_PSIKOTEST.dbo.Trx_SendMessageWhatsApp WHERE idclient = P.NoHP ORDER BY Id DESC) WA " +
             whereClause + " ORDER BY A.TimeInput DESC"
         conn.Open()
         try
@@ -421,7 +422,7 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
         addLike "q_waktuTest" "CONVERT(VARCHAR(19),A.WaktuTest,120)" "@q_waktuTest"
         addLike "q_waktuMulai" "CONVERT(VARCHAR(19),A.StartTest,120)" "@q_waktuMulai"
         addLike "q_statusPesan" statusPesanExpr "@q_statusPesan"
-        addLike "q_kirim" "CONVERT(VARCHAR(19),A.WaktuKirim,120)" "@q_kirim"
+        addLike "q_kirim" "CONVERT(VARCHAR(19),WA.TimeInput,120)" "@q_kirim"
         addLike "q_userInput" "ISNULL(A.UserInput,'')" "@q_userInput"
         addLike "q_timeInput" "CONVERT(VARCHAR(19),A.TimeInput,120)" "@q_timeInput"
         addLike "q_userEdit" "ISNULL(A.UserEdit,'')" "@q_userEdit"
@@ -442,7 +443,7 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
                 | "waktuTest" -> "A.WaktuTest " + dir
                 | "waktuMulai" -> "A.StartTest " + dir
                 | "statusPesan" -> "A.bKirim " + dir
-                | "kirim" -> "A.WaktuKirim " + dir
+                | "kirim" -> "WA.TimeInput " + dir
                 | "userInput" -> "A.UserInput " + dir
                 | "timeInput" -> "A.TimeInput " + dir
                 | "userEdit" -> "A.UserEdit " + dir
@@ -463,7 +464,7 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
             "A.WaktuTest, " +
             "A.StartTest, " +
             "A.bKirim, " +
-            "A.WaktuKirim, " +
+            "WA.TimeInput AS WaktuKirim, " +
             "NULL AS WaktuTerbaca, " +
             "A.UserInput, " +
             "A.TimeInput, " +
@@ -472,6 +473,7 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
             "FROM WISECON_PSIKOTEST.dbo.VW_MASTER_PesertaDtl A " +
             "LEFT JOIN WISECON_PSIKOTEST.dbo.VW_MASTER_Peserta P ON P.NoPeserta=A.NoPeserta " +
             "LEFT JOIN WISECON_PSIKOTEST.dbo.MS_PaketSoal PS ON PS.NoPaket=A.NoPaket " +
+            "OUTER APPLY (SELECT TOP 1 TimeInput FROM WISECON_PSIKOTEST.dbo.Trx_SendMessageWhatsApp WHERE idclient = P.NoHP ORDER BY Id DESC) WA " +
             whereClause + " ORDER BY " + orderBy
 
         let fmtDt (v: Nullable<DateTime>) =
