@@ -65,6 +65,8 @@ type ScoresController (db: IDbConnection) =
                 let qCol = this.detectQuestionColumn(cols)
                 let hasUser = this.hasColumn(cols, "UserInput")
                 let hasTime = this.hasColumn(cols, "TimeInput")
+                let hasUE = this.hasColumn(cols, "UserEdit")
+                let hasTE = this.hasColumn(cols, "TimeEdit")
                 let isPersonality = this.isPersonalityKind(kind)
                 let hasAspek = isPersonality && this.hasColumn(cols, "Aspek")
                 let hasUraian = isPersonality && this.hasColumn(cols, "Uraian")
@@ -78,12 +80,14 @@ type ScoresController (db: IDbConnection) =
                     cmd.Parameters.AddWithValue("@e", endd.Value.Date) |> ignore
                 let selectUser = if hasUser then "UserInput" else "'' AS UserInput"
                 let selectTime = if hasTime then "TimeInput" else "GETDATE() AS TimeInput"
+                let selectUserEdit = if hasUE then "UserEdit" else "'' AS UserEdit"
+                let selectTimeEdit = if hasTE then "TimeEdit" else "NULL AS TimeEdit"
                 let selectQuestion =
                     if hasUraian then "ISNULL([Uraian],'') AS Question"
                     else sprintf "ISNULL(%s,'') AS Question" qCol
                 let selectAspek = if hasAspek then "ISNULL([Aspek],'') AS Aspek" else "'' AS Aspek"
                 let selectUraian = if hasUraian then "ISNULL([Uraian],'') AS Uraian" else "'' AS Uraian"
-                cmd.CommandText <- sprintf "SELECT %s AS Id, %s, %s, %s, %s, %s FROM %s%s ORDER BY %s DESC" idCol selectQuestion selectAspek selectUraian selectUser selectTime table whereClause idCol
+                cmd.CommandText <- sprintf "SELECT %s AS Id, %s, %s, %s, %s, %s, %s, %s FROM %s%s ORDER BY %s DESC" idCol selectQuestion selectAspek selectUraian selectUser selectTime selectUserEdit selectTimeEdit table whereClause idCol
                 use rdr = cmd.ExecuteReader()
                 let out = ResizeArray<obj>()
                 let mutable i = 0
@@ -95,7 +99,9 @@ type ScoresController (db: IDbConnection) =
                     let uraian = if rdr.IsDBNull(3) then "" else rdr.GetString(3)
                     let user = if rdr.IsDBNull(4) then "" else rdr.GetString(4)
                     let time = if rdr.IsDBNull(5) then Nullable() else Nullable(rdr.GetDateTime(5))
-                    out.Add(box {| num = i; id = id; question = q; aspek = aspek; uraian = uraian; userInput = user; timeInput = time |})
+                    let userEdit = if rdr.IsDBNull(6) then "" else rdr.GetString(6)
+                    let timeEdit = if rdr.IsDBNull(7) then Nullable() else Nullable(rdr.GetDateTime(7))
+                    out.Add(box {| num = i; id = id; question = q; aspek = aspek; uraian = uraian; userInput = user; timeInput = time; userEdit = userEdit; timeEdit = timeEdit |})
                 this.Ok(out)
             finally
                 conn.Close()

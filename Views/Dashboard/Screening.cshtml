@@ -186,6 +186,8 @@
   <style>
   .table-loader{ position:absolute; inset:0; display:none; background:rgba(255,255,255,0.65); align-items:center; justify-content:center; z-index:10; }
   .table-scroll.loading .table-loader{ display:flex; }
+  #tblScreeningTop, #tblBiodata{ width:max-content; min-width:100%; }
+  #tblScreeningTop th, #tblScreeningTop td, #tblBiodata th, #tblBiodata td{ white-space:nowrap; }
   .btn-flat{ background:#FFFFFF; border:1px solid #d1d5db; color:#111827; }
   .btn-flat{ transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease, transform .05s ease; }
   .btn-flat:hover{ background:#F9FAFB; border-color:#cbd5e1; box-shadow:0 1px 2px rgba(0,0,0,0.06); }
@@ -235,6 +237,19 @@
     var rawBiodata = [];
     var selected = { key:null };
 
+    function ModalAlert(msg){
+      if(window.DCT3Modals){ DCT3Modals.open('alert', { message: msg || '' }); }
+      else { alert(msg || ''); }
+    }
+    function ModalInformation(msg){
+      if(window.DCT3Modals){ DCT3Modals.open('information', { message: msg || '' }); }
+      else { alert(msg || ''); }
+    }
+    function ModalFailed(msg){
+      if(window.DCT3Modals){ DCT3Modals.open('failed', { message: msg || '' }); }
+      else { alert(msg || ''); }
+    }
+
     function fmtDateOnly(d){ var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; var dd=('0'+d.getDate()).slice(-2); var mm=months[d.getMonth()]; var yy=d.getFullYear(); return dd+' '+mm+' '+yy; }
     function enhanceDateInput(input){ var iso=input.value; input.classList.add('date-formatted'); var d = iso ? new Date(iso) : null; input.dataset.display = d ? fmtDateOnly(d) : ''; input.addEventListener('change', function(){ var iso2 = input.value; var d2 = iso2 ? new Date(iso2) : null; input.dataset.display = d2 ? fmtDateOnly(d2) : ''; }); }
     function withinRange(d, start, end){ var ds=new Date(start+"T00:00:00"); var de=new Date(end+"T23:59:59"); return d>=ds && d<=de; }
@@ -274,7 +289,7 @@
     btnSRefresh.addEventListener('click', function(){ fetchTop().then(function(){ if(rawTop && rawTop.length>0){ selected.key=rawTop[0].key; var r=document.querySelector('#tblScreeningTop tbody tr[data-key="'+selected.key+'"]'); if(r) r.classList.add('row-active'); fetchBiodata(selected.key); } else { rawBiodata=[]; applyBiodata(); } }); });
     btnSExport.addEventListener('click', function(){ var s=sInputStart.value; var e=sInputEnd.value; var ss=sStatusSeleksi.value; var sv=sStatusVerifikasi.value; var url='@Url.Content("~/Screening/Top/Export")'+'?fromDate='+encodeURIComponent(s)+'&toDate='+encodeURIComponent(e)+'&statusSeleksi='+encodeURIComponent(ss)+'&statusVerifikasi='+encodeURIComponent(sv); window.open(url, '_blank'); });
 
-    document.getElementById('btnApprove').addEventListener('click', function(){ var payload=rawBiodata.filter(function(x){ return x.selected; }).map(function(x){ return { kodeBiodata: x.kodeBiodata }; }); if(payload.length===0) return; var url='@Url.Content("~/Screening/Biodata/Approve")'; fetch(url,{ method:'POST', headers:{ 'Content-Type':'application/json' }, credentials:'same-origin', body: JSON.stringify({ items: payload }) }).then(function(r){ return r.json().then(function(j){ return { ok:r.ok, json:j }; }); }).then(function(res){ if(!res.ok){ alert((res.json&&res.json.error)||'Gagal approve'); return; } if(res.json && res.json.message){ alert(res.json.message); } else { alert('Approve berhasil'); } fetchBiodata(selected.key); }).catch(function(err){ console.error('approve biodata error', err); }); });
+    document.getElementById('btnApprove').addEventListener('click', function(){ var payload=rawBiodata.filter(function(x){ return x.selected; }).map(function(x){ return { kodeBiodata: x.kodeBiodata }; }); if(payload.length===0) return; var url='@Url.Content("~/Screening/Biodata/Approve")'; fetch(url,{ method:'POST', headers:{ 'Content-Type':'application/json' }, credentials:'same-origin', body: JSON.stringify({ items: payload }) }).then(function(r){ return r.json().then(function(j){ return { ok:r.ok, json:j }; }); }).then(function(res){ if(!res.ok){ ModalFailed((res.json&&res.json.error)||'Gagal approve'); return; } if(res.json && res.json.message){ ModalInformation(res.json.message); } else { ModalInformation('Approve berhasil'); } fetchBiodata(selected.key); }).catch(function(err){ console.error('approve biodata error', err); ModalFailed('Gagal approve'); }); });
 
     initDefaults();
     fetchTop().then(function(){ if(rawTop && rawTop.length>0){ selected.key=rawTop[0].key; var r=document.querySelector('#tblScreeningTop tbody tr[data-key="'+selected.key+'"]'); if(r) r.classList.add('row-active'); fetchBiodata(selected.key); } });

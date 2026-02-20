@@ -709,6 +709,11 @@
       else { alert(msg); }
     }
 
+    function ModalAlert(msg){
+      if(window.DCT3Modals){ DCT3Modals.open('alert', { message: msg || '' }); }
+      else { alert(msg); }
+    }
+
     function showSuccess(msg){
       if(window.DCT3Modals){ DCT3Modals.open('success', { message: msg }); }
       else { alert(msg); }
@@ -1089,7 +1094,7 @@
 
     document.getElementById('btnBulkInvite').addEventListener('click', function(){
       var ids = Array.from(selectedPesertaIds.values());
-      if(ids.length === 0){ showError('Pilih minimal 1 peserta'); return; }
+      if(ids.length === 0){ ModalAlert('Ceklis data pelamar yang ingin diundang'); return; }
       openInvite(ids, 'psikotest');
     });
     // Selection handled via select-square click, no default checkbox
@@ -1441,14 +1446,6 @@
       var sc=document.querySelector('#gridUjian .table-scroll'); if(sc) sc.classList.add('loading');
       if(window.__applicantsActiveNoPeserta) activeNoPeserta = ''+window.__applicantsActiveNoPeserta;
       var activeKey = normalizeNo(activeNoPeserta);
-      if(!activeNoPeserta){
-        examData = [];
-        var body0=document.querySelector('#tblUjian tbody'); if(body0) body0.innerHTML='';
-        infoUjian.textContent='Showing 0 to 0 of 0 entries';
-        renderPages(pageNumsUjian, 1, 1);
-        if(sc) sc.classList.remove('loading');
-        return Promise.resolve();
-      }
       var s1=ddUjianInputStart.value; var e1=ddUjianInputEnd.value; var s2=ddUjianDateStart.value; var e2=ddUjianDateEnd.value; var st=ddStatusPengerjaan.value; var hs=ddHasilPsikotest.value;
       var url='@Url.Content("~/Applicants/Ujian/List")'+
         '?inputStart='+(encodeURIComponent(s1||''))+
@@ -1457,7 +1454,7 @@
         '&ujianEnd='+(encodeURIComponent(e2||''))+
         '&status='+(encodeURIComponent(st||''))+
         '&hasil='+(encodeURIComponent(hs||''))+
-        '&noPeserta='+(encodeURIComponent(activeNoPeserta||''));
+        (activeNoPeserta ? '&noPeserta='+(encodeURIComponent(activeNoPeserta||'')) : '');
       if(debug){ console.groupCollapsed('[Applicants] fetch ujian'); console.log('url', url); console.log('filters', { inputStart:s1, inputEnd:e1, ujianStart:s2, ujianEnd:e2, status:st, hasil:hs }); }
       return fetch(url,{ method:'GET', credentials:'same-origin' }).then(function(r){
         var status=r.status; var ok=r.ok; var ct=(r.headers&&r.headers.get)?(r.headers.get('content-type')||''):'';
@@ -1468,7 +1465,8 @@
           try{ return JSON.parse(t); }catch(e){ console.error('[Applicants] JSON parse error', e, 'sample', t.slice(0,200)); return []; }
         });
       }).then(function(rows){
-        examData = (rows||[]).filter(function(x){ return normalizeNo(x && x.nomor) === activeKey; });
+        var allRows = (rows||[]);
+        examData = activeKey ? allRows.filter(function(x){ return normalizeNo(x && x.nomor) === activeKey; }) : allRows;
         updateSelectOptions(ddStatusPengerjaan, examData, 'status');
         if(debug){
           var t0 = examData[0] ? examData[0].timeInput : null;

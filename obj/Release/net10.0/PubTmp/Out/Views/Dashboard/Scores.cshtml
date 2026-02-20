@@ -162,6 +162,7 @@
         var titleScores = document.getElementById('titleScores');
 
         function fmt(d){ var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; var dd=('0'+d.getDate()).slice(-2); var mm=months[d.getMonth()]; var yy=d.getFullYear(); var hh=('0'+d.getHours()).slice(-2); var mi=('0'+d.getMinutes()).slice(-2); return dd+' '+mm+' '+yy+' '+hh+':'+mi; }
+        function fmtMaybe(d){ return d ? fmt(new Date(d)) : ''; }
         function fmtDateOnly(d){ var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; var dd=('0'+d.getDate()).slice(-2); var mm=months[d.getMonth()]; var yy=d.getFullYear(); return dd+' '+mm+' '+yy; }
         function enhanceDateInput(input){ var iso=input.value; input.classList.add('date-formatted'); var d = iso ? new Date(iso) : null; input.dataset.display = d ? fmtDateOnly(d) : ''; input.addEventListener('change', function(){ var iso2 = input.value; var d2 = iso2 ? new Date(iso2) : null; input.dataset.display = d2 ? fmtDateOnly(d2) : ''; }); }
         function within(d, s, e){ if(!s||!e) return true; var ds=new Date(s+'T00:00:00'); var de=new Date(e+'T23:59:59'); return d>=ds && d<=de; }
@@ -178,6 +179,8 @@
               '<th class="px-1 py-1 text-left"><div class="th-inner"><span>Uraian</span><span class="sort-icons" data-sort="uraian"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>'+
               '<th class="px-1 py-1 text-left"><div class="th-inner"><span>User Input</span><span class="sort-icons" data-sort="userInput"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>'+
               '<th class="px-3 py-1 text-left"><div class="th-inner"><span>Time Input</span><span class="sort-icons" data-sort="timeInput"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>'+
+              '<th class="px-1 py-1 text-left"><div class="th-inner"><span>User Edit</span><span class="sort-icons" data-sort="userEdit"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>'+
+              '<th class="px-3 py-1 text-left"><div class="th-inner"><span>Time Edit</span><span class="sort-icons" data-sort="timeEdit"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>'+
             '</tr>'+
             '<tr class="bg-[#EBEBE9]">'+
               '<th class="px-1 py-1"></th>'+
@@ -186,6 +189,8 @@
               '<th class="px-1 py-1 search-cell"><input class="col-search-scores border border-gray-300 rounded-md px-2 py-1 w-full" data-field="uraian" placeholder="Search uraian" /></th>'+
               '<th class="px-1 py-1 search-cell"><input class="col-search-scores border border-gray-300 rounded-md px-2 py-1 w-full" data-field="userInput" placeholder="Search user" /></th>'+
               '<th class="px-1 py-1 search-cell"><input class="col-search-scores border border-gray-300 rounded-md px-2 py-1 w-full" data-field="timeInput" placeholder="Search time" /></th>'+
+              '<th class="px-1 py-1 search-cell"><input class="col-search-scores border border-gray-300 rounded-md px-2 py-1 w-full" data-field="userEdit" placeholder="Search user edit" /></th>'+
+              '<th class="px-1 py-1 search-cell"><input class="col-search-scores border border-gray-300 rounded-md px-2 py-1 w-full" data-field="timeEdit" placeholder="Search time edit" /></th>'+
             '</tr>';
           }
 
@@ -195,6 +200,8 @@
             '<th class="px-1 py-1 text-left"><div class="th-inner"><span>Pertanyaan</span><span class="sort-icons" data-sort="question"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>'+
             '<th class="px-1 py-1 text-left"><div class="th-inner"><span>User Input</span><span class="sort-icons" data-sort="userInput"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>'+
             '<th class="px-3 py-1 text-left"><div class="th-inner"><span>Time Input</span><span class="sort-icons" data-sort="timeInput"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>'+
+            '<th class="px-1 py-1 text-left"><div class="th-inner"><span>User Edit</span><span class="sort-icons" data-sort="userEdit"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>'+
+            '<th class="px-3 py-1 text-left"><div class="th-inner"><span>Time Edit</span><span class="sort-icons" data-sort="timeEdit"><span class="asc">↑</span><span class="desc">↓</span></span></div></th>'+
           '</tr>'+
           '<tr class="bg-[#EBEBE9]">'+
             '<th class="px-1 py-1"></th>'+
@@ -202,6 +209,8 @@
             '<th class="px-1 py-1 search-cell"><input class="col-search-scores border border-gray-300 rounded-md px-2 py-1 w-full" data-field="question" placeholder="Search pertanyaan" /></th>'+
             '<th class="px-1 py-1 search-cell"><input class="col-search-scores border border-gray-300 rounded-md px-2 py-1 w-full" data-field="userInput" placeholder="Search user" /></th>'+
             '<th class="px-1 py-1 search-cell"><input class="col-search-scores border border-gray-300 rounded-md px-2 py-1 w-full" data-field="timeInput" placeholder="Search time" /></th>'+
+            '<th class="px-1 py-1 search-cell"><input class="col-search-scores border border-gray-300 rounded-md px-2 py-1 w-full" data-field="userEdit" placeholder="Search user edit" /></th>'+
+            '<th class="px-1 py-1 search-cell"><input class="col-search-scores border border-gray-300 rounded-md px-2 py-1 w-full" data-field="timeEdit" placeholder="Search time edit" /></th>'+
           '</tr>';
         }
 
@@ -247,7 +256,7 @@
               var v=(search[k]||'').toLowerCase();
               if(v){
                 var xv=(''+(x[k]||'')).toLowerCase();
-                if(k==='timeInput'){ xv=fmt(new Date(x[k])).toLowerCase(); }
+                if(k==='timeInput' || k==='timeEdit'){ xv=x[k]?fmt(new Date(x[k])).toLowerCase():''; }
                 if(xv.indexOf(v)===-1) okSearch=false;
               }
             });
@@ -256,7 +265,7 @@
           if(sort.field){
             rows.sort(function(a,b){
               var av=a[sort.field]; var bv=b[sort.field];
-              if(sort.field==='timeInput'){ av=new Date(a[sort.field]).getTime(); bv=new Date(b[sort.field]).getTime(); }
+              if(sort.field==='timeInput' || sort.field==='timeEdit'){ av=a[sort.field]?new Date(a[sort.field]).getTime():0; bv=b[sort.field]?new Date(b[sort.field]).getTime():0; }
               if(av<bv) return -1*sort.dir;
               if(av>bv) return 1*sort.dir;
               return 0;
@@ -277,13 +286,17 @@
                 '<td class="px-1 py-1 cell">'+(r.aspek||'')+'</td>'+
                 '<td class="px-1 py-1 cell">'+(r.uraian||'')+'</td>'+
                 '<td class="px-1 py-1 cell">'+(r.userInput||'')+'</td>'+
-                '<td class="px-1 py-1 cell">'+fmt(new Date(r.timeInput))+'</td>';
+                '<td class="px-1 py-1 cell">'+fmtMaybe(r.timeInput)+'</td>'+
+                '<td class="px-1 py-1 cell">'+(r.userEdit||'')+'</td>'+
+                '<td class="px-1 py-1 cell">'+fmtMaybe(r.timeEdit)+'</td>';
             } else {
               tr.innerHTML='<td class="px-3 py-1 cell select-cell"><div class="select-square"></div></td>'+
                 '<td class="px-1 py-1 cell">'+r.num+'</td>'+
                 '<td class="px-1 py-1 cell">'+(r.question||'')+'</td>'+
                 '<td class="px-1 py-1 cell">'+(r.userInput||'')+'</td>'+
-                '<td class="px-1 py-1 cell">'+fmt(new Date(r.timeInput))+'</td>';
+                '<td class="px-1 py-1 cell">'+fmtMaybe(r.timeInput)+'</td>'+
+                '<td class="px-1 py-1 cell">'+(r.userEdit||'')+'</td>'+
+                '<td class="px-1 py-1 cell">'+fmtMaybe(r.timeEdit)+'</td>';
             }
             tr.setAttribute('data-id', r.id);
             tblBody.appendChild(tr);
@@ -391,7 +404,9 @@ function hideModal(){
                   aspek:x.aspek,
                   uraian:x.uraian,
                   userInput:x.userInput,
-                  timeInput:x.timeInput
+                  timeInput:x.timeInput,
+                  userEdit:x.userEdit,
+                  timeEdit:x.timeEdit
                 };
               });
               currentPage=1;

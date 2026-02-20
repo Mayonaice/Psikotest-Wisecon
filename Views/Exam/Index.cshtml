@@ -44,5 +44,21 @@
             </div>
         </div>
     </div>
+
+    @await Html.PartialAsync("_DCT3Notifications")
+
+    <script>
+        (function(){
+            try{
+                var done = sessionStorage.getItem('examFinished');
+                if(done){
+                    sessionStorage.removeItem('examFinished');
+                    if(window.DCT3Modals && typeof DCT3Modals.open === 'function'){
+                        DCT3Modals.open('success', { message: 'Selamat! Anda telah berhasil menyelesaikan ujian.' });
+                    }
+                }
+            }catch(e){}
+        })();
+    </script>
 </body>
 </html>

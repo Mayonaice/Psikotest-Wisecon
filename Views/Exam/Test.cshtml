@@ -28,7 +28,13 @@
 
     <div class="w-full bg-[#2F86C8] py-3 px-3 sm:px-6">
         <div class="max-w-6xl mx-auto flex items-center gap-3 text-white">
-            <div class="bg-[#2A78B1] rounded-lg px-4 py-2 font-extrabold tracking-wide" id="paketLabel">@namaPaket</div>
+            <div class="bg-[#2A78B1] rounded-lg px-4 py-2 font-extrabold tracking-wide flex items-center gap-2">
+                <span class="bg-white/20 rounded-md px-2 py-1 text-sm font-bold" id="paketLabelNo"></span>
+                <span id="paketLabel">@namaPaket</span>
+                <button type="button" id="petunjukBtn" class="ml-2 inline-flex items-center justify-center w-8 h-8 rounded-md bg-white/15 hover:bg-white/25">
+                    <img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/Confirmation.png")" alt="Petunjuk" class="w-5 h-5" />
+                </button>
+            </div>
             <div class="ml-auto flex items-center gap-3">
                 <div class="text-[11px] sm:text-xs font-semibold bg-white/15 rounded-md px-2 py-1" id="saveStatus"></div>
                 <div class="text-xs sm:text-sm font-semibold bg-white/15 rounded-md px-2 py-1">
@@ -47,12 +53,17 @@
                 <div class="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
                     <div class="flex items-start gap-3">
                         <div class="text-xl sm:text-2xl font-extrabold" id="soalNo">Soal No. 1</div>
-                        <div class="ml-auto">
-                            <select id="groupSelect" class="border border-gray-300 rounded-md px-2 py-1 text-sm"></select>
-                        </div>
                     </div>
                     <div class="mt-2 text-base sm:text-lg text-gray-900" id="soalText"></div>
                     <div class="mt-5 space-y-3" id="jawabanWrap"></div>
+                    <div class="mt-6 flex items-center justify-between gap-3">
+                        <button type="button" id="prevQuestionBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                            Previous
+                        </button>
+                        <button type="button" id="nextQuestionBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                            Next
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -79,9 +90,20 @@
         </div>
     </div>
 
+    <div id="petunjukModal" class="hidden fixed inset-0 bg-black/60 z-50 items-center justify-center">
+        <div class="bg-white rounded-xl shadow-xl w-[92vw] max-w-3xl max-h-[80vh] overflow-hidden">
+            <div class="px-5 py-4 text-lg font-bold text-gray-900 border-b border-gray-200">Petunjuk</div>
+            <div class="px-5 py-4 overflow-y-auto max-h-[62vh] text-gray-800" id="petunjukContent"></div>
+            <div class="px-5 py-4 border-t border-gray-200 flex justify-end">
+                <button type="button" id="petunjukCloseBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">Close</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const token = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(token));
         const groups = @Html.Raw(questionsJson);
+        const namaPaket = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(namaPaket));
 
         function pad2(n){ return String(n).padStart(2,'0'); }
         function fmtMMSS(totalSec){
@@ -192,12 +214,62 @@
             try{ localStorage.setItem(keyFor(), JSON.stringify(state.answers)); }catch{}
         }
 
+        const petunjukModal = document.getElementById('petunjukModal');
+        const petunjukContent = document.getElementById('petunjukContent');
+        const petunjukBtn = document.getElementById('petunjukBtn');
+        const petunjukCloseBtn = document.getElementById('petunjukCloseBtn');
+        const paketLabelNo = document.getElementById('paketLabelNo');
+        const paketLabel = document.getElementById('paketLabel');
+
+        function setGroupHeader(){
+            const g = groups && groups.length ? groups[state.groupIndex] : null;
+            const noGroup = g && g.noGroup ? g.noGroup : '';
+            paketLabelNo.textContent = noGroup ? String(noGroup) : '';
+            paketLabel.textContent = g && g.namaGroup ? g.namaGroup : namaPaket;
+            const hasPetunjuk = g && g.petunjuk && String(g.petunjuk).trim() !== '';
+            if(petunjukBtn){
+                petunjukBtn.style.display = hasPetunjuk ? 'inline-flex' : 'none';
+            }
+        }
+
+        function openPetunjuk(text){
+            if(!petunjukModal || !petunjukContent) return;
+            petunjukContent.innerHTML = text || '';
+            petunjukModal.classList.remove('hidden');
+            petunjukModal.classList.add('flex');
+        }
+        function closePetunjuk(){
+            if(!petunjukModal) return;
+            petunjukModal.classList.add('hidden');
+            petunjukModal.classList.remove('flex');
+        }
+        function showPetunjukForGroup(){
+            const g = groups && groups.length ? groups[state.groupIndex] : null;
+            const text = g && g.petunjuk ? String(g.petunjuk) : '';
+            if(text.trim() !== ''){
+                openPetunjuk(text);
+            }
+        }
+        if(petunjukBtn){
+            petunjukBtn.addEventListener('click', function(){
+                const g = groups && groups.length ? groups[state.groupIndex] : null;
+                const text = g && g.petunjuk ? String(g.petunjuk) : '';
+                if(text.trim() !== ''){
+                    openPetunjuk(text);
+                }
+            });
+        }
+        if(petunjukCloseBtn){
+            petunjukCloseBtn.addEventListener('click', closePetunjuk);
+        }
+
         function setGroup(idx){
             state.groupIndex = idx;
             state.questionIndex = 0;
             loadSaved();
             startGroupTimer();
             render();
+            showPetunjukForGroup();
         }
 
         function setQuestion(idx){
@@ -206,26 +278,29 @@
         }
 
         function render(){
+            setGroupHeader();
             if(!groups || !groups.length){
                 document.getElementById('soalNo').textContent = 'Soal';
                 document.getElementById('soalText').textContent = 'Tidak ada data soal untuk paket ini';
                 document.getElementById('jawabanWrap').innerHTML = '';
                 document.getElementById('navWrap').innerHTML = '';
+                updateFinishButton();
+                updateQuestionNavButtons();
                 return;
             }
             const g = groups[state.groupIndex];
             if(!g || !Array.isArray(g.questions) || g.questions.length === 0){
                 document.getElementById('ujianKeText').textContent = 'Ujian ke-' + (state.groupIndex+1) + ' dari ' + groups.length;
-                document.getElementById('paketLabel').textContent = g && g.namaGroup ? g.namaGroup : @Html.Raw(System.Text.Json.JsonSerializer.Serialize(namaPaket));
                 document.getElementById('soalNo').textContent = 'Soal';
                 document.getElementById('soalText').textContent = 'Tidak ada soal pada group ini';
                 document.getElementById('jawabanWrap').innerHTML = '';
                 document.getElementById('navWrap').innerHTML = '';
+                updateFinishButton();
+                updateQuestionNavButtons();
                 return;
             }
             const totalGroups = groups.length;
             document.getElementById('ujianKeText').textContent = 'Ujian ke-' + (state.groupIndex+1) + ' dari ' + totalGroups;
-            document.getElementById('paketLabel').textContent = g.namaGroup || @Html.Raw(System.Text.Json.JsonSerializer.Serialize(namaPaket));
 
             const q = g.questions[state.questionIndex];
             document.getElementById('soalNo').textContent = 'Soal No. ' + (state.questionIndex + 1);
@@ -261,6 +336,8 @@
             }
 
             renderNav();
+            updateFinishButton();
+            updateQuestionNavButtons();
         }
 
         function renderNav(){
@@ -277,17 +354,21 @@
             });
         }
 
-        function initGroupSelect(){
-            const sel = document.getElementById('groupSelect');
-            sel.innerHTML = '';
-            groups.forEach((g, i) => {
-                const opt = document.createElement('option');
-                opt.value = String(i);
-                opt.textContent = (g.namaGroup || ('Group ' + g.noGroup));
-                sel.appendChild(opt);
-            });
-            sel.value = String(state.groupIndex);
-            sel.addEventListener('change', (e) => setGroup(parseInt(e.target.value, 10) || 0));
+        function updateQuestionNavButtons(){
+            const prevBtn = document.getElementById('prevQuestionBtn');
+            const nextBtn = document.getElementById('nextQuestionBtn');
+            if(!prevBtn || !nextBtn) return;
+            const g = groups && groups.length ? groups[state.groupIndex] : null;
+            const total = (g && Array.isArray(g.questions)) ? g.questions.length : 0;
+            prevBtn.disabled = !(total > 0 && state.questionIndex > 0);
+            nextBtn.disabled = !(total > 0 && state.questionIndex < total - 1);
+        }
+
+        function updateFinishButton(){
+            const btn = document.getElementById('finishBtn');
+            if(!btn) return;
+            const isLastGroup = !(groups && groups.length) || state.groupIndex >= (groups.length - 1);
+            btn.textContent = isLastGroup ? 'Akhiri Sesi' : 'Grup Soal Berikutnya';
         }
 
         function updateStartEnd(){
@@ -369,7 +450,8 @@
                             localStorage.removeItem(k);
                         }
                     }catch{}
-                    window.location.href = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Url.Content("~/Exam?Token="))) + encodeURIComponent(token);
+                    try{ sessionStorage.setItem('examFinished','1'); }catch{}
+                    window.location.href = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Url.Content("~/Exam")));
                 }else{
                     document.getElementById('finishBtn').disabled = false;
                     finishing = false;
@@ -379,10 +461,24 @@
                 finishing = false;
             }
         }
-        document.getElementById('finishBtn').addEventListener('click', finish);
+        document.getElementById('finishBtn').addEventListener('click', function(){
+            const isLastGroup = !(groups && groups.length) || state.groupIndex >= (groups.length - 1);
+            if(isLastGroup){
+                finish();
+            }else{
+                moveToNextGroup();
+            }
+        });
+        document.getElementById('prevQuestionBtn').addEventListener('click', function(){
+            if(state.questionIndex > 0) setQuestion(state.questionIndex - 1);
+        });
+        document.getElementById('nextQuestionBtn').addEventListener('click', function(){
+            const g = groups[state.groupIndex];
+            const total = g && Array.isArray(g.questions) ? g.questions.length : 0;
+            if(total > 0 && state.questionIndex < total - 1) setQuestion(state.questionIndex + 1);
+        });
 
         prepareGroups();
-        initGroupSelect();
         setGroup(0);
         setInterval(updateTimer, 1000);
     </script>

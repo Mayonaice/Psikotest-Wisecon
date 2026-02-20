@@ -56,7 +56,7 @@
       <textarea id="remarksInterview" class="border border-gray-300 rounded-md px-2 py-1 w-full" rows="3"></textarea>
     </div>
     <div class="mt-3">
-      <label class="block text-sm text-gray-700">Media</label>
+      <label class="block text-sm text-gray-700">Dokumen Interview</label>
       <input id="fileInterview" type="file" class="border border-gray-300 rounded-md px-2 py-1 w-full" />
       <a id="downloadInterview" class="text-sm text-blue-600 underline mt-2 inline-block" target="_blank" href="#" style="display:none;">Download File</a>
     </div>
@@ -77,7 +77,7 @@
         </select>
       </div>
       <div>
-        <label class="block text-sm text-gray-700">Media</label>
+        <label class="block text-sm text-gray-700">Dokumen Psikotest</label>
         <input id="filePsikotest" type="file" class="border border-gray-300 rounded-md px-2 py-1 w-full" />
         <a id="downloadPsikotest" class="text-sm text-blue-600 underline mt-2 inline-block" target="_blank" href="#" style="display:none;">Download File</a>
       </div>
@@ -197,6 +197,15 @@
     container.appendChild(table);
   }
 
+  function normalizePersonalityValue(v) {
+    const s = (v == null ? "" : String(v)).trim();
+    if (!s) return "";
+    if (s === "1") return "Kurang";
+    if (s === "2") return "Cukup";
+    if (s === "3") return "Baik";
+    return s;
+  }
+
   function renderPersonality(list, map, containerId) {
     const container = document.getElementById(containerId);
     container.innerHTML = "";
@@ -208,7 +217,7 @@
           <th class="border px-2 py-1">Num</th>
           <th class="border px-2 py-1">Aspect</th>
           <th class="border px-2 py-1">Uraian</th>
-          <th class="border px-2 py-1">Uraian</th>
+          <th class="border px-2 py-1">Penilaian</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -216,13 +225,19 @@
     const tbody = table.querySelector("tbody");
     list.forEach((item, index) => {
       const res = map.get(item.msSeqNo) || {};
+      const selected = normalizePersonalityValue(res.nilai);
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td class="border px-2 py-1 text-center">${index + 1}</td>
         <td class="border px-2 py-1">${item.aspek || ""}</td>
         <td class="border px-2 py-1">${item.uraian || ""}</td>
         <td class="border px-2 py-1">
-          <input type="number" class="border border-gray-300 rounded-md px-2 py-1 w-full" data-ms="${item.msSeqNo}" data-kind="personality" value="${res.nilai || ""}" />
+          <select class="border border-gray-300 rounded-md px-2 py-1 w-full" data-ms="${item.msSeqNo}" data-kind="personality">
+            <option value="">Pilih</option>
+            <option value="Baik" ${selected === "Baik" ? "selected" : ""}>Baik</option>
+            <option value="Cukup" ${selected === "Cukup" ? "selected" : ""}>Cukup</option>
+            <option value="Kurang" ${selected === "Kurang" ? "selected" : ""}>Kurang</option>
+          </select>
         </td>
       `;
       tbody.appendChild(tr);
@@ -526,27 +541,40 @@
     const out = [];
     document.querySelectorAll(`[data-kind="personality"]`).forEach(el => {
       const ms = parseInt(el.getAttribute("data-ms"), 10);
-      const val = el.value === "" ? 0 : parseInt(el.value, 10);
+      const val = (el.value || "").trim();
       const item = personality.find(p => p.msSeqNo === ms) || {};
       out.push({
         msSeqNo: ms,
         aspek: item.aspek || "",
         uraian: item.uraian || "",
-        nilai: isNaN(val) ? 0 : val
+        nilai: val
       });
     });
     return out;
+  }
+
+  function ModalAlert(msg){
+    if(window.DCT3Modals){ DCT3Modals.open('alert', { message: msg || '' }); }
+    else { alert(msg || ''); }
+  }
+  function ModalInformation(msg){
+    if(window.DCT3Modals){ DCT3Modals.open('information', { message: msg || '' }); }
+    else { alert(msg || ''); }
+  }
+  function ModalFailed(msg){
+    if(window.DCT3Modals){ DCT3Modals.open('failed', { message: msg || '' }); }
+    else { alert(msg || ''); }
   }
 
   document.getElementById("saveInterview").addEventListener("click", async () => {
     const hasil = document.getElementById("hasilInterview").value;
     const file = document.getElementById("fileInterview").files[0];
     if (!hasil) {
-      alert("Hasil interview wajib diisi");
+      ModalAlert("Hasil interview wajib diisi");
       return;
     }
     if (!file && !statusData.interviewFile) {
-      alert("File hasil interview wajib diupload");
+      ModalAlert("File hasil interview wajib diupload");
       return;
     }
     const payload = {
@@ -565,10 +593,10 @@
     const res = await fetch("/Screening/Biodata/Interview/Save", { method: "POST", body: fd });
     const json = await res.json();
     if (!res.ok) {
-      alert(json.error || "Gagal menyimpan");
+      ModalFailed(json.error || "Gagal menyimpan");
       return;
     }
-    alert("Berhasil menyimpan interview");
+    ModalInformation("Berhasil menyimpan interview");
     location.reload();
   });
 
@@ -576,11 +604,11 @@
     const hasil = document.getElementById("hasilPsikotest").value;
     const file = document.getElementById("filePsikotest").files[0];
     if (!hasil) {
-      alert("Hasil psikotest wajib diisi");
+      ModalAlert("Hasil psikotest wajib diisi");
       return;
     }
     if (!file && !statusData.psikotestFile) {
-      alert("File hasil psikotest wajib diupload");
+      ModalAlert("File hasil psikotest wajib diupload");
       return;
     }
     const fd = new FormData();
@@ -590,10 +618,10 @@
     const res = await fetch("/Screening/Biodata/Psikotest/Save", { method: "POST", body: fd });
     const json = await res.json();
     if (!res.ok) {
-      alert(json.error || "Gagal menyimpan");
+      ModalFailed(json.error || "Gagal menyimpan");
       return;
     }
-    alert("Berhasil menyimpan psikotest");
+    ModalInformation("Berhasil menyimpan psikotest");
     location.reload();
   });
 </script>

@@ -24,7 +24,7 @@ type ExamGroupStartRequest = { Token: string; NoGroup: int }
 
 type ExamAnswer = { noJawaban: int; jawaban: string; poin: int }
 type ExamQuestion = { noUrut: int; judul: string; deskripsi: string; answers: ResizeArray<ExamAnswer> }
-type ExamGroup = { noGroup: int; namaGroup: string; minSoal: int; waktu: int; random: bool; isPrioritas: bool; questions: ResizeArray<ExamQuestion> }
+type ExamGroup = { noGroup: int; namaGroup: string; minSoal: int; waktu: int; random: bool; isPrioritas: bool; noPetunjuk: int; petunjuk: string; questions: ResizeArray<ExamQuestion> }
 
 type ExamController (db: IDbConnection, cfg: IConfiguration) =
     inherit Controller()
@@ -193,9 +193,11 @@ type ExamController (db: IDbConnection, cfg: IConfiguration) =
         cmd.CommandType <- CommandType.Text
         cmd.CommandText <-
             "SELECT g.NoGroup, g.NamaGroup, g.MinimumJmlSoal, g.WaktuPengerjaan, ISNULL(g.bRandom,0) AS bRandom, ISNULL(g.IsPrioritas,0) AS IsPrioritas, " +
+            "ISNULL(g.NoPetunjuk,0) AS NoPetunjuk, ISNULL(p.Keterangan,'') AS Keterangan, " +
             "d.NoUrut, d.Judul, d.Deskripsi, " +
             "a.NoJawaban, a.Jawaban, CAST(a.NoJawabanBenar AS INT) AS PoinJawaban " +
             "FROM WISECON_PSIKOTEST.dbo.MS_PaketSoalGroup g " +
+            "LEFT JOIN WISECON_PSIKOTEST.dbo.MS_Petunjuk p ON p.SeqNo=g.NoPetunjuk " +
             "JOIN WISECON_PSIKOTEST.dbo.MS_PaketSoalGroupDtl d ON d.NoPaket=g.NoPaket AND d.NoGroup=g.NoGroup " +
             "LEFT JOIN WISECON_PSIKOTEST.dbo.MS_PaketSoalGroupDtlJawaban a ON a.NoPaket=d.NoPaket AND a.NoGroup=d.NoGroup AND a.NoUrut=d.NoUrut " +
             "WHERE g.NoPaket=@p " +
@@ -211,16 +213,18 @@ type ExamController (db: IDbConnection, cfg: IConfiguration) =
             let waktu = if rdr.IsDBNull(3) then 0 else rdr.GetInt32(3)
             let bRandom = if rdr.IsDBNull(4) then false else (try rdr.GetBoolean(4) with _ -> Convert.ToInt32(rdr.GetValue(4)) <> 0)
             let isPrioritas = if rdr.IsDBNull(5) then false else (try rdr.GetBoolean(5) with _ -> Convert.ToInt32(rdr.GetValue(5)) <> 0)
-            let noUrut = if rdr.IsDBNull(6) then 0 else rdr.GetInt32(6)
-            let judul = if rdr.IsDBNull(7) then "" else rdr.GetString(7)
-            let deskripsi = if rdr.IsDBNull(8) then "" else rdr.GetString(8)
-            let hasJawaban = not (rdr.IsDBNull(9))
-            let noJawaban = if hasJawaban then (try int (rdr.GetByte(9)) with _ -> Convert.ToInt32(rdr.GetValue(9))) else -1
-            let jawaban = if hasJawaban && not (rdr.IsDBNull(10)) then rdr.GetString(10) else ""
-            let poin = if hasJawaban && not (rdr.IsDBNull(11)) then Convert.ToInt32(rdr.GetValue(11)) else 0
+            let noPetunjuk = if rdr.IsDBNull(6) then 0 else Convert.ToInt32(rdr.GetValue(6))
+            let petunjuk = if rdr.IsDBNull(7) then "" else rdr.GetString(7)
+            let noUrut = if rdr.IsDBNull(8) then 0 else rdr.GetInt32(8)
+            let judul = if rdr.IsDBNull(9) then "" else rdr.GetString(9)
+            let deskripsi = if rdr.IsDBNull(10) then "" else rdr.GetString(10)
+            let hasJawaban = not (rdr.IsDBNull(11))
+            let noJawaban = if hasJawaban then (try int (rdr.GetByte(11)) with _ -> Convert.ToInt32(rdr.GetValue(11))) else -1
+            let jawaban = if hasJawaban && not (rdr.IsDBNull(12)) then rdr.GetString(12) else ""
+            let poin = if hasJawaban && not (rdr.IsDBNull(13)) then Convert.ToInt32(rdr.GetValue(13)) else 0
 
             if not (groups.ContainsKey(noGroup)) then
-                groups.[noGroup] <- { noGroup = noGroup; namaGroup = namaGroup; minSoal = minSoal; waktu = waktu; random = bRandom; isPrioritas = isPrioritas; questions = ResizeArray<ExamQuestion>() }
+                groups.[noGroup] <- { noGroup = noGroup; namaGroup = namaGroup; minSoal = minSoal; waktu = waktu; random = bRandom; isPrioritas = isPrioritas; noPetunjuk = noPetunjuk; petunjuk = petunjuk; questions = ResizeArray<ExamQuestion>() }
                 qmaps.[noGroup] <- System.Collections.Generic.Dictionary<int, ExamQuestion>()
 
             let qmap = qmaps.[noGroup]

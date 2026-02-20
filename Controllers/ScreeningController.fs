@@ -19,7 +19,7 @@ type ApproveRequest = { items: ApproveItem array }
 type InterviewItem = { msSeqNo: int; question: string; answer: string; remark: string }
 
 [<CLIMutable>]
-type PersonalityItem = { msSeqNo: int; aspek: string; uraian: string; nilai: int }
+type PersonalityItem = { msSeqNo: int; aspek: string; uraian: string; nilai: string }
 
 [<CLIMutable>]
 type InterviewSavePayload = { personal: InterviewItem array; experience: InterviewItem array; personality: PersonalityItem array }
@@ -31,29 +31,33 @@ type ScreeningController (db: IDbConnection) =
     member private this.getQueryValue(key: string) =
         if this.Request.Query.ContainsKey(key) then this.Request.Query.[key].ToString() else ""
 
-    member private this.applyFilters(cmd: Microsoft.Data.SqlClient.SqlCommand) =
+    member private this.applyFilters(cmd: Microsoft.Data.SqlClient.SqlCommand, ?alias: string) =
+        let prefix =
+            match alias with
+            | Some a when not (String.IsNullOrWhiteSpace(a)) -> a + "."
+            | _ -> ""
         let mutable whereClause = " WHERE 1=1 "
         let fromDateStr = this.getQueryValue("fromDate")
         if not (String.IsNullOrWhiteSpace(fromDateStr)) then
             match DateTime.TryParse(fromDateStr) with
             | true, v ->
-                whereClause <- whereClause + " AND TimeInput >= @fromDate "
+                whereClause <- whereClause + " AND " + prefix + "TimeInput >= @fromDate "
                 cmd.Parameters.AddWithValue("@fromDate", v.Date) |> ignore
             | _ -> ()
         let toDateStr = this.getQueryValue("toDate")
         if not (String.IsNullOrWhiteSpace(toDateStr)) then
             match DateTime.TryParse(toDateStr) with
             | true, v ->
-                whereClause <- whereClause + " AND TimeInput <= @toDate "
+                whereClause <- whereClause + " AND " + prefix + "TimeInput <= @toDate "
                 cmd.Parameters.AddWithValue("@toDate", v.Date.AddDays(1.0).AddSeconds(-1.0)) |> ignore
             | _ -> ()
         let statusSeleksi = this.getQueryValue("statusSeleksi")
         if not (String.IsNullOrWhiteSpace(statusSeleksi)) then
-            whereClause <- whereClause + " AND StatusScreening = @statusSeleksi "
+            whereClause <- whereClause + " AND " + prefix + "StatusScreening = @statusSeleksi "
             cmd.Parameters.AddWithValue("@statusSeleksi", statusSeleksi) |> ignore
         let statusVerifikasi = this.getQueryValue("statusVerifikasi")
         if not (String.IsNullOrWhiteSpace(statusVerifikasi)) then
-            whereClause <- whereClause + " AND StatusVerif = @statusVerifikasi "
+            whereClause <- whereClause + " AND " + prefix + "StatusVerif = @statusVerifikasi "
             cmd.Parameters.AddWithValue("@statusVerifikasi", statusVerifikasi) |> ignore
         whereClause
 
@@ -177,16 +181,21 @@ type ScreeningController (db: IDbConnection) =
         use cmd = new Microsoft.Data.SqlClient.SqlCommand()
         cmd.Connection <- conn
         cmd.CommandType <- CommandType.Text
-        let whereClause = this.applyFilters(cmd)
+        let whereClause = this.applyFilters(cmd, "v")
         let kodeLowongan = this.getQueryValue("kodeLowongan")
         if not (String.IsNullOrWhiteSpace(kodeLowongan)) then
             cmd.Parameters.AddWithValue("@kodeLowongan", kodeLowongan) |> ignore
         cmd.CommandText <-
-            "SELECT SeqNo, JobCode, JobPosition, BatchNo, Name, StatusScreening, StatusVerif, ResultInterviewTes, StatusPsikotes, Sex, UserEmail, PhoneNo, PendidikanTerakhir, CVFileName " +
-            "FROM WISECON_PSIKOTEST.dbo.VW_REC_Screening " +
+            "WITH Ranked AS (" +
+            "SELECT v.SeqNo, v.JobCode, v.JobPosition, v.BatchNo, v.Name, v.StatusScreening, v.StatusVerif, v.ResultInterviewTes, v.StatusPsikotes, v.Sex, v.UserEmail, v.PhoneNo, v.PendidikanTerakhir, v.CVFileName, v.TimeInput, " +
+            "ROW_NUMBER() OVER (PARTITION BY ISNULL(p.NoPeserta, CONCAT('SEQ_', v.SeqNo)) ORDER BY v.TimeInput DESC, v.SeqNo DESC) AS rn " +
+            "FROM WISECON_PSIKOTEST.dbo.VW_REC_Screening v " +
+            "LEFT JOIN WISECON_PSIKOTEST.dbo.MS_Peserta p ON p.ID = v.SeqNo " +
             whereClause +
-            (if String.IsNullOrWhiteSpace(kodeLowongan) then "" else " AND JobPosition = @kodeLowongan ") +
-            "ORDER BY Name"
+            (if String.IsNullOrWhiteSpace(kodeLowongan) then "" else " AND v.JobPosition = @kodeLowongan ") +
+            ") " +
+            "SELECT SeqNo, JobCode, JobPosition, BatchNo, Name, StatusScreening, StatusVerif, ResultInterviewTes, StatusPsikotes, Sex, UserEmail, PhoneNo, PendidikanTerakhir, CVFileName, TimeInput " +
+            "FROM Ranked WHERE rn=1 ORDER BY Name"
         conn.Open()
         try
             use rdr = cmd.ExecuteReader()
@@ -206,7 +215,8 @@ type ScreeningController (db: IDbConnection) =
                 let phone = if rdr.IsDBNull(11) then "" else rdr.GetString(11)
                 let pendidikan = if rdr.IsDBNull(12) then "" else rdr.GetString(12)
                 let cv = if rdr.IsDBNull(13) then "" else rdr.GetString(13)
-                rows.Add(box {| kodeLowongan = jobCode; kodeBiodata = string seqNo; posLowongan = jobPos; batch = batch; name = name; statusScreening = statusScreening; statusVerifikasi = statusVerif; hasilInterview = hasilInterview; hasilPsikotest = hasilPsikotest; sex = sex; email = email; phone = phone; pendidikanTerakhir = pendidikan; cvFileName = cv |})
+                let timeInput = if rdr.IsDBNull(14) then DateTime.MinValue else rdr.GetDateTime(14)
+                rows.Add(box {| kodeLowongan = jobCode; kodeBiodata = string seqNo; posLowongan = jobPos; batch = batch; name = name; statusScreening = statusScreening; statusVerifikasi = statusVerif; hasilInterview = hasilInterview; hasilPsikotest = hasilPsikotest; sex = sex; email = email; phone = phone; pendidikanTerakhir = pendidikan; cvFileName = cv; timeInput = timeInput |})
             this.Ok(rows)
         finally
             conn.Close()
@@ -355,7 +365,7 @@ type ScreeningController (db: IDbConnection) =
                 box {| msSeqNo = ms; answer = a; remark = rmk |})
             let personalityRes = loadListById "SELECT MsSeqNo, Nilai FROM WISECON_PSIKOTEST.dbo.REC_ResultPersonalityTest WHERE JobVacancySubmittedSeqNo=@id ORDER BY MsSeqNo" (fun r ->
                 let ms = r.GetInt32(0)
-                let n = if r.IsDBNull(1) then 0 else r.GetInt32(1)
+                let n = if r.IsDBNull(1) then "" else r.GetString(1)
                 box {| msSeqNo = ms; nilai = n |})
 
             let statusCmd = new Microsoft.Data.SqlClient.SqlCommand("SELECT ResultInterviewTes, InterviewResultRemarks, InterviewResultFileName, StatusPsikotes, PsikotesResultFileName, InterviewStrengthWeakness, InterviewLikeDislike FROM WISECON_PSIKOTEST.dbo.REC_ScreeningStatus WHERE JobVacancySubmittedSeqNo=@id", conn)
