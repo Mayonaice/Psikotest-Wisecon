@@ -111,12 +111,33 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
     [<Authorize>]
     [<HttpGet>]
     [<Route("Applicants/PaketSoal/List")>]
-    member this.ListPaketSoal() : IActionResult =
+    member this.ListPaketSoal([<FromQuery>] posisi: string) : IActionResult =
         let conn = db :?> Microsoft.Data.SqlClient.SqlConnection
         use cmd = new Microsoft.Data.SqlClient.SqlCommand()
         cmd.Connection <- conn
         cmd.CommandType <- CommandType.Text
-        cmd.CommandText <- "SELECT NoPaket, NamaPaket FROM WISECON_PSIKOTEST.dbo.MS_PaketSoal WHERE ISNULL(bAktif,0)=1 ORDER BY NoPaket"
+        let posValue = if String.IsNullOrWhiteSpace(posisi) then "" else posisi.Replace(";", ",")
+        let hasPos =
+            use chk = new Microsoft.Data.SqlClient.SqlCommand()
+            chk.Connection <- conn
+            chk.CommandType <- CommandType.Text
+            chk.CommandText <- "SELECT CASE WHEN EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('WISECON_PSIKOTEST.dbo.MS_PaketSoal') AND name = 'Position') THEN 1 ELSE 0 END"
+            conn.Open()
+            let vObj = chk.ExecuteScalar()
+            conn.Close()
+            try Convert.ToInt32(vObj) = 1 with _ -> false
+        let baseSql = "SELECT ps.NoPaket, ps.NamaPaket FROM WISECON_PSIKOTEST.dbo.MS_PaketSoal ps WHERE ISNULL(ps.bAktif,0)=1"
+        let filterSql =
+            if hasPos && not (String.IsNullOrWhiteSpace(posValue)) then
+                " AND EXISTS (" +
+                "   SELECT 1 FROM STRING_SPLIT(REPLACE(ISNULL(ps.Position,''),';',','), ',') p " +
+                "   JOIN STRING_SPLIT(@pos, ',') s ON " +
+                "     LTRIM(RTRIM(p.value)) <> '' AND LTRIM(RTRIM(s.value)) <> '' AND " +
+                "     UPPER(LTRIM(RTRIM(p.value))) = UPPER(LTRIM(RTRIM(s.value)))" +
+                " )"
+            else ""
+        cmd.CommandText <- baseSql + filterSql + " ORDER BY ps.NoPaket"
+        cmd.Parameters.AddWithValue("@pos", posValue) |> ignore
         conn.Open()
         try
             use rdr = cmd.ExecuteReader()
@@ -350,6 +371,106 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
             this.Ok(rows)
         finally
             conn.Close()
+
+    [<Authorize>]
+    [<HttpGet>]
+    [<Route("Applicants/Ujian/Result")>]
+    member this.ResultUjian([<FromQuery>] noPeserta: string, [<FromQuery>] userId: string, [<FromQuery>] attemptTime: Nullable<DateTime>) : IActionResult =
+        let conn = db :?> Microsoft.Data.SqlClient.SqlConnection
+        let mutable noPesertaVal = if String.IsNullOrWhiteSpace(noPeserta) then "" else noPeserta.Trim()
+        let mutable userIdVal = if String.IsNullOrWhiteSpace(userId) then "" else userId.Trim()
+        if String.IsNullOrWhiteSpace(noPesertaVal) && String.IsNullOrWhiteSpace(userIdVal) then
+            this.BadRequest(box {| error = "Missing participant" |}) :> IActionResult
+        else
+            conn.Open()
+            try
+                if String.IsNullOrWhiteSpace(noPesertaVal) && not (String.IsNullOrWhiteSpace(userIdVal)) then
+                    use cmdFind = new Microsoft.Data.SqlClient.SqlCommand("SELECT TOP 1 NoPeserta FROM WISECON_PSIKOTEST.dbo.MS_PesertaDtl WHERE UserId=@u ORDER BY TimeInput DESC", conn)
+                    cmdFind.Parameters.AddWithValue("@u", userIdVal) |> ignore
+                    let obj = cmdFind.ExecuteScalar()
+                    if not (isNull obj) then noPesertaVal <- Convert.ToString(obj)
+
+                let mutable biodataObj = box {| nomor = noPesertaVal; nama = ""; ktp = ""; alamat = ""; phone = ""; email = ""; posisi = ""; pendidikan = "" |}
+                if not (String.IsNullOrWhiteSpace(noPesertaVal)) then
+                    use cmdBio = new Microsoft.Data.SqlClient.SqlCommand("SELECT TOP 1 NoPeserta, NamaPeserta, NoKTP, Alamat, NoHP, Email, LamarSebagai, PendidikanTerakhir FROM WISECON_PSIKOTEST.dbo.MS_Peserta WHERE NoPeserta=@n", conn)
+                    cmdBio.Parameters.AddWithValue("@n", noPesertaVal) |> ignore
+                    use rdrBio = cmdBio.ExecuteReader()
+                    if rdrBio.Read() then
+                        let nomor = if rdrBio.IsDBNull(0) then noPesertaVal else Convert.ToString(rdrBio.GetValue(0))
+                        let nama = if rdrBio.IsDBNull(1) then "" else rdrBio.GetString(1)
+                        let ktp = if rdrBio.IsDBNull(2) then "" else rdrBio.GetString(2)
+                        let alamat = if rdrBio.IsDBNull(3) then "" else rdrBio.GetString(3)
+                        let phone = if rdrBio.IsDBNull(4) then "" else rdrBio.GetString(4)
+                        let email = if rdrBio.IsDBNull(5) then "" else rdrBio.GetString(5)
+                        let posisi = if rdrBio.IsDBNull(6) then "" else rdrBio.GetString(6)
+                        let pendidikan = if rdrBio.IsDBNull(7) then "" else rdrBio.GetString(7)
+                        biodataObj <- box {| nomor = nomor; nama = nama; ktp = ktp; alamat = alamat; phone = phone; email = email; posisi = posisi; pendidikan = pendidikan |}
+                    rdrBio.Close()
+
+                let mutable noPaket = 0
+                if attemptTime.HasValue && not (String.IsNullOrWhiteSpace(noPesertaVal)) then
+                    use cmdDtl = new Microsoft.Data.SqlClient.SqlCommand("SELECT TOP 1 UserId, NoPaket FROM WISECON_PSIKOTEST.dbo.MS_PesertaDtl WHERE NoPeserta=@np AND TimeInput=@ti ORDER BY TimeInput DESC", conn)
+                    cmdDtl.Parameters.AddWithValue("@np", noPesertaVal) |> ignore
+                    cmdDtl.Parameters.AddWithValue("@ti", attemptTime.Value) |> ignore
+                    use rdrDtl = cmdDtl.ExecuteReader()
+                    if rdrDtl.Read() then
+                        if String.IsNullOrWhiteSpace(userIdVal) then userIdVal <- if rdrDtl.IsDBNull(0) then "" else rdrDtl.GetString(0)
+                        noPaket <- if rdrDtl.IsDBNull(1) then 0 else Convert.ToInt32(rdrDtl.GetValue(1))
+                    rdrDtl.Close()
+                elif not (String.IsNullOrWhiteSpace(noPesertaVal)) then
+                    use cmdDtl = new Microsoft.Data.SqlClient.SqlCommand("SELECT TOP 1 UserId, NoPaket FROM WISECON_PSIKOTEST.dbo.MS_PesertaDtl WHERE NoPeserta=@np ORDER BY TimeInput DESC", conn)
+                    cmdDtl.Parameters.AddWithValue("@np", noPesertaVal) |> ignore
+                    use rdrDtl = cmdDtl.ExecuteReader()
+                    if rdrDtl.Read() then
+                        if String.IsNullOrWhiteSpace(userIdVal) then userIdVal <- if rdrDtl.IsDBNull(0) then "" else rdrDtl.GetString(0)
+                        noPaket <- if rdrDtl.IsDBNull(1) then 0 else Convert.ToInt32(rdrDtl.GetValue(1))
+                    rdrDtl.Close()
+
+                let psiko = ResizeArray<obj>()
+                if not (String.IsNullOrWhiteSpace(noPesertaVal)) && not (String.IsNullOrWhiteSpace(userIdVal)) then
+                    let mutable loadedHistory = false
+                    if attemptTime.HasValue then
+                        use cmdHist = new Microsoft.Data.SqlClient.SqlCommand(
+                            "IF OBJECT_ID('WISECON_PSIKOTEST.dbo.TR_PsikotestResultHistory','U') IS NULL " +
+                            "BEGIN SELECT 1 WHERE 1=0 END " +
+                            "ELSE " +
+                            "SELECT R.GroupSoal, ISNULL(R.NilaiStandard, G.NilaiStandar) AS NilaiStandard, R.NilaiGroupResult, G.NamaGroup, " +
+                            "(SELECT SUM(mx) FROM (SELECT MAX(ISNULL(J.NoJawabanBenar,0)) mx FROM WISECON_PSIKOTEST.dbo.MS_PaketSoalGroupDtlJawaban J WHERE J.NoPaket=R.NoPaket AND J.NoGroup = G.NoGroup GROUP BY J.NoUrut) X) AS NilaiMax " +
+                            "FROM WISECON_PSIKOTEST.dbo.TR_PsikotestResultHistory R " +
+                            "LEFT JOIN WISECON_PSIKOTEST.dbo.MS_PaketSoalGroup G ON G.NoPaket=R.NoPaket AND G.NoGroup = TRY_CONVERT(int, R.GroupSoal) " +
+                            "WHERE (R.NoPeserta=@np OR R.UserId=@u) AND CONVERT(VARCHAR(19), R.AttemptTime, 120)=CONVERT(VARCHAR(19), @at, 120) ORDER BY R.GroupSoal", conn)
+                        cmdHist.Parameters.AddWithValue("@u", userIdVal) |> ignore
+                        cmdHist.Parameters.AddWithValue("@np", noPesertaVal) |> ignore
+                        cmdHist.Parameters.AddWithValue("@at", attemptTime.Value) |> ignore
+                        use rdrPs = cmdHist.ExecuteReader()
+                        while rdrPs.Read() do
+                            let noGroup = if rdrPs.IsDBNull(0) then "" else rdrPs.GetString(0)
+                            let standar = if rdrPs.IsDBNull(1) then 0 else Convert.ToInt32(rdrPs.GetValue(1))
+                            let hasil = if rdrPs.IsDBNull(2) then 0 else Convert.ToInt32(rdrPs.GetValue(2))
+                            let namaGroup = if rdrPs.IsDBNull(3) then "" else rdrPs.GetString(3)
+                            let nilaiMax = if rdrPs.IsDBNull(4) then 0 else Convert.ToInt32(rdrPs.GetValue(4))
+                            psiko.Add(box {| noGroup = noGroup; namaGroup = namaGroup; nilaiStandard = standar; nilaiGroupResult = hasil; nilaiMax = nilaiMax |})
+                        rdrPs.Close()
+                        if psiko.Count > 0 then loadedHistory <- true
+
+                    if (not loadedHistory) && noPaket > 0 then
+                        use cmdPs = new Microsoft.Data.SqlClient.SqlCommand("SELECT R.GroupSoal, ISNULL(R.NilaiStandard, G.NilaiStandar) AS NilaiStandard, R.NilaiGroupResult, G.NamaGroup, (SELECT SUM(mx) FROM (SELECT MAX(ISNULL(J.NoJawabanBenar,0)) mx FROM WISECON_PSIKOTEST.dbo.MS_PaketSoalGroupDtlJawaban J WHERE J.NoPaket=@p AND J.NoGroup = G.NoGroup GROUP BY J.NoUrut) X) AS NilaiMax FROM WISECON_PSIKOTEST.dbo.TR_PsikotestResult R LEFT JOIN WISECON_PSIKOTEST.dbo.MS_PaketSoalGroup G ON G.NoPaket=@p AND G.NoGroup = TRY_CONVERT(int, R.GroupSoal) WHERE (R.NoPeserta=@np OR R.UserId=@u) ORDER BY R.GroupSoal", conn)
+                        cmdPs.Parameters.AddWithValue("@p", noPaket) |> ignore
+                        cmdPs.Parameters.AddWithValue("@u", userIdVal) |> ignore
+                        cmdPs.Parameters.AddWithValue("@np", noPesertaVal) |> ignore
+                        use rdrPs = cmdPs.ExecuteReader()
+                        while rdrPs.Read() do
+                            let noGroup = if rdrPs.IsDBNull(0) then "" else rdrPs.GetString(0)
+                            let standar = if rdrPs.IsDBNull(1) then 0 else Convert.ToInt32(rdrPs.GetValue(1))
+                            let hasil = if rdrPs.IsDBNull(2) then 0 else Convert.ToInt32(rdrPs.GetValue(2))
+                            let namaGroup = if rdrPs.IsDBNull(3) then "" else rdrPs.GetString(3)
+                            let nilaiMax = if rdrPs.IsDBNull(4) then 0 else Convert.ToInt32(rdrPs.GetValue(4))
+                            psiko.Add(box {| noGroup = noGroup; namaGroup = namaGroup; nilaiStandard = standar; nilaiGroupResult = hasil; nilaiMax = nilaiMax |})
+                        rdrPs.Close()
+
+                this.Ok(box {| biodata = biodataObj; psikotest = psiko |})
+            finally
+                conn.Close()
 
     [<Authorize>]
     [<HttpGet>]

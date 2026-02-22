@@ -506,7 +506,6 @@ C:\Users\vadod\source\repos\PsikotestWisesa\PsikotestWisesa\bin\Release\net10.0\
 C:\Users\vadod\source\repos\PsikotestWisesa\PsikotestWisesa\bin\Release\net10.0\appsettings.json
 C:\Users\vadod\source\repos\PsikotestWisesa\PsikotestWisesa\bin\Release\net10.0\PsikotestWisesa.staticwebassets.runtime.json
 C:\Users\vadod\source\repos\PsikotestWisesa\PsikotestWisesa\bin\Release\net10.0\PsikotestWisesa.staticwebassets.endpoints.json
-C:\Users\vadod\source\repos\PsikotestWisesa\PsikotestWisesa\bin\Release\net10.0\PsikotestWisesa.exe
 C:\Users\vadod\source\repos\PsikotestWisesa\PsikotestWisesa\bin\Release\net10.0\PsikotestWisesa.deps.json
 C:\Users\vadod\source\repos\PsikotestWisesa\PsikotestWisesa\bin\Release\net10.0\PsikotestWisesa.runtimeconfig.json
 C:\Users\vadod\source\repos\PsikotestWisesa\PsikotestWisesa\bin\Release\net10.0\PsikotestWisesa.dll
@@ -1003,4 +1002,3 @@ C:\Users\vadod\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Release\net10.0\
 C:\Users\vadod\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Release\net10.0\PsikotestWisesa.pdb
 C:\Users\vadod\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Release\net10.0\PsikotestWisesa.genruntimeconfig.cache
 C:\Users\vadod\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Release\net10.0\ref\PsikotestWisesa.dll
-C:\Users\vadod\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Release\net10.0\staticwebassets.upToDateCheck.txt

@@ -128,19 +128,24 @@ type ScreeningController (db: IDbConnection) =
         use cmd = new Microsoft.Data.SqlClient.SqlCommand()
         cmd.Connection <- conn
         cmd.CommandType <- CommandType.Text
-        let whereClause = this.applyFilters(cmd)
+        let whereClause = this.applyFilters(cmd, "v")
         cmd.CommandText <-
-            "SELECT JobCode, JobPosition, Name, StatusScreening, StatusVerif, ResultInterviewTes, StatusPsikotes, Sex, UserEmail, PhoneNo, PendidikanTerakhir, TimeInput " +
-            "FROM WISECON_PSIKOTEST.dbo.VW_REC_Screening " +
+            "WITH Ranked AS (" +
+            "SELECT v.SeqNo, v.JobCode, v.JobPosition, v.BatchNo, v.Name, v.StatusScreening, v.StatusVerif, v.ResultInterviewTes, v.StatusPsikotes, v.Sex, v.UserEmail, v.PhoneNo, v.PendidikanTerakhir, v.TimeInput, " +
+            "ROW_NUMBER() OVER (PARTITION BY ISNULL(p.NoPeserta, CONCAT('SEQ_', v.SeqNo)) ORDER BY v.TimeInput DESC, v.SeqNo DESC) AS rn " +
+            "FROM WISECON_PSIKOTEST.dbo.VW_REC_Screening v " +
+            "LEFT JOIN WISECON_PSIKOTEST.dbo.MS_Peserta p ON p.ID = v.SeqNo " +
             whereClause +
-            "ORDER BY JobCode, Name"
+            ") " +
+            "SELECT JobPosition, BatchNo, Name, StatusScreening, StatusVerif, ResultInterviewTes, StatusPsikotes, Sex, UserEmail, PhoneNo, PendidikanTerakhir, TimeInput " +
+            "FROM Ranked WHERE rn=1 ORDER BY Name"
         conn.Open()
         try
             use rdr = cmd.ExecuteReader()
             use wb = new XLWorkbook()
             let ws = wb.AddWorksheet("Screening")
-            ws.Cell(1,1).Value <- "JobCode"
-            ws.Cell(1,2).Value <- "JobPosition"
+            ws.Cell(1,1).Value <- "JobPosition"
+            ws.Cell(1,2).Value <- "Batch"
             ws.Cell(1,3).Value <- "Name"
             ws.Cell(1,4).Value <- "StatusScreening"
             ws.Cell(1,5).Value <- "StatusVerif"
@@ -164,7 +169,8 @@ type ScreeningController (db: IDbConnection) =
                 ws.Cell(row,9).Value <- if rdr.IsDBNull(8) then "" else rdr.GetString(8)
                 ws.Cell(row,10).Value <- if rdr.IsDBNull(9) then "" else rdr.GetString(9)
                 ws.Cell(row,11).Value <- if rdr.IsDBNull(10) then "" else rdr.GetString(10)
-                ws.Cell(row,12).Value <- if rdr.IsDBNull(11) then DateTime.MinValue else rdr.GetDateTime(11)
+                let t = if rdr.IsDBNull(11) then DateTime.MinValue else rdr.GetDateTime(11)
+                ws.Cell(row,12).Value <- (if t = DateTime.MinValue then "" else t.ToString("yyyy-MM-dd HH:mm"))
                 row <- row + 1
             ws.Columns().AdjustToContents() |> ignore
             use ms = new MemoryStream()
@@ -301,10 +307,20 @@ type ScreeningController (db: IDbConnection) =
                 let idObj = cmdId.ExecuteScalar()
                 if not (isNull idObj) then
                     biodataId <- Convert.ToInt32(idObj)
+            let mutable noPesertaBio = noPesertaInput
+            let mutable noKtpBio = ""
+            use cmdPeserta = new Microsoft.Data.SqlClient.SqlCommand("SELECT TOP 1 NoPeserta, NoKTP FROM WISECON_PSIKOTEST.dbo.MS_Peserta WHERE ID=@id", conn)
+            cmdPeserta.Parameters.AddWithValue("@id", biodataId) |> ignore
+            use rdrPeserta = cmdPeserta.ExecuteReader()
+            if rdrPeserta.Read() then
+                noPesertaBio <- if rdrPeserta.IsDBNull(0) then noPesertaBio else rdrPeserta.GetString(0)
+                noKtpBio <- if rdrPeserta.IsDBNull(1) then "" else rdrPeserta.GetString(1)
+            rdrPeserta.Close()
+
             use cmdBio = new Microsoft.Data.SqlClient.SqlCommand("SELECT SeqNo, Name, UserEmail, JobPosition, PhoneNo, PendidikanTerakhir, StatusScreening, StatusVerif, ResultInterviewTes, StatusPsikotes FROM WISECON_PSIKOTEST.dbo.VW_REC_Screening WHERE SeqNo=@id", conn)
             cmdBio.Parameters.AddWithValue("@id", biodataId) |> ignore
             use rdrBio = cmdBio.ExecuteReader()
-            let mutable biodataObj = box {| seqNo = biodataId; name = ""; email = ""; job = ""; phone = ""; pendidikan = ""; statusScreening = ""; statusVerif = ""; hasilInterview = ""; hasilPsikotest = "" |}
+            let mutable biodataObj = box {| seqNo = biodataId; noPeserta = noPesertaBio; noKtp = noKtpBio; name = ""; email = ""; job = ""; phone = ""; pendidikan = ""; statusScreening = ""; statusVerif = ""; hasilInterview = ""; hasilPsikotest = "" |}
             let mutable bioEmail = ""
             if rdrBio.Read() then
                 let name = if rdrBio.IsDBNull(1) then "" else rdrBio.GetString(1)
@@ -317,7 +333,7 @@ type ScreeningController (db: IDbConnection) =
                 let hasilInterview = if rdrBio.IsDBNull(8) then "" else rdrBio.GetString(8)
                 let hasilPsikotest = if rdrBio.IsDBNull(9) then "" else rdrBio.GetString(9)
                 bioEmail <- email
-                biodataObj <- box {| seqNo = biodataId; name = name; email = email; job = job; phone = phone; pendidikan = pendidikan; statusScreening = statusScreening; statusVerif = statusVerif; hasilInterview = hasilInterview; hasilPsikotest = hasilPsikotest |}
+                biodataObj <- box {| seqNo = biodataId; noPeserta = noPesertaBio; noKtp = noKtpBio; name = name; email = email; job = job; phone = phone; pendidikan = pendidikan; statusScreening = statusScreening; statusVerif = statusVerif; hasilInterview = hasilInterview; hasilPsikotest = hasilPsikotest |}
             rdrBio.Close()
 
             let loadList (sql: string) (mapFn: IDataRecord -> obj) =

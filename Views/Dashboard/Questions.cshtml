@@ -364,6 +364,11 @@
   .modal-form .w-24{ width:6rem; }
   .modal-form textarea{ border:1px solid #d1d5db; border-radius:6px; padding:6px 8px; min-height:220px; }
   .modal-form input[type='file']{ display:none !important; }
+  .posisi-dropdown{ position:relative; width:100%; }
+  .posisi-toggle{ width:100%; text-align:left; background:#fff; border:1px solid #d1d5db; border-radius:6px; padding:4px 8px; }
+  .posisi-menu{ position:absolute; top:100%; left:0; right:0; max-height:220px; overflow:auto; background:#fff; border:1px solid #d1d5db; border-radius:6px; margin-top:4px; padding:6px; z-index:40; box-shadow:0 8px 16px rgba(0,0,0,0.08); }
+  .posisi-item{ display:flex; align-items:center; gap:8px; padding:4px 6px; border-radius:4px; }
+  .posisi-item:hover{ background:#F9FAFB; }
   .upload-placeholder{ border:1px solid #e5e7eb; border-radius:10px; padding:16px 12px; min-height:76px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; background:linear-gradient(180deg,#ffffff 0%,#f8fafc 100%); cursor:pointer; width:100%; box-shadow:0 1px 2px rgba(16,24,40,0.04); transition:border-color .15s ease, box-shadow .15s ease, transform .05s ease, color .15s ease; }
   .upload-placeholder:hover{ border-color:#cbd5e1; color:#4b5563; box-shadow:0 2px 6px rgba(16,24,40,0.08); }
   .upload-placeholder:active{ transform:translateY(1px); }
@@ -593,35 +598,61 @@
             return masterPosisiOptions;
           });
       }
+      function splitPosList(v){ return (v||'').split(/[;,]/).map(function(x){ return (x||'').trim(); }).filter(function(x){ return x; }); }
+      function normalizePosList(v){ var arr = splitPosList(v); var seen = {}; return arr.filter(function(x){ if(seen[x]) return false; seen[x]=true; return true; }); }
       function setupPaketFormInteractions(){
-        var sel = document.getElementById('fPosition');
-        if(!sel) return;
-        var current = (sel.value || sel.getAttribute('data-current') || '').trim();
-        sel.innerHTML = '<option value="">Loading...</option>';
+        var hidden = document.getElementById('fPosition');
+        var toggle = document.getElementById('fPositionToggle');
+        var menu = document.getElementById('fPositionMenu');
+        var wrap = document.getElementById('fPositionWrap');
+        if(!hidden || !toggle || !menu || !wrap) return;
+        var currentRaw = (hidden.value || hidden.getAttribute('data-current') || '').trim();
+        var selected = splitPosList(currentRaw);
+        hidden.value = selected.join(',');
+        toggle.textContent = selected.length ? selected.join(', ') : 'Pilih posisi';
+        menu.innerHTML = '<div class="text-sm text-gray-500 px-2 py-1">Loading...</div>';
         fetchMasterPosisiOptions().then(function(list){
           var values = (list||[]).slice();
-          if(current && values.indexOf(current) === -1) values.unshift(current);
-          sel.innerHTML = '';
-          var opt0 = document.createElement('option');
-          opt0.value = '';
-          opt0.textContent = '-- pilih posisi --';
-          sel.appendChild(opt0);
+          selected.forEach(function(v){ if(values.indexOf(v) === -1) values.unshift(v); });
+          menu.innerHTML = '';
           values.forEach(function(v){
             if(!v) return;
-            var opt = document.createElement('option');
-            opt.value = v;
-            opt.textContent = v;
-            sel.appendChild(opt);
+            var item = document.createElement('label');
+            item.className = 'posisi-item';
+            var cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.value = v;
+            cb.checked = selected.indexOf(v) > -1;
+            var sp = document.createElement('span');
+            sp.textContent = v;
+            item.appendChild(cb);
+            item.appendChild(sp);
+            cb.addEventListener('change', function(){
+              var picks = Array.prototype.slice.call(menu.querySelectorAll('input[type="checkbox"]:checked')).map(function(x){ return x.value; });
+              hidden.value = picks.join(',');
+              toggle.textContent = picks.length ? picks.join(', ') : 'Pilih posisi';
+            });
+            menu.appendChild(item);
           });
-          sel.value = current || '';
+          if(values.length === 0){
+            menu.innerHTML = '<div class="text-sm text-gray-500 px-2 py-1">Data posisi kosong</div>';
+          }
         });
+        toggle.addEventListener('click', function(e){
+          e.stopPropagation();
+          menu.classList.toggle('hidden');
+        });
+        menu.addEventListener('click', function(e){ e.stopPropagation(); });
+        if(window.__posisiCloseHandler){ document.removeEventListener('click', window.__posisiCloseHandler); }
+        window.__posisiCloseHandler = function(ev){ if(!wrap.contains(ev.target)) menu.classList.add('hidden'); };
+        document.addEventListener('click', window.__posisiCloseHandler);
       }
       function paketForm(o){ var np=o.noPaket||''; var na=o.namaPaket||''; var to=o.toleransi||0; var st=o.status||'AKTIF'; var po=(o.posisi||''); return (
         '<div class="modal-form">'+
           '<div class="modal-label">Nomor Paket Soal:</div><div class="modal-field"><input id="fNoPaket" value="'+np+'" readonly /></div>'+
           '<div class="modal-label">Nama Paket Soal:</div><div class="modal-field"><input id="fNamaPaket" value="'+na+'" /></div>'+
           '<div class="modal-label">Toleransi Waktu:</div><div class="modal-field"><input id="fToleransi" type="number" class="w-24" value="'+to+'" /><span>Menit</span></div>'+
-          '<div class="modal-label">Posisi:</div><div class="modal-field"><select id="fPosition" data-current="'+po+'"><option value="'+po+'">'+(po||'')+'</option></select></div>'+
+          '<div class="modal-label">Posisi:</div><div class="modal-field"><div id="fPositionWrap" class="posisi-dropdown"><button type="button" id="fPositionToggle" class="posisi-toggle">Pilih posisi</button><div id="fPositionMenu" class="posisi-menu hidden"></div><input type="hidden" id="fPosition" data-current="'+po+'" value="'+po+'"/></div></div>'+
           '<div class="modal-label">Status:</div><div class="modal-field">'+
             '<label class="inline-flex items-center gap-2"><input type="radio" name="fStatus" value="AKTIF"'+(st==='AKTIF'?' checked':'')+' /> <span>Aktif</span></label>'+
             '<label class="inline-flex items-center gap-2"><input type="radio" name="fStatus" value="NONAKTIF"'+(st!=='AKTIF'?' checked':'')+' /> <span>Nonaktif</span></label>'+
@@ -1127,16 +1158,12 @@
       pageSizePaket.addEventListener('change', function(){ currentPagePaket=1; applyPaket(); });
       pagerPaket.addEventListener('click', function(e){ var t=e.target; if(!t.classList.contains('page-btn')) return; var p=t.dataset.page; if(p==='prev'){ currentPagePaket=Math.max(1,currentPagePaket-1); } else if(p==='next'){ currentPagePaket=currentPagePaket+1; } else { currentPagePaket=parseInt(p,10)||1; } applyPaket(); });
       btnQRefresh.addEventListener('click', function(){ fetchPaket(); });
-      function exportPaketCSV(){
+      function exportPaketXlsx(){
         var s=qDateStart.value; var e=qDateEnd.value; var st=qStatusPaket.value;
-        var rows = rawPaket.filter(function(x){ var okDate = !s || !e || within(new Date(x.time), s, e); var okSt = !st || (st==='AKTIF' ? x.status==='AKTIF' : x.status==='NONAKTIF'); return okDate && okSt; });
-        var csv = 'No Paket,Nama Paket Soal,Posisi,Toleransi Waktu (Menit),Status,User Input,Time Input,User Edit,Time Edit\n';
-        rows.forEach(function(r){ csv += [r.noPaket,r.namaPaket,r.posisi,r.toleransi,r.status,r.userInput,fmtDateTime(new Date(r.time)),r.userEdit,fmtDateTime(new Date(r.timeEdit))].join(',')+'\n'; });
-        var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-        var url = URL.createObjectURL(blob);
-        var a = document.createElement('a'); a.href = url; a.download = 'paket-soal.csv'; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+        var url='@Url.Content("~/Questions/Paket/Export")'+'?fromDate='+encodeURIComponent(s||'')+'&toDate='+encodeURIComponent(e||'')+'&status='+encodeURIComponent(st||'');
+        window.open(url, '_blank');
       }
-      btnQExport.addEventListener('click', exportPaketCSV);
+      btnQExport.addEventListener('click', exportPaketXlsx);
 
       function setSingleSelection(scope, key){
         var body = document.querySelector(scope+' tbody');
@@ -1314,7 +1341,7 @@
           }, true);
         }
       })();
-      document.getElementById('btnAddPaket').addEventListener('click', function(){ var o={}; openModal('Tambah Paket Soal', paketForm(o), function(){ var na=(document.getElementById('fNamaPaket').value||'').trim(); var to=parseInt(document.getElementById('fToleransi').value||'0',10); var st=(document.querySelector('input[name="fStatus"]:checked')||{value:'AKTIF'}).value; var pos=(document.getElementById('fPosition').value||'').trim(); fetch('@Url.Content("~/Questions/Paket/Add")',{ method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ NamaPaket:na, ToleransiWaktu:to, Status:st, Position:pos, User:'@User.Identity?.Name' }) }).then(function(r){ return r.json().then(function(data){ if(!r.ok){ toast((data&&data.error)||'Gagal tambah paket'); return; } fetchPaket(); }); }); }); });
+      document.getElementById('btnAddPaket').addEventListener('click', function(){ var o={}; openModal('Tambah Paket Soal', paketForm(o), function(){ var na=(document.getElementById('fNamaPaket').value||'').trim(); var to=parseInt(document.getElementById('fToleransi').value||'0',10); var st=(document.querySelector('input[name="fStatus"]:checked')||{value:'AKTIF'}).value; var pos=normalizePosList((document.getElementById('fPosition').value||'').trim()).join(','); fetch('@Url.Content("~/Questions/Paket/Add")',{ method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ NamaPaket:na, ToleransiWaktu:to, Status:st, Position:pos, User:'@User.Identity?.Name' }) }).then(function(r){ return r.json().then(function(data){ if(!r.ok){ toast((data&&data.error)||'Gagal tambah paket'); return; } fetchPaket(); }); }); }); });
       wireSelect('#tblPaket','selectAllPaket', function(scope,key,sel){
         selected.paket=key;
         fetchGroup(selected.paket).then(function(){
@@ -1423,7 +1450,7 @@
       });
       document.getElementById('btnDeleteJawaban').addEventListener('click', function(){ var keys=getSelectedKeys('#tblJawaban'); if(keys.length===0){ toast('Pilih data'); return; } var doDelete=function(){ var nums=keys.map(function(k){ var n=parseInt(k,10); return isNaN(n)?null:n; }).filter(function(x){ return x!==null; }); Promise.all(nums.map(function(n){ return fetch('@Url.Content("~/Questions/Answer/Delete")',{ method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ SeqNo:n }) }); })).then(function(){ var idx=findByKey(rawDtl,'seqNo',selected.dtlSeqNo); if(idx===-1) idx=findByKey(rawDtl,'noSoal',selected.dtlSeqNo); var nu=(idx>-1)? rawDtl[idx].noUrut : 0; fetchJawaban(selected.paket, selected.group, nu); }); }; if(window.DCT3Modals && typeof DCT3Modals.open==='function'){ DCT3Modals.open('confirmation',{ message:'Yakin ingin menghapus data ini?', onYes:doDelete }); } else { if(confirm('Yakin ingin menghapus data ini?')){ doDelete(); } } });
 
-      document.querySelector('#tblPaket tbody').addEventListener('click', function(e){ var b=e.target.closest('.row-edit-btn'); if(!b) return; var key=b.getAttribute('data-key'); var idx=findByKey(rawPaket,'noPaket',key); if(idx<0) return; var obj=rawPaket[idx]; openModal('Edit Paket Soal', paketForm(obj), function(){ var np=parseInt((document.getElementById('fNoPaket').value||obj.noPaket),10)||0; var na=(document.getElementById('fNamaPaket').value||obj.namaPaket).trim(); var to=parseInt(document.getElementById('fToleransi').value||obj.toleransi,10); var st=(document.querySelector('input[name="fStatus"]:checked')||{value:obj.status}).value; var pos=(document.getElementById('fPosition').value||'').trim(); fetch('@Url.Content("~/Questions/Paket/Edit")',{ method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ NoPaket:np, NamaPaket:na, ToleransiWaktu:to, Status:st, Position:pos, User:'@User.Identity?.Name' }) }).then(function(r){ return r.text().then(function(t){ var data=null; if(t){ try{ data=JSON.parse(t); } catch(e){} } if(!r.ok){ toast((data&&data.error)||'Gagal edit paket'); return; } fetchPaket(); }); }); }); });
+      document.querySelector('#tblPaket tbody').addEventListener('click', function(e){ var b=e.target.closest('.row-edit-btn'); if(!b) return; var key=b.getAttribute('data-key'); var idx=findByKey(rawPaket,'noPaket',key); if(idx<0) return; var obj=rawPaket[idx]; openModal('Edit Paket Soal', paketForm(obj), function(){ var np=parseInt((document.getElementById('fNoPaket').value||obj.noPaket),10)||0; var na=(document.getElementById('fNamaPaket').value||obj.namaPaket).trim(); var to=parseInt(document.getElementById('fToleransi').value||obj.toleransi,10); var st=(document.querySelector('input[name="fStatus"]:checked')||{value:obj.status}).value; var pos=normalizePosList((document.getElementById('fPosition').value||'').trim()).join(','); fetch('@Url.Content("~/Questions/Paket/Edit")',{ method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ NoPaket:np, NamaPaket:na, ToleransiWaktu:to, Status:st, Position:pos, User:'@User.Identity?.Name' }) }).then(function(r){ return r.text().then(function(t){ var data=null; if(t){ try{ data=JSON.parse(t); } catch(e){} } if(!r.ok){ toast((data&&data.error)||'Gagal edit paket'); return; } fetchPaket(); }); }); }); });
       document.querySelector('#tblGroup tbody').addEventListener('click', function(e){ var b=e.target.closest('.row-edit-btn'); if(!b) return; var key=b.getAttribute('data-key'); var idx=findByKey(rawGroup,'noGroup',key); if(idx<0) return; var obj=rawGroup[idx]; ensurePetunjuk().then(function(){ openModal('Edit Group Soal', groupForm(obj), function(){ var np=parseInt(selected.paket||'0',10); var ng=parseInt((document.getElementById('gNoGroup').value||obj.noGroup||'0'),10); var nm=(document.getElementById('gNamaGroup').value||obj.namaGroup||'').trim(); var ms=parseInt(document.getElementById('gMinSoal').value||obj.minSoal||'0',10)||0; var ns=parseInt(document.getElementById('gNilaiStandar').value||obj.nilaiStandar||'0',10)||0; var w=parseInt(document.getElementById('gWaktu').value||obj.waktu||'0',10)||0; var pjVal=(document.getElementById('gNoPetunjuk').value||''); var pj=parseInt(pjVal,10)||0; var bRand=((document.querySelector('input[name="gRandom"]:checked')||{value:(obj.random==='Ya'?'Ya':'Tidak')}).value==='Ya'); var bAktif=((document.querySelector('input[name="gStatus"]:checked')||{value:(obj.status==='AKTIF'?'Ya':'Tidak')}).value==='Ya'); var isPrioritas=!!obj.isPrioritas; fetch('@Url.Content("~/Questions/Group/Modify")',{ method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ NoPaket:np, NoGroup:ng, NamaGroup:nm, MinimumJmlSoal:ms, NilaiStandar:ns, WaktuPengerjaan:w, NoPetunjuk:pj, bRandom:bRand, IsPrioritas:isPrioritas, bAktif:bAktif, User:'@User.Identity?.Name' }) }).then(function(){ fetchGroup(selected.paket); }); }); }).catch(function(){ openModal('Edit Group Soal', groupForm(obj), function(){ var np=parseInt(selected.paket||'0',10); var ng=parseInt((document.getElementById('gNoGroup').value||obj.noGroup||'0'),10); var nm=(document.getElementById('gNamaGroup').value||obj.namaGroup||'').trim(); var ms=parseInt(document.getElementById('gMinSoal').value||obj.minSoal||'0',10)||0; var ns=parseInt(document.getElementById('gNilaiStandar').value||obj.nilaiStandar||'0',10)||0; var w=parseInt(document.getElementById('gWaktu').value||obj.waktu||'0',10)||0; var pjVal=(document.getElementById('gNoPetunjuk').value||''); var pj=parseInt(pjVal,10)||0; var bRand=((document.querySelector('input[name="gRandom"]:checked')||{value:(obj.random==='Ya'?'Ya':'Tidak')}).value==='Ya'); var bAktif=((document.querySelector('input[name="gStatus"]:checked')||{value:(obj.status==='AKTIF'?'Ya':'Tidak')}).value==='Ya'); var isPrioritas=!!obj.isPrioritas; fetch('@Url.Content("~/Questions/Group/Modify")',{ method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ NoPaket:np, NoGroup:ng, NamaGroup:nm, MinimumJmlSoal:ms, NilaiStandar:ns, WaktuPengerjaan:w, NoPetunjuk:pj, bRandom:bRand, IsPrioritas:isPrioritas, bAktif:bAktif, User:'@User.Identity?.Name' }) }).then(function(){ fetchGroup(selected.paket); }); }); }); });
       document.querySelector('#tblDtl tbody').addEventListener('click', function(e){ var b=e.target.closest('.row-edit-btn'); if(!b) return; var key=b.getAttribute('data-key'); var idx=findByKey(rawDtl,'seqNo',key); if(idx===-1) idx=findByKey(rawDtl,'noSoal',key); if(idx<0) return; var obj=rawDtl[idx]; openModal('Edit Pertanyaan', dtlForm(obj), async function(){ var sp=parseInt(document.getElementById('dSeqNo').value||obj.seqNo||obj.noSoal,10)||0; var np=parseInt(document.getElementById('dNoPaket').value||'0',10); var ng=parseInt(document.getElementById('dNoGroup').value||'0',10); var nu=parseInt(document.getElementById('dNoUrut').value||obj.noUrut,10); var jd=(document.getElementById('dJudul').value||obj.judul||'').trim(); var ds=(document.getElementById('dDeskripsi').value||obj.deskripsi||'').trim(); if (window.CKEDITOR && CKEDITOR.instances && CKEDITOR.instances.dDeskripsi){ ds = CKEDITOR.instances.dDeskripsi.getData(); } else { var rt=document.getElementById('dDeskripsiRT'); if(rt) ds=rt.innerHTML; } var id=(document.querySelector('input[name="dIsDownload"]:checked')||{value:(obj.isDownload||'Tidak')}).value; var ak=(document.querySelector('input[name="dAktif"]:checked')||{value:(obj.aktif||'Ya')}).value; var tmr=(document.querySelector('input[name="dTipeMedia"]:checked')||{value:(obj.tipeMedia||'NOMEDIA')}).value; var tm=(tmr==='NOMEDIA'?'NOMEDIA':(tmr==='LINK'?'LINK':'UPLOAD')); var um=document.getElementById('dUrlMedia').value||obj.urlMedia||''; var mediaFile='NOMEDIA'; var bDownload=id==='Ya'; var bAktif=ak==='Ya'; if(tm==='NOMEDIA'){ um=''; } else if(tm==='LINK'){ if(um==='No Media') um=''; } else if(tm==='UPLOAD'){ var f=document.getElementById('dUploadFile'); if(f && f.files && f.files.length>0){ if(!validateImageFile(f.files[0])){ return; } var fd=new FormData(); fd.append('file', f.files[0]); var up=await fetch('@Url.Content("~/Questions/Detail/UploadMedia")',{ method:'POST', body:fd }); var uj=await up.json(); if(up.ok){ um=uj.url||''; mediaFile=uj.fileName||'NOMEDIA'; } else { toast((uj && uj.error)||'Gagal upload media'); return; } } else { toast('Pilih file untuk upload'); return; } } return fetch('@Url.Content("~/Questions/Detail/Modify")',{ method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ SeqNo:sp, NoPaket:np, NoGroup:ng, NoUrut:nu, Judul:jd, Deskripsi:ds, IsDownload:bDownload, bAktif:bAktif, MediaFileName:mediaFile, UrlMedia:um, TipeMedia:tm, User:'@User.Identity?.Name' }) }).then(function(){ selected.paket=''+np; selected.group=''+ng; fetchDtl(selected.paket, selected.group); }); }); });
       (function(){ if (!window.CKEDITOR){ var s=document.createElement('script'); s.src='https://cdn.ckeditor.com/4.25.1/standard/ckeditor.js'; document.head.appendChild(s); } })();

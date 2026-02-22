@@ -474,7 +474,7 @@ type QuestionsController (db: System.Data.IDbConnection) =
             let vObj = chk.ExecuteScalar()
             conn2.Close()
             let hasPos = try Convert.ToInt32(vObj) = 1 with _ -> false
-            if hasPos then "ISNULL(CAST(ps.Position AS NVARCHAR(200)), '') AS Position" else "'' AS Position"
+            if hasPos then "ISNULL(CAST(ps.Position AS NVARCHAR(500)), '') AS Position" else "'' AS Position"
         cmd.CommandText <- baseSelect.Replace("{POS}", posExpr)
         cmd.Parameters.AddWithValue("@f", (if String.IsNullOrWhiteSpace(fromDate) then box DBNull.Value else box fromDate)) |> ignore
         cmd.Parameters.AddWithValue("@t", (if String.IsNullOrWhiteSpace(toDate) then box DBNull.Value else box toDate)) |> ignore
@@ -495,6 +495,75 @@ type QuestionsController (db: System.Data.IDbConnection) =
                 let posisi = if rdr.IsDBNull(8) then "" else rdr.GetString(8)
                 rows.Add(box {| noPaket = string noPaket; namaPaket = namaPaket; posisi = posisi; toleransi = toleransi; status = (if bAktif then "AKTIF" else "NONAKTIF"); userInput = userInput; time = timeInput; userEdit = userEdit; timeEdit = timeEdit |})
             this.Ok(rows)
+        finally
+            conn.Close()
+
+    [<Authorize>]
+    [<HttpGet>]
+    [<Route("Questions/Paket/Export")>]
+    member this.ExportPaket ([<FromQuery>] fromDate: string, [<FromQuery>] toDate: string, [<FromQuery>] status: string) : IActionResult =
+        let conn = db :?> Microsoft.Data.SqlClient.SqlConnection
+        use cmd = new Microsoft.Data.SqlClient.SqlCommand()
+        cmd.Connection <- conn
+        cmd.CommandType <- CommandType.Text
+        let baseSelect = "SELECT ps.NoPaket, ps.NamaPaket, ps.ToleransiWaktu, ps.bAktif, ps.UserInput, ps.TimeInput, ps.UserEdit, ps.TimeEdit, {POS} FROM WISECON_PSIKOTEST.dbo.MS_PaketSoal ps WHERE ( @st IS NULL OR @st = '' OR ps.bAktif = CASE WHEN @st='AKTIF' THEN 1 ELSE 0 END ) AND ( (@f IS NULL OR @f = '') OR (@t IS NULL OR @t = '') OR (ps.TimeInput BETWEEN CONVERT(datetime,@f+'T00:00:00') AND CONVERT(datetime,@t+'T23:59:59')) ) ORDER BY ps.NoPaket DESC"
+        let posExpr =
+            let conn2 = db :?> Microsoft.Data.SqlClient.SqlConnection
+            use chk = new Microsoft.Data.SqlClient.SqlCommand()
+            chk.Connection <- conn2
+            chk.CommandType <- CommandType.Text
+            chk.CommandText <- "SELECT CASE WHEN EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('WISECON_PSIKOTEST.dbo.MS_PaketSoal') AND name = 'Position') THEN 1 ELSE 0 END"
+            conn2.Open()
+            let vObj = chk.ExecuteScalar()
+            conn2.Close()
+            let hasPos = try Convert.ToInt32(vObj) = 1 with _ -> false
+            if hasPos then "ISNULL(CAST(ps.Position AS NVARCHAR(500)), '') AS Position" else "'' AS Position"
+        cmd.CommandText <- baseSelect.Replace("{POS}", posExpr)
+        cmd.Parameters.AddWithValue("@f", (if String.IsNullOrWhiteSpace(fromDate) then box DBNull.Value else box fromDate)) |> ignore
+        cmd.Parameters.AddWithValue("@t", (if String.IsNullOrWhiteSpace(toDate) then box DBNull.Value else box toDate)) |> ignore
+        cmd.Parameters.AddWithValue("@st", (if String.IsNullOrWhiteSpace(status) then box DBNull.Value else box status)) |> ignore
+        conn.Open()
+        try
+            use rdr = cmd.ExecuteReader()
+            use wb = new XLWorkbook()
+            let ws = wb.AddWorksheet("Paket Soal")
+            ws.Cell(1,1).Value <- "No Paket"
+            ws.Cell(1,2).Value <- "Nama Paket Soal"
+            ws.Cell(1,3).Value <- "Posisi"
+            ws.Cell(1,4).Value <- "Toleransi Waktu (Menit)"
+            ws.Cell(1,5).Value <- "Status"
+            ws.Cell(1,6).Value <- "User Input"
+            ws.Cell(1,7).Value <- "Time Input"
+            ws.Cell(1,8).Value <- "User Edit"
+            ws.Cell(1,9).Value <- "Time Edit"
+            let header = ws.Range(1,1,1,9)
+            header.Style.Fill.BackgroundColor <- XLColor.FromHtml("#DCFCE7")
+            header.Style.Font.Bold <- true
+            let mutable row = 2
+            while rdr.Read() do
+                let noPaket = if rdr.IsDBNull(0) then "" else rdr.GetInt32(0).ToString()
+                let namaPaket = if rdr.IsDBNull(1) then "" else rdr.GetString(1)
+                let toleransi = if rdr.IsDBNull(2) then 0 else rdr.GetInt32(2)
+                let bAktif = try rdr.GetBoolean(3) with _ -> false
+                let userInput = if rdr.IsDBNull(4) then "" else rdr.GetString(4)
+                let timeInput = if rdr.IsDBNull(5) then DateTime.MinValue else rdr.GetDateTime(5)
+                let userEdit = if rdr.IsDBNull(6) then "" else rdr.GetString(6)
+                let timeEdit = if rdr.IsDBNull(7) then DateTime.MinValue else rdr.GetDateTime(7)
+                let posisi = if rdr.IsDBNull(8) then "" else rdr.GetString(8)
+                ws.Cell(row,1).Value <- noPaket
+                ws.Cell(row,2).Value <- namaPaket
+                ws.Cell(row,3).Value <- posisi
+                ws.Cell(row,4).Value <- toleransi
+                ws.Cell(row,5).Value <- (if bAktif then "AKTIF" else "NONAKTIF")
+                ws.Cell(row,6).Value <- userInput
+                ws.Cell(row,7).Value <- (if timeInput = DateTime.MinValue then "" else timeInput.ToString("yyyy-MM-dd HH:mm"))
+                ws.Cell(row,8).Value <- userEdit
+                ws.Cell(row,9).Value <- (if timeEdit = DateTime.MinValue then "" else timeEdit.ToString("yyyy-MM-dd HH:mm"))
+                row <- row + 1
+            ws.Columns().AdjustToContents() |> ignore
+            use ms = new MemoryStream()
+            wb.SaveAs(ms)
+            this.File(ms.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "paket-soal.xlsx")
         finally
             conn.Close()
 

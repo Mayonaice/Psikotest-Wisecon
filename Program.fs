@@ -28,6 +28,24 @@ type AutoFinalizeUjianService(cfg: IConfiguration) =
     inherit BackgroundService()
 
     member private this.recalculateResults(conn: SqlConnection, userId: string) =
+        use insHist = new SqlCommand()
+        insHist.Connection <- conn
+        insHist.CommandType <- CommandType.Text
+        insHist.CommandText <-
+            "IF OBJECT_ID('WISECON_PSIKOTEST.dbo.TR_PsikotestResultHistory','U') IS NOT NULL " +
+            "BEGIN " +
+            "  INSERT INTO WISECON_PSIKOTEST.dbo.TR_PsikotestResultHistory " +
+            "  (IdNoPeserta, NoPeserta, UserId, NoPaket, UndangPsikotestKe, AttemptTime, GroupSoal, NilaiStandard, NilaiGroupResult, UserInput, TimeInput, UserEdit, TimeEdit, ArchivedAt) " +
+            "  SELECT R.IdNoPeserta, R.NoPeserta, R.UserId, D.NoPaket, ISNULL(D.UndangPsikotestKe,0), D.TimeInput, " +
+            "         R.GroupSoal, R.NilaiStandard, R.NilaiGroupResult, R.UserInput, R.TimeInput, R.UserEdit, R.TimeEdit, GETDATE() " +
+            "  FROM WISECON_PSIKOTEST.dbo.TR_PsikotestResult R " +
+            "  OUTER APPLY (SELECT TOP 1 NoPaket, UndangPsikotestKe, TimeInput FROM WISECON_PSIKOTEST.dbo.MS_PesertaDtl WHERE (UserId=R.UserId AND ISNULL(R.UserId,'')<>'') OR (ISNULL(R.UserId,'')='' AND NoPeserta=R.NoPeserta) ORDER BY TimeInput DESC) D " +
+            "  WHERE (R.UserId=@u OR R.NoPeserta = (SELECT TOP 1 NoPeserta FROM WISECON_PSIKOTEST.dbo.MS_PesertaDtl WHERE UserId=@u) " +
+            "     OR R.IdNoPeserta = (SELECT TOP 1 ID FROM WISECON_PSIKOTEST.dbo.MS_Peserta WHERE NoPeserta = (SELECT TOP 1 NoPeserta FROM WISECON_PSIKOTEST.dbo.MS_PesertaDtl WHERE UserId=@u))) " +
+            "    AND NOT EXISTS (SELECT 1 FROM WISECON_PSIKOTEST.dbo.TR_PsikotestResultHistory H WHERE H.IdNoPeserta=R.IdNoPeserta AND H.GroupSoal=R.GroupSoal AND H.AttemptTime=COALESCE(D.TimeInput, R.TimeInput)); " +
+            "END;"
+        insHist.Parameters.AddWithValue("@u", userId) |> ignore
+        insHist.ExecuteNonQuery() |> ignore
         use del = new SqlCommand("DELETE FROM WISECON_PSIKOTEST.dbo.TR_PsikotestResult WHERE UserId=@u OR NoPeserta = (SELECT TOP 1 NoPeserta FROM WISECON_PSIKOTEST.dbo.MS_PesertaDtl WHERE UserId=@u) OR IdNoPeserta = (SELECT TOP 1 ID FROM WISECON_PSIKOTEST.dbo.MS_Peserta WHERE NoPeserta = (SELECT TOP 1 NoPeserta FROM WISECON_PSIKOTEST.dbo.MS_PesertaDtl WHERE UserId=@u))", conn)
         del.Parameters.AddWithValue("@u", userId) |> ignore
         del.ExecuteNonQuery() |> ignore

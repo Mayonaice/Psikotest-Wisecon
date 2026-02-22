@@ -176,6 +176,27 @@ type ExamController (db: IDbConnection, cfg: IConfiguration) =
         upd.Parameters.AddWithValue("@p", noPaket) |> ignore
         upd.ExecuteNonQuery() |> ignore
 
+        use insHist = new SqlCommand()
+        insHist.Connection <- conn
+        insHist.CommandType <- CommandType.Text
+        insHist.CommandText <-
+            "IF OBJECT_ID('WISECON_PSIKOTEST.dbo.TR_PsikotestResultHistory','U') IS NOT NULL " +
+            "BEGIN " +
+            "  INSERT INTO WISECON_PSIKOTEST.dbo.TR_PsikotestResultHistory " +
+            "  (IdNoPeserta, NoPeserta, UserId, NoPaket, UndangPsikotestKe, AttemptTime, GroupSoal, NilaiStandard, NilaiGroupResult, UserInput, TimeInput, UserEdit, TimeEdit, ArchivedAt) " +
+            "  SELECT R.IdNoPeserta, R.NoPeserta, R.UserId, D.NoPaket, ISNULL(D.UndangPsikotestKe,0), D.TimeInput, " +
+            "         R.GroupSoal, R.NilaiStandard, R.NilaiGroupResult, R.UserInput, R.TimeInput, R.UserEdit, R.TimeEdit, GETDATE() " +
+            "  FROM WISECON_PSIKOTEST.dbo.TR_PsikotestResult R " +
+            "  OUTER APPLY (SELECT TOP 1 NoPaket, UndangPsikotestKe, TimeInput FROM WISECON_PSIKOTEST.dbo.MS_PesertaDtl WHERE (UserId=R.UserId AND ISNULL(R.UserId,'')<>'') OR (ISNULL(R.UserId,'')='' AND NoPeserta=R.NoPeserta) ORDER BY TimeInput DESC) D " +
+            "  WHERE (R.UserId=@u OR R.NoPeserta=@n OR R.IdNoPeserta=@id) " +
+            "    AND NOT EXISTS (SELECT 1 FROM WISECON_PSIKOTEST.dbo.TR_PsikotestResultHistory H WHERE H.IdNoPeserta=R.IdNoPeserta AND H.GroupSoal=R.GroupSoal AND H.AttemptTime=COALESCE(D.TimeInput, R.TimeInput)); " +
+            "END;"
+        insHist.Parameters.AddWithValue("@u", userId) |> ignore
+        insHist.Parameters.AddWithValue("@p", noPaket) |> ignore
+        insHist.Parameters.AddWithValue("@n", noPeserta) |> ignore
+        insHist.Parameters.AddWithValue("@id", idNoPeserta) |> ignore
+        insHist.ExecuteNonQuery() |> ignore
+
         use delW = new SqlCommand("DELETE FROM WISECON_PSIKOTEST.dbo.TR_PsikotestResult WHERE UserId=@u OR NoPeserta=@n OR IdNoPeserta=@id", conn)
         delW.Parameters.AddWithValue("@u", userId) |> ignore
         delW.Parameters.AddWithValue("@n", noPeserta) |> ignore
