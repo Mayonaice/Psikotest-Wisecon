@@ -433,26 +433,26 @@
       </div>
       <div class="dct-body">
         <div class="invite-panel">
-          <div class="invite-row">
+          <div class="invite-row" id="edit-row-nomor">
             <div class="invite-label">Nomor Peserta</div>
             <div class="invite-field">
               <div id="edit-nomor" class="invite-target-text"></div>
             </div>
           </div>
-          <div class="invite-row">
+          <div class="invite-row" id="edit-row-nama">
             <div class="invite-label">Nama Peserta</div>
             <div class="invite-field">
               <div id="edit-nama" class="invite-target-text"></div>
             </div>
           </div>
 
-          <div class="invite-row">
+          <div class="invite-row" id="edit-row-date">
             <div class="invite-label">Tanggal</div>
             <div class="invite-field">
               <input id="edit-date" type="date" class="border border-gray-300 rounded-md px-2 py-1 w-full" />
             </div>
           </div>
-          <div class="invite-row">
+          <div class="invite-row" id="edit-row-time">
             <div class="invite-label">Waktu</div>
             <div class="invite-field">
               <input id="edit-time" type="time" class="border border-gray-300 rounded-md px-2 py-1 w-32" />
@@ -487,6 +487,40 @@
             <div class="invite-label">Detail</div>
             <div class="invite-field">
               <div id="edit-view-details" class="invite-target-text"></div>
+            </div>
+          </div>
+
+          <div class="hidden" id="edit-view-psikotest">
+            <div class="mt-4 bg-white border border-gray-200 rounded-xl p-4">
+              <div class="text-lg font-semibold mb-2">Hasil Psikotest</div>
+              <div id="viewPsikoEmpty" class="text-sm text-gray-500 hidden"></div>
+              <div id="viewPsikoContent">
+                <div class="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-4 items-start">
+                  <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm">
+                    <div class="flex flex-col gap-2">
+                      <div class="flex gap-2"><span class="w-28 text-gray-500">Nomor Peserta</span><span id="viewBioNomor"></span></div>
+                      <div class="flex gap-2"><span class="w-28 text-gray-500">Nama</span><span id="viewBioName"></span></div>
+                      <div class="flex gap-2"><span class="w-28 text-gray-500">Email</span><span id="viewBioEmail"></span></div>
+                      <div class="flex gap-2"><span class="w-28 text-gray-500">Posisi</span><span id="viewBioPosisi"></span></div>
+                      <div class="flex gap-2"><span class="w-28 text-gray-500">Telepon</span><span id="viewBioPhone"></span></div>
+                      <div class="flex gap-2"><span class="w-28 text-gray-500">Pendidikan</span><span id="viewBioEdu"></span></div>
+                      <div class="flex gap-2"><span class="w-28 text-gray-500">No KTP</span><span id="viewBioKtp"></span></div>
+                    </div>
+                  </div>
+                  <div class="bg-white border border-gray-200 rounded-lg p-3">
+                    <div class="flex items-center justify-center">
+                      <svg id="viewPsikoRadar" width="360" height="320" viewBox="0 0 360 320"></svg>
+                    </div>
+                    <div class="mt-2 flex justify-center gap-4 text-sm">
+                      <div class="flex items-center gap-2"><span class="inline-block w-3 h-3 bg-[#1E90FF]"></span><span>Nilai</span></div>
+                      <div class="flex items-center gap-2"><span class="inline-block w-3 h-3 bg-[#F59E0B]"></span><span>Norma</span></div>
+                      <div class="flex items-center gap-2"><span class="inline-block w-3 h-3 bg-[#10B981]"></span><span>Nilai Maks</span></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div id="viewPsikoCards" class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -558,6 +592,8 @@
   .spinner{ width:28px; height:28px; border:3px solid #d1d5db; border-top-color:#1E90FF; border-radius:50%; animation:spin .9s linear infinite; }
   @@keyframes spin{ to{ transform:rotate(360deg); } }
   .invite-modal{ width:520px; max-width:95vw; }
+  #edit-overlay .invite-modal{ width:520px; max-width:95vw; }
+  #edit-overlay.view-wide .invite-modal{ width:900px; max-width:96vw; }
   #invite-overlay .dct-modal, #edit-overlay .dct-modal{ background:#FFFFFF; }
   .invite-panel{ padding:2px 2px; }
   .invite-row{ display:grid; grid-template-columns: 140px 1fr; align-items:center; gap:10px; margin-bottom:10px; }
@@ -572,15 +608,19 @@
   #invite-overlay .dct-btn, #edit-overlay .dct-btn{ display:inline-flex; align-items:center; gap:8px; white-space:nowrap; border:1px solid #d1d5db; background:#FFFFFF; }
   #invite-overlay .dct-btn img, #edit-overlay .dct-btn img{ width:18px; height:18px; display:inline-block; }
   #invite-overlay .dct-btn:hover, #edit-overlay .dct-btn:hover{ background:#F9FAFB; }
+  #edit-overlay .dct-modal{ max-height:90vh; display:flex; flex-direction:column; }
+  #edit-overlay .dct-header, #edit-overlay .dct-actions{ flex:0 0 auto; }
+  #edit-overlay .dct-body{ flex:1 1 auto; overflow-y:auto; }
   </style>
 
 <script>
   (function(){
     var debug = true;
     var rawData = [];
+    var pesertaPosMap = {};
     var activeNoPeserta = '';
     var selectedPesertaIds = new Set();
-    var paketSoalCache = null;
+    var paketSoalCache = {};
     var batchCache = null;
     var currentUser = '@(User.Identity?.Name ?? "")';
 
@@ -623,9 +663,23 @@
       updateBatchVisibility();
     }
 
+    function normalizePosList(list){
+      var arr = (list || []).map(function(x){ return (''+(x==null?'':x)).trim(); }).filter(function(x){ return x; });
+      var seen = {};
+      return arr.filter(function(x){ if(seen[x]) return false; seen[x]=true; return true; });
+    }
+    function getSelectedPosisi(ids){
+      var set = {};
+      (ids||[]).forEach(function(id){
+        var p = pesertaPosMap[id];
+        if(p) set[p] = true;
+      });
+      return Object.keys(set);
+    }
     function openInvite(ids, type){
       inviteState.ids = (ids || []).map(function(x){ return ''+x; }).filter(function(x){ return x; });
       inviteState.type = type || inviteState.type || 'psikotest';
+      inviteState.posisi = normalizePosList(getSelectedPosisi(inviteState.ids));
       resetInviteForm(inviteState.type);
       if(inviteTargetText){
         if(inviteState.ids.length === 1) inviteTargetText.textContent = inviteState.ids[0];
@@ -633,7 +687,7 @@
       }
       var radios = document.querySelectorAll('input[name="inviteType"]');
       radios.forEach(function(r){ r.checked = (r.value === inviteState.type); });
-      ensurePaketSoal();
+      ensurePaketSoal(inviteState.posisi);
       ensureBatchList();
       if(inviteOverlay){ inviteOverlay.style.display = 'flex'; inviteOverlay.classList.remove('dct-hidden'); inviteOverlay.setAttribute('aria-hidden','false'); }
     }
@@ -657,16 +711,19 @@
       }
     }
 
-    function ensurePaketSoal(){
-      if(paketSoalCache) { fillPaketOptions(paketSoalCache); return; }
+    function ensurePaketSoal(posList){
+      var key = (posList && posList.length) ? posList.join('|') : '*';
+      if(paketSoalCache[key]) { fillPaketOptions(paketSoalCache[key]); return Promise.resolve(paketSoalCache[key]); }
       var url='@Url.Content("~/Applicants/PaketSoal/List")';
+      if(posList && posList.length){ url += '?posisi=' + encodeURIComponent(posList.join(',')); }
       return fetch(url,{ method:'GET', credentials:'same-origin' })
         .then(function(r){ return r.ok ? r.json() : []; })
         .then(function(rows){
-          paketSoalCache = (rows||[]).map(function(x){ return { noPaket: x.noPaket, namaPaket: x.namaPaket }; });
-          fillPaketOptions(paketSoalCache);
+          paketSoalCache[key] = (rows||[]).map(function(x){ return { noPaket: x.noPaket, namaPaket: x.namaPaket }; });
+          fillPaketOptions(paketSoalCache[key]);
+          return paketSoalCache[key];
         })
-        .catch(function(){ fillPaketOptions([]); });
+        .catch(function(){ paketSoalCache[key] = []; fillPaketOptions([]); return paketSoalCache[key]; });
     }
 
     function fillPaketOptions(rows){
@@ -870,6 +927,12 @@
         })
         .then(function(rows){
           rawData = rows||[];
+          pesertaPosMap = {};
+          rawData.forEach(function(r){
+            var key = ''+(r && r.nomor!=null ? r.nomor : '');
+            if(!key) return;
+            pesertaPosMap[key] = (r && r.posisi!=null) ? (''+r.posisi).trim() : '';
+          });
           if(debug){
             var t0 = rawData[0] ? rawData[0].time : null;
             console.log('rows', rawData.length, rawData[0] ? Object.keys(rawData[0]) : []);
@@ -1163,9 +1226,13 @@
     var editSave = document.getElementById('edit-save');
     var editTitle = document.getElementById('edit-title');
     var editIcon = document.getElementById('edit-icon');
+    var editRowNomor = document.getElementById('edit-row-nomor');
     var editNomor = document.getElementById('edit-nomor');
+    var editRowNama = document.getElementById('edit-row-nama');
     var editNama = document.getElementById('edit-nama');
+    var editRowDate = document.getElementById('edit-row-date');
     var editDate = document.getElementById('edit-date');
+    var editRowTime = document.getElementById('edit-row-time');
     var editTime = document.getElementById('edit-time');
     var editRowPaket = document.getElementById('edit-row-paket');
     var editPaket = document.getElementById('edit-paket');
@@ -1175,8 +1242,20 @@
     var editBlock = document.getElementById('edit-block');
     var editRowView = document.getElementById('edit-row-view');
     var editViewDetails = document.getElementById('edit-view-details');
+    var viewPsikoWrap = document.getElementById('edit-view-psikotest');
+    var viewBioNomor = document.getElementById('viewBioNomor');
+    var viewBioName = document.getElementById('viewBioName');
+    var viewBioPosisi = document.getElementById('viewBioPosisi');
+    var viewBioPhone = document.getElementById('viewBioPhone');
+    var viewBioEmail = document.getElementById('viewBioEmail');
+    var viewBioEdu = document.getElementById('viewBioEdu');
+    var viewBioKtp = document.getElementById('viewBioKtp');
+    var viewPsikoEmpty = document.getElementById('viewPsikoEmpty');
+    var viewPsikoContent = document.getElementById('viewPsikoContent');
+    var viewPsikoRadar = document.getElementById('viewPsikoRadar');
+    var viewPsikoCards = document.getElementById('viewPsikoCards');
     var editState = { kind: '', row: null };
-    var paketSoalCache = null;
+    var paketSoalCache = {};
 
     function showError(msg){
       if(window.DCT3Modals){ window.DCT3Modals.open('failed', { message: msg }); }
@@ -1233,18 +1312,24 @@
     }
     function getDateValue(input){ return input.value; }
 
-    function ensurePaketSoal(){
-      if(paketSoalCache) return Promise.resolve(paketSoalCache);
+    function ensurePaketSoal(posList){
+      var key = (posList && posList.length) ? posList.join('|') : '*';
+      if(paketSoalCache[key]) return Promise.resolve(paketSoalCache[key]);
       var url='@Url.Content("~/Applicants/PaketSoal/List")';
+      if(posList && posList.length){ url += '?posisi=' + encodeURIComponent(posList.join(',')); }
       return fetch(url,{ method:'GET', credentials:'same-origin' })
         .then(function(r){ return r.ok ? r.json() : []; })
         .then(function(rows){
-          paketSoalCache = (rows||[]).map(function(x){ return { noPaket: x.noPaket, namaPaket: x.namaPaket }; });
-          return paketSoalCache;
+          paketSoalCache[key] = (rows||[]).map(function(x){ return { noPaket: x.noPaket, namaPaket: x.namaPaket }; });
+          return paketSoalCache[key];
         })
-        .catch(function(){ paketSoalCache = []; return paketSoalCache; });
+        .catch(function(){ paketSoalCache[key] = []; return paketSoalCache[key]; });
     }
 
+    function getPosisiForPeserta(noPeserta){
+      var key = ''+(noPeserta==null?'':noPeserta);
+      return key && pesertaPosMap ? pesertaPosMap[key] : '';
+    }
     function fillPaketOptions(selectEl, rows){
       if(!selectEl) return;
       var prev = selectEl.value;
@@ -1258,13 +1343,264 @@
       if(prev) selectEl.value = prev;
     }
 
+    function resetViewPsikotest(){
+      if(viewBioNomor) viewBioNomor.textContent = '';
+      if(viewBioName) viewBioName.textContent = '';
+      if(viewBioPosisi) viewBioPosisi.textContent = '';
+      if(viewBioPhone) viewBioPhone.textContent = '';
+      if(viewBioEmail) viewBioEmail.textContent = '';
+      if(viewBioKtp) viewBioKtp.textContent = '';
+      if(viewBioEdu) viewBioEdu.textContent = '';
+      if(viewPsikoCards) viewPsikoCards.innerHTML = '';
+      if(viewPsikoRadar) viewPsikoRadar.innerHTML = '';
+      if(viewPsikoEmpty){ viewPsikoEmpty.textContent = ''; viewPsikoEmpty.classList.add('hidden'); }
+      if(viewPsikoContent) viewPsikoContent.classList.remove('hidden');
+    }
+
+    function renderViewBiodata(b){
+      if(viewBioNomor) viewBioNomor.textContent = b.nomor || '';
+      if(viewBioName) viewBioName.textContent = b.nama || '';
+      if(viewBioPosisi) viewBioPosisi.textContent = b.posisi || '';
+      if(viewBioPhone) viewBioPhone.textContent = b.phone || '';
+      if(viewBioEmail) viewBioEmail.textContent = b.email || '';
+      if(viewBioKtp) viewBioKtp.textContent = b.ktp || '';
+      if(viewBioEdu) viewBioEdu.textContent = b.pendidikan || b.pendidikanTerakhir || '';
+    }
+
+    function normaLabel(result, standard){
+      return (result || 0) >= (standard || 0) ? 'Cukup' : 'Rendah';
+    }
+
+    function normaClass(result, standard){
+      return (result || 0) >= (standard || 0) ? 'bg-amber-400' : 'bg-red-500';
+    }
+
+    function renderViewCards(rows){
+      if(!viewPsikoCards) return;
+      viewPsikoCards.innerHTML = '';
+      (rows||[]).forEach(function(row){
+        var label = normaLabel(row.nilaiGroupResult, row.nilaiStandard);
+        var card = document.createElement('div');
+        card.className = 'rounded-md '+normaClass(row.nilaiGroupResult, row.nilaiStandard)+' text-white p-3 text-center';
+        card.innerHTML =
+          '<div class="text-sm font-semibold">'+(row.namaGroup || row.noGroup || '')+'</div>'+
+          '<div class="text-xs mt-1">'+label+'</div>'+
+          '<div class="text-lg font-semibold">'+(row.nilaiGroupResult || 0)+'/'+(row.nilaiMax || 0)+'</div>';
+        viewPsikoCards.appendChild(card);
+      });
+    }
+
+    function drawViewRadar(rows){
+      var svg = viewPsikoRadar;
+      if(!svg) return;
+      var labels = (rows||[]).map(function(x){ return x.namaGroup || x.noGroup || ''; });
+      var values = (rows||[]).map(function(x){ return x.nilaiGroupResult || 0; });
+      var standards = (rows||[]).map(function(x){ return x.nilaiStandard || 0; });
+      var maxValues = (rows||[]).map(function(x){ return x.nilaiMax || 0; });
+      var count = labels.length;
+      svg.innerHTML = '';
+      if(count === 0) return;
+      var width = 360;
+      var height = 320;
+      var cx = width / 2;
+      var cy = height / 2;
+      var radius = Math.min(width, height) / 2 - 40;
+      var maxVal = Math.max.apply(null, [1].concat(values, standards, maxValues));
+      var ns = 'http://www.w3.org/2000/svg';
+
+      function pointAt(i, value){
+        var angle = (Math.PI * 2 * i) / count - Math.PI / 2;
+        var r = (value / maxVal) * radius;
+        return { x: cx + Math.cos(angle) * r, y: cy + Math.sin(angle) * r };
+      }
+
+      function polygonPoints(arr){
+        return arr.map(function(v, i){
+          var p = pointAt(i, v);
+          return p.x+','+p.y;
+        }).join(' ');
+      }
+
+      function makeText(x, y, text, size, color, weight){
+        var t = document.createElementNS(ns, 'text');
+        t.setAttribute('x', x);
+        t.setAttribute('y', y);
+        t.setAttribute('font-size', String(size));
+        t.setAttribute('fill', color);
+        t.setAttribute('text-anchor', 'middle');
+        if(weight) t.setAttribute('font-weight', weight);
+        t.textContent = text;
+        return t;
+      }
+
+      if(count === 1){
+        var v = values[0];
+        var s = standards[0];
+        var m = maxValues[0];
+        var ring = radius - 12;
+        var base = document.createElementNS(ns, 'circle');
+        base.setAttribute('cx', cx);
+        base.setAttribute('cy', cy);
+        base.setAttribute('r', ring);
+        base.setAttribute('fill', 'none');
+        base.setAttribute('stroke', '#E5E7EB');
+        base.setAttribute('stroke-width', '16');
+        svg.appendChild(base);
+
+        function arcPath(value, r){
+          var ang = (value / maxVal) * Math.PI * 2;
+          var start = -Math.PI / 2;
+          var end = start + ang;
+          var large = ang > Math.PI ? 1 : 0;
+          var x1 = cx + Math.cos(start) * r;
+          var y1 = cy + Math.sin(start) * r;
+          var x2 = cx + Math.cos(end) * r;
+          var y2 = cy + Math.sin(end) * r;
+          return 'M '+x1+' '+y1+' A '+r+' '+r+' 0 '+large+' 1 '+x2+' '+y2;
+        }
+
+        var maxArc = document.createElementNS(ns, 'path');
+        maxArc.setAttribute('d', arcPath(m, ring));
+        maxArc.setAttribute('fill', 'none');
+        maxArc.setAttribute('stroke', '#10B981');
+        maxArc.setAttribute('stroke-width', '16');
+        maxArc.setAttribute('stroke-linecap', 'round');
+        maxArc.setAttribute('opacity', '0.35');
+        svg.appendChild(maxArc);
+
+        var normArc = document.createElementNS(ns, 'path');
+        normArc.setAttribute('d', arcPath(s, ring));
+        normArc.setAttribute('fill', 'none');
+        normArc.setAttribute('stroke', '#F59E0B');
+        normArc.setAttribute('stroke-width', '10');
+        normArc.setAttribute('stroke-linecap', 'round');
+        svg.appendChild(normArc);
+
+        var valArc = document.createElementNS(ns, 'path');
+        valArc.setAttribute('d', arcPath(v, ring));
+        valArc.setAttribute('fill', 'none');
+        valArc.setAttribute('stroke', '#1E90FF');
+        valArc.setAttribute('stroke-width', '10');
+        valArc.setAttribute('stroke-linecap', 'round');
+        svg.appendChild(valArc);
+
+        svg.appendChild(makeText(cx, cy - 6, v+'/'+(m || 0), 22, '#111827', '600'));
+        svg.appendChild(makeText(cx, cy + 16, 'Norma '+(s || 0), 12, '#6B7280'));
+        svg.appendChild(makeText(cx, cy + 34, labels[0] || 'Group Soal', 12, '#374151', '500'));
+        return;
+      }
+
+      for(var level=1; level<=5; level++){
+        var r = (radius * level) / 5;
+        var points = labels.map(function(_, i){
+          var angle = (Math.PI * 2 * i) / count - Math.PI / 2;
+          return (cx + Math.cos(angle) * r)+','+(cy + Math.sin(angle) * r);
+        }).join(' ');
+        var grid = document.createElementNS(ns, 'polygon');
+        grid.setAttribute('points', points);
+        grid.setAttribute('fill', 'none');
+        grid.setAttribute('stroke', '#E5E7EB');
+        svg.appendChild(grid);
+      }
+
+      labels.forEach(function(label, i){
+        var angle = (Math.PI * 2 * i) / count - Math.PI / 2;
+        var x = cx + Math.cos(angle) * (radius + 12);
+        var y = cy + Math.sin(angle) * (radius + 12);
+        var line = document.createElementNS(ns, 'line');
+        line.setAttribute('x1', cx);
+        line.setAttribute('y1', cy);
+        line.setAttribute('x2', cx + Math.cos(angle) * radius);
+        line.setAttribute('y2', cy + Math.sin(angle) * radius);
+        line.setAttribute('stroke', '#E5E7EB');
+        svg.appendChild(line);
+        svg.appendChild(makeText(x, y, label, 10, '#374151'));
+      });
+
+      var normPoly = document.createElementNS(ns, 'polygon');
+      normPoly.setAttribute('points', polygonPoints(standards));
+      normPoly.setAttribute('fill', 'rgba(245, 158, 11, 0.25)');
+      normPoly.setAttribute('stroke', '#F59E0B');
+      svg.appendChild(normPoly);
+
+      var valPoly = document.createElementNS(ns, 'polygon');
+      valPoly.setAttribute('points', polygonPoints(values));
+      valPoly.setAttribute('fill', 'rgba(30, 144, 255, 0.25)');
+      valPoly.setAttribute('stroke', '#1E90FF');
+      svg.appendChild(valPoly);
+
+      var maxPoly = document.createElementNS(ns, 'polygon');
+      maxPoly.setAttribute('points', polygonPoints(maxValues));
+      maxPoly.setAttribute('fill', 'rgba(16, 185, 129, 0.18)');
+      maxPoly.setAttribute('stroke', '#10B981');
+      svg.appendChild(maxPoly);
+
+      values.forEach(function(v, i){
+        var p = pointAt(i, v);
+        var dot = document.createElementNS(ns, 'circle');
+        dot.setAttribute('cx', p.x);
+        dot.setAttribute('cy', p.y);
+        dot.setAttribute('r', '3.5');
+        dot.setAttribute('fill', '#1E90FF');
+        svg.appendChild(dot);
+        svg.appendChild(makeText(p.x, p.y - 8, String(v), 9, '#111827', '600'));
+      });
+    }
+
+    function renderViewPsikotest(rows){
+      var data = rows || [];
+      if(data.length === 0){
+        if(viewPsikoContent) viewPsikoContent.classList.add('hidden');
+        if(viewPsikoEmpty){ viewPsikoEmpty.textContent = 'Tidak ada data psikotest.'; viewPsikoEmpty.classList.remove('hidden'); }
+        if(viewPsikoCards) viewPsikoCards.innerHTML = '';
+        if(viewPsikoRadar) viewPsikoRadar.innerHTML = '';
+        return;
+      }
+      if(viewPsikoContent) viewPsikoContent.classList.remove('hidden');
+      if(viewPsikoEmpty) viewPsikoEmpty.classList.add('hidden');
+      renderViewCards(data);
+      drawViewRadar(data);
+    }
+
+    function fetchUjianResult(row){
+      var noPeserta = row && row.nomor ? (''+row.nomor) : '';
+      var userId = row && row.userId ? (''+row.userId) : '';
+      var attemptTime = '';
+      if(row && row.timeInput){
+        if(typeof row.timeInput === 'string') attemptTime = row.timeInput;
+        else if(row.timeInput && typeof row.timeInput.Value === 'string') attemptTime = row.timeInput.Value;
+        else {
+          var dt = parseDateValue(row.timeInput);
+          if(dt && !isNaN(dt.getTime())) attemptTime = dt.toISOString();
+        }
+      }
+      var url = '@Url.Content("~/Applicants/Ujian/Result")' +
+        '?noPeserta=' + encodeURIComponent(noPeserta) +
+        '&userId=' + encodeURIComponent(userId) +
+        '&attemptTime=' + encodeURIComponent(attemptTime);
+      return fetch(url, { method:'GET', credentials:'same-origin' })
+        .then(function(r){
+          var ok = r.ok;
+          var ct = (r.headers && r.headers.get) ? (r.headers.get('content-type') || '') : '';
+          return r.text().then(function(t){
+            if(!ok) throw new Error(t || 'Gagal mengambil data');
+            if(ct.indexOf('application/json') === -1) throw new Error('Format data tidak dikenal');
+            try { return JSON.parse(t); } catch(e){ throw new Error('Gagal membaca data'); }
+          });
+        });
+    }
+
     function openEdit(){
       if(editOverlay){ editOverlay.style.display = 'flex'; editOverlay.classList.remove('dct-hidden'); editOverlay.setAttribute('aria-hidden','false'); }
     }
     function closeEdit(){
       if(editOverlay){ editOverlay.style.display = 'none'; editOverlay.classList.add('dct-hidden'); editOverlay.setAttribute('aria-hidden','true'); }
+      if(editOverlay) editOverlay.classList.remove('view-wide');
       editState.kind = '';
       editState.row = null;
+      if(editRowView) editRowView.classList.add('hidden');
+      if(viewPsikoWrap) viewPsikoWrap.classList.add('hidden');
+      resetViewPsikotest();
     }
 
     function setEditDateTime(dt){
@@ -1283,17 +1619,24 @@
       editState.row = row || null;
       if(editTitle) editTitle.textContent = 'Edit Ujian';
       if(editIcon) editIcon.src = '@Url.Content("~/DCT3_Standarisasi/assets/icons/edit.png")';
+      if(editOverlay) editOverlay.classList.remove('view-wide');
       if(editNomor) editNomor.textContent = (row && row.nomor) ? (''+row.nomor) : '';
       if(editNama) editNama.textContent = (row && row.nama) ? (''+row.nama) : '';
+      if(editRowNomor) editRowNomor.classList.remove('hidden');
+      if(editRowNama) editRowNama.classList.remove('hidden');
+      if(editRowDate) editRowDate.classList.remove('hidden');
+      if(editRowTime) editRowTime.classList.remove('hidden');
       if(editRowPaket) editRowPaket.classList.remove('hidden');
       if(editRowLokasi) editRowLokasi.classList.add('hidden');
       if(editRowBlock) editRowBlock.classList.remove('hidden');
       if(editRowView) editRowView.classList.add('hidden');
+      if(viewPsikoWrap) viewPsikoWrap.classList.add('hidden');
       if(editSave) editSave.classList.remove('hidden');
       if(editLokasi) editLokasi.value = '';
       if(editBlock) editBlock.checked = false;
       setEditDateTime(parseDateValue(row ? row.waktuTest : null));
-      ensurePaketSoal().then(function(rows){ fillPaketOptions(editPaket, rows); });
+      var pos = getPosisiForPeserta(row ? row.nomor : '');
+      ensurePaketSoal(pos ? [pos] : []).then(function(rows){ fillPaketOptions(editPaket, rows); });
       openEdit();
     }
 
@@ -1302,12 +1645,18 @@
       editState.row = row || null;
       if(editTitle) editTitle.textContent = 'Edit Interview';
       if(editIcon) editIcon.src = '@Url.Content("~/DCT3_Standarisasi/assets/icons/edit.png")';
+      if(editOverlay) editOverlay.classList.remove('view-wide');
       if(editNomor) editNomor.textContent = (row && row.nomor) ? (''+row.nomor) : '';
       if(editNama) editNama.textContent = (row && row.nama) ? (''+row.nama) : '';
+      if(editRowNomor) editRowNomor.classList.remove('hidden');
+      if(editRowNama) editRowNama.classList.remove('hidden');
+      if(editRowDate) editRowDate.classList.remove('hidden');
+      if(editRowTime) editRowTime.classList.remove('hidden');
       if(editRowPaket) editRowPaket.classList.add('hidden');
       if(editRowLokasi) editRowLokasi.classList.remove('hidden');
       if(editRowBlock) editRowBlock.classList.add('hidden');
       if(editRowView) editRowView.classList.add('hidden');
+      if(viewPsikoWrap) viewPsikoWrap.classList.add('hidden');
       if(editSave) editSave.classList.remove('hidden');
       if(editLokasi) editLokasi.value = (row && row.lokasi) ? (''+row.lokasi) : '';
       setEditDateTime(parseDateValue(row ? row.waktuInterview : null));
@@ -1319,21 +1668,32 @@
       editState.row = row || null;
       if(editTitle) editTitle.textContent = 'View Ujian';
       if(editIcon) editIcon.src = '@Url.Content("~/DCT3_Standarisasi/assets/icons/ViewNB.png")';
+      if(editOverlay) editOverlay.classList.add('view-wide');
       if(editNomor) editNomor.textContent = (row && row.nomor) ? (''+row.nomor) : '';
       if(editNama) editNama.textContent = (row && row.nama) ? (''+row.nama) : '';
+      if(editRowNomor) editRowNomor.classList.add('hidden');
+      if(editRowNama) editRowNama.classList.add('hidden');
+      if(editRowDate) editRowDate.classList.add('hidden');
+      if(editRowTime) editRowTime.classList.add('hidden');
       if(editRowPaket) editRowPaket.classList.add('hidden');
       if(editRowLokasi) editRowLokasi.classList.add('hidden');
       if(editRowBlock) editRowBlock.classList.add('hidden');
-      if(editRowView) editRowView.classList.remove('hidden');
+      if(editRowView) editRowView.classList.add('hidden');
+      if(viewPsikoWrap) viewPsikoWrap.classList.remove('hidden');
       if(editSave) editSave.classList.add('hidden');
-      var link = (row && row.link) ? (''+row.link) : '';
-      var detail = [
-        'User ID: ' + ((row && row.userId) ? (''+row.userId) : ''),
-        'Status: ' + ((row && row.status) ? (''+row.status) : ''),
-        'Hasil: ' + ((row && row.hasil) ? (''+row.hasil) : ''),
-        'Link Login: ' + link
-      ].join('\n');
-      if(editViewDetails) editViewDetails.textContent = detail;
+      resetViewPsikotest();
+      if(viewPsikoEmpty){ viewPsikoEmpty.textContent = 'Memuat data...'; viewPsikoEmpty.classList.remove('hidden'); }
+      if(viewPsikoContent) viewPsikoContent.classList.add('hidden');
+      fetchUjianResult(row).then(function(data){
+        var biodata = data && data.biodata ? data.biodata : {};
+        var psiko = data && data.psikotest ? data.psikotest : [];
+        renderViewBiodata(biodata);
+        renderViewPsikotest(psiko);
+      }).catch(function(err){
+        if(viewPsikoContent) viewPsikoContent.classList.add('hidden');
+        if(viewPsikoEmpty){ viewPsikoEmpty.textContent = 'Gagal memuat data.'; viewPsikoEmpty.classList.remove('hidden'); }
+        showError(err && err.message ? err.message : 'Gagal memuat data');
+      });
       openEdit();
     }
 

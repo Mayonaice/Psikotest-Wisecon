@@ -583,6 +583,9 @@
   .date-formatted{ position:relative; padding-right:2.25rem; }
   #invite-overlay .dct-header, #edit-overlay .dct-header{ border-bottom:1px solid #e5e7eb; padding-bottom:10px; }
   #invite-overlay .dct-actions, #edit-overlay .dct-actions{ border-top:1px solid #e5e7eb; padding-top:10px; }
+  #invite-overlay, #edit-overlay{ align-items:center; overflow-y:auto; padding:3vh 0; }
+  #invite-overlay .dct-modal, #edit-overlay .dct-modal{ display:flex; flex-direction:column; max-height:calc(100vh - 24px); }
+  #invite-overlay .dct-body, #edit-overlay .dct-body{ flex:1 1 auto; overflow-y:auto; }
   .date-formatted::before{ content: attr(data-display); position:absolute; left:.5rem; right:2.25rem; top:50%; transform:translateY(-50%); color:#111827; pointer-events:none; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .date-formatted::-webkit-datetime-edit{ color:transparent; }
   .date-formatted::-webkit-calendar-picker-indicator{ opacity:1; position:absolute; right:.5rem; top:50%; transform:translateY(-50%); margin:0; padding:0; cursor:pointer; }
@@ -608,9 +611,7 @@
   #invite-overlay .dct-btn, #edit-overlay .dct-btn{ display:inline-flex; align-items:center; gap:8px; white-space:nowrap; border:1px solid #d1d5db; background:#FFFFFF; }
   #invite-overlay .dct-btn img, #edit-overlay .dct-btn img{ width:18px; height:18px; display:inline-block; }
   #invite-overlay .dct-btn:hover, #edit-overlay .dct-btn:hover{ background:#F9FAFB; }
-  #edit-overlay .dct-modal{ max-height:90vh; display:flex; flex-direction:column; }
   #edit-overlay .dct-header, #edit-overlay .dct-actions{ flex:0 0 auto; }
-  #edit-overlay .dct-body{ flex:1 1 auto; overflow-y:auto; }
   </style>
 
 <script>
@@ -1292,7 +1293,7 @@
       }
       return null;
     }
-    function fmtDateTime(d){ var m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; var dd=(''+('0'+d.getDate()).slice(-2)); var mm=m[d.getMonth()]; var yy=d.getFullYear(); var hh=('0'+d.getHours()).slice(-2); var mi=('0'+d.getMinutes()).slice(-2); return dd+' '+mm+' '+yy+' '+hh+':'+mi; }
+    function fmtDateTime(d){ var m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; var dd=(''+('0'+d.getDate()).slice(-2)); var mm=m[d.getMonth()]; var yy=d.getFullYear(); var hh=('0'+d.getHours()).slice(-2); var mi=('0'+d.getMinutes()).slice(-2); if(d.getHours()===0 && d.getMinutes()===0) return dd+' '+mm+' '+yy; return dd+' '+mm+' '+yy+' '+hh+':'+mi; }
     function within(d, s, e){ var ds=new Date(s+"T00:00:00"); var de=new Date(e+"T23:59:59"); return d>=ds && d<=de; }
     function fmtDateOnly(d){ var m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; var dd=('0'+d.getDate()).slice(-2); var mm=m[d.getMonth()]; var yy=d.getFullYear(); return dd+' '+mm+' '+yy; }
     function enhanceDateInput(input){ var iso=input.value; input.classList.add('date-formatted'); var d = iso ? new Date(iso) : null; input.dataset.display = d ? fmtDateOnly(d) : ''; input.addEventListener('change', function(){ var iso2 = input.value; var d2 = iso2 ? new Date(iso2) : null; input.dataset.display = d2 ? fmtDateOnly(d2) : ''; }); }

@@ -598,7 +598,7 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
             whereClause + " ORDER BY " + orderBy
 
         let fmtDt (v: Nullable<DateTime>) =
-            if v.HasValue then v.Value.ToString("yyyy-MM-dd HH:mm") else ""
+            if v.HasValue then v.Value.ToString("dd MMM yyyy HH:mm") else ""
 
         conn.Open()
         try
@@ -841,7 +841,7 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
             "FROM WISECON_PSIKOTEST.dbo.VW_MASTER_PesertaInterview I" + whereClause + " ORDER BY " + orderBy
 
         let fmtDt (v: Nullable<DateTime>) =
-            if v.HasValue then v.Value.ToString("yyyy-MM-dd HH:mm") else ""
+            if v.HasValue then v.Value.ToString("dd MMM yyyy HH:mm") else ""
 
         conn.Open()
         try

@@ -589,7 +589,7 @@
     fd.append("likeDislike", document.getElementById("likeDislike").value || "");
     fd.append("answers", JSON.stringify(payload));
     if (file) fd.append("file", file);
-    const res = await fetch("/Screening/Biodata/Interview/Save", { method: "POST", body: fd });
+    const res = await fetch("@Url.Content("~/Screening/Biodata/Interview/Save")", { method: "POST", body: fd });
     const json = await res.json();
     if (!res.ok) {
       ModalFailed(json.error || "Gagal menyimpan");
@@ -614,7 +614,7 @@
     fd.append("seqNo", biodata.seqNo);
     fd.append("hasilPsikotest", hasil);
     if (file) fd.append("file", file);
-    const res = await fetch("/Screening/Biodata/Psikotest/Save", { method: "POST", body: fd });
+    const res = await fetch("@Url.Content("~/Screening/Biodata/Psikotest/Save")", { method: "POST", body: fd });
     const json = await res.json();
     if (!res.ok) {
       ModalFailed(json.error || "Gagal menyimpan");

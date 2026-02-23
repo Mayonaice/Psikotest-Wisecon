@@ -226,7 +226,7 @@ type QuestionsController (db: System.Data.IDbConnection) =
         use cmd = new Microsoft.Data.SqlClient.SqlCommand()
         cmd.Connection <- conn
         cmd.CommandType <- CommandType.Text
-        cmd.CommandText <- "SELECT SeqNo, Keterangan FROM WISECON_PSIKOTEST.dbo.MS_Petunjuk WHERE bAktif=0 ORDER BY SeqNo"
+        cmd.CommandText <- "SELECT SeqNo, Keterangan FROM WISECON_PSIKOTEST.dbo.MS_Petunjuk WHERE bAktif=1 ORDER BY SeqNo"
         conn.Open()
         try
             use rdr = cmd.ExecuteReader()
@@ -556,9 +556,9 @@ type QuestionsController (db: System.Data.IDbConnection) =
                 ws.Cell(row,4).Value <- toleransi
                 ws.Cell(row,5).Value <- (if bAktif then "AKTIF" else "NONAKTIF")
                 ws.Cell(row,6).Value <- userInput
-                ws.Cell(row,7).Value <- (if timeInput = DateTime.MinValue then "" else timeInput.ToString("yyyy-MM-dd HH:mm"))
+                ws.Cell(row,7).Value <- (if timeInput = DateTime.MinValue then "" else timeInput.ToString("dd MMM yyyy HH:mm"))
                 ws.Cell(row,8).Value <- userEdit
-                ws.Cell(row,9).Value <- (if timeEdit = DateTime.MinValue then "" else timeEdit.ToString("yyyy-MM-dd HH:mm"))
+                ws.Cell(row,9).Value <- (if timeEdit = DateTime.MinValue then "" else timeEdit.ToString("dd MMM yyyy HH:mm"))
                 row <- row + 1
             ws.Columns().AdjustToContents() |> ignore
             use ms = new MemoryStream()

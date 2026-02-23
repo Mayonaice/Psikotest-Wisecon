@@ -223,7 +223,7 @@
 
         function setGroupHeader(){
             const g = groups && groups.length ? groups[state.groupIndex] : null;
-            const noGroup = g && g.noGroup ? g.noGroup : '';
+            const noGroup = (groups && groups.length) ? (state.groupIndex + 1) : '';
             paketLabelNo.textContent = noGroup ? String(noGroup) : '';
             paketLabel.textContent = g && g.namaGroup ? g.namaGroup : namaPaket;
             const hasPetunjuk = g && g.petunjuk && String(g.petunjuk).trim() !== '';

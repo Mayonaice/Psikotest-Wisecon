@@ -170,7 +170,7 @@ type ScreeningController (db: IDbConnection) =
                 ws.Cell(row,10).Value <- if rdr.IsDBNull(9) then "" else rdr.GetString(9)
                 ws.Cell(row,11).Value <- if rdr.IsDBNull(10) then "" else rdr.GetString(10)
                 let t = if rdr.IsDBNull(11) then DateTime.MinValue else rdr.GetDateTime(11)
-                ws.Cell(row,12).Value <- (if t = DateTime.MinValue then "" else t.ToString("yyyy-MM-dd HH:mm"))
+                ws.Cell(row,12).Value <- (if t = DateTime.MinValue then "" else t.ToString("dd MMM yyyy HH:mm"))
                 row <- row + 1
             ws.Columns().AdjustToContents() |> ignore
             use ms = new MemoryStream()

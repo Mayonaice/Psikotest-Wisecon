@@ -22,8 +22,8 @@ type ExamSubmitAnswerRequest = { Token: string; NoGroup: int; NoUrut: int; Jawab
 [<CLIMutable>]
 type ExamGroupStartRequest = { Token: string; NoGroup: int }
 
-type ExamAnswer = { noJawaban: int; jawaban: string; poin: int }
-type ExamQuestion = { noUrut: int; judul: string; deskripsi: string; answers: ResizeArray<ExamAnswer> }
+type ExamAnswer = { noJawaban: int; jawaban: string; poin: int; tipeMedia: string; urlMedia: string; textMedia: string }
+type ExamQuestion = { noUrut: int; judul: string; deskripsi: string; tipeMedia: string; urlMedia: string; answers: ResizeArray<ExamAnswer> }
 type ExamGroup = { noGroup: int; namaGroup: string; minSoal: int; waktu: int; random: bool; isPrioritas: bool; noPetunjuk: int; petunjuk: string; questions: ResizeArray<ExamQuestion> }
 
 type ExamController (db: IDbConnection, cfg: IConfiguration) =
@@ -215,8 +215,8 @@ type ExamController (db: IDbConnection, cfg: IConfiguration) =
         cmd.CommandText <-
             "SELECT g.NoGroup, g.NamaGroup, g.MinimumJmlSoal, g.WaktuPengerjaan, ISNULL(g.bRandom,0) AS bRandom, ISNULL(g.IsPrioritas,0) AS IsPrioritas, " +
             "ISNULL(g.NoPetunjuk,0) AS NoPetunjuk, ISNULL(p.Keterangan,'') AS Keterangan, " +
-            "d.NoUrut, d.Judul, d.Deskripsi, " +
-            "a.NoJawaban, a.Jawaban, CAST(a.NoJawabanBenar AS INT) AS PoinJawaban " +
+            "d.NoUrut, d.Judul, d.Deskripsi, ISNULL(d.UrlMedia,'') AS DUrlMedia, ISNULL(d.TipeMedia,'NOMEDIA') AS DTipeMedia, " +
+            "a.NoJawaban, a.Jawaban, CAST(a.NoJawabanBenar AS INT) AS PoinJawaban, ISNULL(a.UrlMedia,'') AS AUrlMedia, ISNULL(a.TipeMedia,'NOMEDIA') AS ATipeMedia, ISNULL(a.TextMedia,'') AS ATextMedia " +
             "FROM WISECON_PSIKOTEST.dbo.MS_PaketSoalGroup g " +
             "LEFT JOIN WISECON_PSIKOTEST.dbo.MS_Petunjuk p ON p.SeqNo=g.NoPetunjuk " +
             "JOIN WISECON_PSIKOTEST.dbo.MS_PaketSoalGroupDtl d ON d.NoPaket=g.NoPaket AND d.NoGroup=g.NoGroup " +
@@ -239,10 +239,15 @@ type ExamController (db: IDbConnection, cfg: IConfiguration) =
             let noUrut = if rdr.IsDBNull(8) then 0 else rdr.GetInt32(8)
             let judul = if rdr.IsDBNull(9) then "" else rdr.GetString(9)
             let deskripsi = if rdr.IsDBNull(10) then "" else rdr.GetString(10)
-            let hasJawaban = not (rdr.IsDBNull(11))
-            let noJawaban = if hasJawaban then (try int (rdr.GetByte(11)) with _ -> Convert.ToInt32(rdr.GetValue(11))) else -1
-            let jawaban = if hasJawaban && not (rdr.IsDBNull(12)) then rdr.GetString(12) else ""
-            let poin = if hasJawaban && not (rdr.IsDBNull(13)) then Convert.ToInt32(rdr.GetValue(13)) else 0
+            let qUrlMedia = if rdr.IsDBNull(11) then "" else rdr.GetString(11)
+            let qTipeMedia = if rdr.IsDBNull(12) then "NOMEDIA" else rdr.GetString(12)
+            let hasJawaban = not (rdr.IsDBNull(13))
+            let noJawaban = if hasJawaban then (try int (rdr.GetByte(13)) with _ -> Convert.ToInt32(rdr.GetValue(13))) else -1
+            let jawaban = if hasJawaban && not (rdr.IsDBNull(14)) then rdr.GetString(14) else ""
+            let poin = if hasJawaban && not (rdr.IsDBNull(15)) then Convert.ToInt32(rdr.GetValue(15)) else 0
+            let aUrlMedia = if hasJawaban && not (rdr.IsDBNull(16)) then rdr.GetString(16) else ""
+            let aTipeMedia = if hasJawaban && not (rdr.IsDBNull(17)) then rdr.GetString(17) else "NOMEDIA"
+            let aTextMedia = if hasJawaban && not (rdr.IsDBNull(18)) then rdr.GetString(18) else ""
 
             if not (groups.ContainsKey(noGroup)) then
                 groups.[noGroup] <- { noGroup = noGroup; namaGroup = namaGroup; minSoal = minSoal; waktu = waktu; random = bRandom; isPrioritas = isPrioritas; noPetunjuk = noPetunjuk; petunjuk = petunjuk; questions = ResizeArray<ExamQuestion>() }
@@ -250,13 +255,13 @@ type ExamController (db: IDbConnection, cfg: IConfiguration) =
 
             let qmap = qmaps.[noGroup]
             if not (qmap.ContainsKey(noUrut)) then
-                let q = { noUrut = noUrut; judul = judul; deskripsi = deskripsi; answers = ResizeArray<ExamAnswer>() }
+                let q = { noUrut = noUrut; judul = judul; deskripsi = deskripsi; tipeMedia = qTipeMedia; urlMedia = qUrlMedia; answers = ResizeArray<ExamAnswer>() }
                 qmap.[noUrut] <- q
                 groups.[noGroup].questions.Add(q)
 
             let qObj = qmap.[noUrut]
             if hasJawaban then
-                qObj.answers.Add({ noJawaban = noJawaban; jawaban = jawaban; poin = poin })
+                qObj.answers.Add({ noJawaban = noJawaban; jawaban = jawaban; poin = poin; tipeMedia = aTipeMedia; urlMedia = aUrlMedia; textMedia = aTextMedia })
 
         groups.Values |> Seq.toArray
 

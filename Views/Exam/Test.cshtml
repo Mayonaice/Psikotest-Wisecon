@@ -55,6 +55,7 @@
                         <div class="text-xl sm:text-2xl font-extrabold" id="soalNo">Soal No. 1</div>
                     </div>
                     <div class="mt-2 text-base sm:text-lg text-gray-900" id="soalText"></div>
+                    <div class="mt-3" id="soalMedia"></div>
                     <div class="mt-5 space-y-3" id="jawabanWrap"></div>
                     <div class="mt-6 flex items-center justify-between gap-3">
                         <button type="button" id="prevQuestionBtn" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
@@ -106,6 +107,15 @@
         const namaPaket = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(namaPaket));
 
         function pad2(n){ return String(n).padStart(2,'0'); }
+        function normalizeText(v){
+            if(v==null) return '';
+            var s = String(v);
+            s = s.replace(/&nbsp;/gi, ' ');
+            s = s.replace(/\u00C2\u00A0/g, ' ');
+            s = s.replace(/\u00A0/g, ' ');
+            s = s.replace(/[\u0000-\u001F\u007F-\u009F\uFFFD]/g, ' ');
+            return s;
+        }
         function fmtMMSS(totalSec){
             const m = Math.max(0, Math.floor(totalSec/60));
             const s = Math.max(0, totalSec%60);
@@ -113,7 +123,16 @@
         }
         function fmtDateTime(d){
             if(!d) return '-';
-            return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()) + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds());
+            var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            var dd=pad2(d.getDate());
+            var mm=months[d.getMonth()];
+            var yy=d.getFullYear();
+            var hh=pad2(d.getHours());
+            var mi=pad2(d.getMinutes());
+            if(d.getHours()===0 && d.getMinutes()===0){
+                return dd+' '+mm+' '+yy;
+            }
+            return dd+' '+mm+' '+yy+' '+hh+':'+mi;
         }
         function nowMs(){ return new Date().getTime(); }
         let finishing = false;
@@ -304,7 +323,20 @@
 
             const q = g.questions[state.questionIndex];
             document.getElementById('soalNo').textContent = 'Soal No. ' + (state.questionIndex + 1);
-            document.getElementById('soalText').textContent = (q.deskripsi || q.judul || '').trim();
+            document.getElementById('soalText').textContent = normalizeText(q.deskripsi || q.judul || '');
+            const soalMedia = document.getElementById('soalMedia');
+            if(soalMedia){
+                soalMedia.innerHTML = '';
+                const qUrl = q && q.urlMedia ? String(q.urlMedia).trim() : '';
+                const qTipe = q && q.tipeMedia ? String(q.tipeMedia).toUpperCase() : 'NOMEDIA';
+                if(qUrl && qTipe !== 'NOMEDIA'){
+                    const img = document.createElement('img');
+                    img.src = qUrl;
+                    img.alt = 'media';
+                    img.className = 'max-h-64 rounded-md border border-gray-200';
+                    soalMedia.appendChild(img);
+                }
+            }
 
             const jawabanWrap = document.getElementById('jawabanWrap');
             jawabanWrap.innerHTML = '';
@@ -312,9 +344,10 @@
             for(const a of q.answers){
                 const id = 'opt_' + g.noGroup + '_' + q.noUrut + '_' + a.noJawaban;
                 const row = document.createElement('label');
-                row.className = 'flex items-center gap-3 border border-gray-200 rounded-lg px-3 py-2 cursor-pointer hover:bg-gray-50';
+                row.className = 'flex items-stretch gap-3 border border-gray-200 rounded-lg px-3 py-2 cursor-pointer hover:bg-gray-50';
                 const input = document.createElement('input');
                 input.type = 'radio';
+                input.className = 'mt-0 self-center';
                 input.name = 'ans_' + g.noGroup + '_' + q.noUrut;
                 input.id = id;
                 input.value = a.noJawaban;
@@ -327,11 +360,23 @@
                     pendingSave = { noGroup: g.noGroup, noUrut: q.noUrut, jawaban: a.noJawaban };
                     saveTimer = setTimeout(() => submitAnswer(g.noGroup, q.noUrut, a.noJawaban), 300);
                 });
+                const txtWrap = document.createElement('div');
+                txtWrap.className = 'flex flex-col gap-2';
                 const txt = document.createElement('div');
                 txt.className = 'text-sm sm:text-base text-gray-900';
-                txt.textContent = a.jawaban;
+                txt.textContent = normalizeText(a.jawaban);
+                txtWrap.appendChild(txt);
+                const aUrl = a && a.urlMedia ? String(a.urlMedia).trim() : '';
+                const aTipe = a && a.tipeMedia ? String(a.tipeMedia).toUpperCase() : 'NOMEDIA';
+                if(aUrl && aTipe !== 'NOMEDIA'){
+                    const img = document.createElement('img');
+                    img.src = aUrl;
+                    img.alt = 'media';
+                    img.className = 'max-h-40 rounded-md border border-gray-200';
+                    txtWrap.appendChild(img);
+                }
                 row.appendChild(input);
-                row.appendChild(txt);
+                row.appendChild(txtWrap);
                 jawabanWrap.appendChild(row);
             }
 
