@@ -194,6 +194,22 @@
   },
   {
     "ContainingType": "PsikotestWisesa.Controllers.AssignController",
+    "Method": "CheckScreeningStatus",
+    "RelativePath": "Applicants/Screening/CheckStatus",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "ids",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "PsikotestWisesa.Controllers.AssignController",
     "Method": "AssignUjian",
     "RelativePath": "Applicants/Ujian/Assign",
     "HttpMethod": "POST",

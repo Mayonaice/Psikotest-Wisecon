@@ -8,8 +8,8 @@ wwwroot\dct3\layout\ModalConfirmation.ascx
 wwwroot\dct3\layout\ModalFailed.ascx
 wwwroot\dct3\layout\ModalInformation.ascx
 wwwroot\dct3\layout\ModalSuccess.ascx
-wwwroot\dct3\layout\notifications.css
-wwwroot\dct3\layout\notifications.js
+wwwroot\DCT3_Standarisasi\Layout\notifications.js
+wwwroot\DCT3_Standarisasi\Layout\notifications.css
 wwwroot\DCT3_Standarisasi\assets\icons\AddNB.svg
 wwwroot\DCT3_Standarisasi\assets\icons\Alert.png
 wwwroot\DCT3_Standarisasi\assets\icons\CloseNotification.png
@@ -40,8 +40,8 @@ wwwroot\DCT3_Standarisasi\assets\icons\Thumbs.db
 wwwroot\DCT3_Standarisasi\assets\icons\UploadNB.png
 wwwroot\DCT3_Standarisasi\assets\icons\ViewNB.png
 wwwroot\DCT3_Standarisasi\assets\icons\XNB.png
-wwwroot\DCT3_Standarisasi\Layout\notifications.css
-wwwroot\DCT3_Standarisasi\Layout\notifications.js
+wwwroot\dct3\layout\notifications.js
+wwwroot\dct3\layout\notifications.css
 wwwroot\favicon.ico
 wwwroot\images\login-banner.png
 wwwroot\js\site.js
@@ -107,6 +107,9 @@ wwwroot\lib\jquery\dist\jquery.slim.min.map
 wwwroot\lib\jquery\LICENSE.txt
 wwwroot\uploads\20251205040744_1d1faed7.png
 wwwroot\uploads\20260217183048_c7a7fe7a.jpg
+wwwroot\uploads\20260223042041_e2f46b80.png
+wwwroot\uploads\20260223042342_f600f955.jpg
+wwwroot\uploads\20260223042358_754c00d5.png
 C:\Users\vadod\source\repos\PsikotestWisesa\PsikotestWisesa\wwwroot\lib\jquery\LICENSE.txt
 C:\Users\vadod\source\repos\PsikotestWisesa\PsikotestWisesa\wwwroot\lib\jquery\dist\jquery.slim.min.map
 C:\Users\vadod\source\repos\PsikotestWisesa\PsikotestWisesa\wwwroot\lib\jquery\dist\jquery.slim.min.js

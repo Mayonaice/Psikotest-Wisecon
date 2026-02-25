@@ -85,7 +85,7 @@ type ScreeningController (db: IDbConnection) =
         use cmd = new Microsoft.Data.SqlClient.SqlCommand()
         cmd.Connection <- conn
         cmd.CommandType <- CommandType.Text
-        let whereClause = this.applyFilters(cmd)
+        let whereClause = this.applyFilters(cmd, "x")
         cmd.CommandText <-
             "SELECT MIN(JobCode) AS JobCode, JobPosition, " +
             "SUM(CASE WHEN StatusScreening IS NULL OR LTRIM(RTRIM(StatusScreening))='' OR StatusScreening='Belum Proses' THEN 1 ELSE 0 END) AS BelumProses, " +
@@ -96,7 +96,10 @@ type ScreeningController (db: IDbConnection) =
             "SUM(CASE WHEN StatusVerif='Lulus' THEN 1 ELSE 0 END) AS StatusLulus, " +
             "SUM(CASE WHEN StatusVerif='Tidak Lulus' THEN 1 ELSE 0 END) AS StatusTidakLulus, " +
             "MAX(TimeInput) AS TimeInput " +
-            "FROM WISECON_PSIKOTEST.dbo.VW_REC_Screening " +
+            "FROM (" +
+            "SELECT v.JobCode, v.JobPosition, v.StatusVerif, v.TimeInput, v.StatusScreening " +
+            "FROM WISECON_PSIKOTEST.dbo.VW_REC_Screening v " +
+            ") x " +
             whereClause +
             "GROUP BY JobPosition " +
             "ORDER BY JobPosition"
@@ -128,13 +131,18 @@ type ScreeningController (db: IDbConnection) =
         use cmd = new Microsoft.Data.SqlClient.SqlCommand()
         cmd.Connection <- conn
         cmd.CommandType <- CommandType.Text
-        let whereClause = this.applyFilters(cmd, "v")
+        let whereClause = this.applyFilters(cmd, "b")
         cmd.CommandText <-
-            "WITH Ranked AS (" +
-            "SELECT v.SeqNo, v.JobCode, v.JobPosition, v.BatchNo, v.Name, v.StatusScreening, v.StatusVerif, v.ResultInterviewTes, v.StatusPsikotes, v.Sex, v.UserEmail, v.PhoneNo, v.PendidikanTerakhir, v.TimeInput, " +
-            "ROW_NUMBER() OVER (PARTITION BY ISNULL(p.NoPeserta, CONCAT('SEQ_', v.SeqNo)) ORDER BY v.TimeInput DESC, v.SeqNo DESC) AS rn " +
+            "WITH Base AS (" +
+            "SELECT v.SeqNo, v.JobCode, v.JobPosition, v.BatchNo, v.Name, v.StatusScreening, " +
+            "v.StatusVerif, v.ResultInterviewTes, v.StatusPsikotes, v.Sex, v.UserEmail, v.PhoneNo, v.PendidikanTerakhir, v.TimeInput " +
             "FROM WISECON_PSIKOTEST.dbo.VW_REC_Screening v " +
-            "LEFT JOIN WISECON_PSIKOTEST.dbo.MS_Peserta p ON p.ID = v.SeqNo " +
+            "), " +
+            "Ranked AS (" +
+            "SELECT b.SeqNo, b.JobCode, b.JobPosition, b.BatchNo, b.Name, b.StatusScreening, b.StatusVerif, b.ResultInterviewTes, b.StatusPsikotes, b.Sex, b.UserEmail, b.PhoneNo, b.PendidikanTerakhir, b.TimeInput, " +
+            "ROW_NUMBER() OVER (PARTITION BY ISNULL(p.NoPeserta, CONCAT('SEQ_', b.SeqNo)) ORDER BY b.TimeInput DESC, b.SeqNo DESC) AS rn " +
+            "FROM Base b " +
+            "LEFT JOIN WISECON_PSIKOTEST.dbo.MS_Peserta p ON p.ID = b.SeqNo " +
             whereClause +
             ") " +
             "SELECT JobPosition, BatchNo, Name, StatusScreening, StatusVerif, ResultInterviewTes, StatusPsikotes, Sex, UserEmail, PhoneNo, PendidikanTerakhir, TimeInput " +
@@ -187,18 +195,23 @@ type ScreeningController (db: IDbConnection) =
         use cmd = new Microsoft.Data.SqlClient.SqlCommand()
         cmd.Connection <- conn
         cmd.CommandType <- CommandType.Text
-        let whereClause = this.applyFilters(cmd, "v")
+        let whereClause = this.applyFilters(cmd, "b")
         let kodeLowongan = this.getQueryValue("kodeLowongan")
         if not (String.IsNullOrWhiteSpace(kodeLowongan)) then
             cmd.Parameters.AddWithValue("@kodeLowongan", kodeLowongan) |> ignore
         cmd.CommandText <-
-            "WITH Ranked AS (" +
-            "SELECT v.SeqNo, v.JobCode, v.JobPosition, v.BatchNo, v.Name, v.StatusScreening, v.StatusVerif, v.ResultInterviewTes, v.StatusPsikotes, v.Sex, v.UserEmail, v.PhoneNo, v.PendidikanTerakhir, v.CVFileName, v.TimeInput, " +
-            "ROW_NUMBER() OVER (PARTITION BY ISNULL(p.NoPeserta, CONCAT('SEQ_', v.SeqNo)) ORDER BY v.TimeInput DESC, v.SeqNo DESC) AS rn " +
+            "WITH Base AS (" +
+            "SELECT v.SeqNo, v.JobCode, v.JobPosition, v.BatchNo, v.Name, v.StatusScreening, " +
+            "v.StatusVerif, v.ResultInterviewTes, v.StatusPsikotes, v.Sex, v.UserEmail, v.PhoneNo, v.PendidikanTerakhir, v.CVFileName, v.TimeInput " +
             "FROM WISECON_PSIKOTEST.dbo.VW_REC_Screening v " +
-            "LEFT JOIN WISECON_PSIKOTEST.dbo.MS_Peserta p ON p.ID = v.SeqNo " +
+            "), " +
+            "Ranked AS (" +
+            "SELECT b.SeqNo, b.JobCode, b.JobPosition, b.BatchNo, b.Name, b.StatusScreening, b.StatusVerif, b.ResultInterviewTes, b.StatusPsikotes, b.Sex, b.UserEmail, b.PhoneNo, b.PendidikanTerakhir, b.CVFileName, b.TimeInput, " +
+            "ROW_NUMBER() OVER (PARTITION BY ISNULL(p.NoPeserta, CONCAT('SEQ_', b.SeqNo)) ORDER BY b.TimeInput DESC, b.SeqNo DESC) AS rn " +
+            "FROM Base b " +
+            "LEFT JOIN WISECON_PSIKOTEST.dbo.MS_Peserta p ON p.ID = b.SeqNo " +
             whereClause +
-            (if String.IsNullOrWhiteSpace(kodeLowongan) then "" else " AND v.JobPosition = @kodeLowongan ") +
+            (if String.IsNullOrWhiteSpace(kodeLowongan) then "" else " AND b.JobPosition = @kodeLowongan ") +
             ") " +
             "SELECT SeqNo, JobCode, JobPosition, BatchNo, Name, StatusScreening, StatusVerif, ResultInterviewTes, StatusPsikotes, Sex, UserEmail, PhoneNo, PendidikanTerakhir, CVFileName, TimeInput " +
             "FROM Ranked WHERE rn=1 ORDER BY Name"
@@ -384,86 +397,65 @@ type ScreeningController (db: IDbConnection) =
                 let n = if r.IsDBNull(1) then "" else r.GetString(1)
                 box {| msSeqNo = ms; nilai = n |})
 
-            let statusCmd = new Microsoft.Data.SqlClient.SqlCommand("SELECT ResultInterviewTes, InterviewResultRemarks, InterviewResultFileName, StatusPsikotes, PsikotesResultFileName, InterviewStrengthWeakness, InterviewLikeDislike FROM WISECON_PSIKOTEST.dbo.REC_ScreeningStatus WHERE JobVacancySubmittedSeqNo=@id", conn)
+            let statusCmd = new Microsoft.Data.SqlClient.SqlCommand("SELECT ResultInterviewTes, InterviewResultRemarks, InterviewResultFileName, StatusPsikotes, PsikotesResultFileName, InterviewStrengthWeakness, InterviewLikeDislike, TimeInput, TimeEdit FROM WISECON_PSIKOTEST.dbo.REC_ScreeningStatus WHERE JobVacancySubmittedSeqNo=@id", conn)
             statusCmd.Parameters.AddWithValue("@id", biodataId) |> ignore
             use statusR = statusCmd.ExecuteReader()
-            let mutable statusObj = box {| hasilInterview = ""; remarks = ""; interviewFile = ""; hasilPsikotest = ""; psikotestFile = ""; strengthWeakness = ""; likeDislike = "" |}
+            let mutable statusHasilInterview = ""
+            let mutable statusRemarks = ""
+            let mutable statusInterviewFile = ""
+            let mutable statusHasilPsikotest = ""
+            let mutable statusPsikotestFile = ""
+            let mutable statusStrengthWeakness = ""
+            let mutable statusLikeDislike = ""
+            let mutable statusTime = Nullable<DateTime>()
             if statusR.Read() then
-                let hasilInterview = if statusR.IsDBNull(0) then "" else statusR.GetString(0)
-                let remarks = if statusR.IsDBNull(1) then "" else statusR.GetString(1)
-                let interviewFile = if statusR.IsDBNull(2) then "" else statusR.GetString(2)
-                let hasilPsikotest = if statusR.IsDBNull(3) then "" else statusR.GetString(3)
-                let psikotestFile = if statusR.IsDBNull(4) then "" else statusR.GetString(4)
-                let strengthWeakness = if statusR.IsDBNull(5) then "" else statusR.GetString(5)
-                let likeDislike = if statusR.IsDBNull(6) then "" else statusR.GetString(6)
-                statusObj <- box {| hasilInterview = hasilInterview; remarks = remarks; interviewFile = interviewFile; hasilPsikotest = hasilPsikotest; psikotestFile = psikotestFile; strengthWeakness = strengthWeakness; likeDislike = likeDislike |}
+                statusHasilInterview <- if statusR.IsDBNull(0) then "" else statusR.GetString(0)
+                statusRemarks <- if statusR.IsDBNull(1) then "" else statusR.GetString(1)
+                statusInterviewFile <- if statusR.IsDBNull(2) then "" else statusR.GetString(2)
+                statusHasilPsikotest <- if statusR.IsDBNull(3) then "" else statusR.GetString(3)
+                statusPsikotestFile <- if statusR.IsDBNull(4) then "" else statusR.GetString(4)
+                statusStrengthWeakness <- if statusR.IsDBNull(5) then "" else statusR.GetString(5)
+                statusLikeDislike <- if statusR.IsDBNull(6) then "" else statusR.GetString(6)
+                let timeInput = if statusR.IsDBNull(7) then Nullable() else Nullable(statusR.GetDateTime(7))
+                let timeEdit = if statusR.IsDBNull(8) then Nullable() else Nullable(statusR.GetDateTime(8))
+                statusTime <- if timeEdit.HasValue then timeEdit else timeInput
             statusR.Close()
 
             let mutable userId = ""
             let mutable noPaket = 0
             let mutable noPesertaDb = ""
-            use cmdUser = new Microsoft.Data.SqlClient.SqlCommand("SELECT TOP 1 D.UserId, D.NoPaket, P.NoPeserta FROM WISECON_PSIKOTEST.dbo.MS_Peserta P LEFT JOIN WISECON_PSIKOTEST.dbo.MS_PesertaDtl D ON D.NoPeserta = P.NoPeserta WHERE P.ID=@id ORDER BY D.TimeInput DESC", conn)
+            let mutable latestAttemptTime = Nullable<DateTime>()
+            use cmdUser = new Microsoft.Data.SqlClient.SqlCommand("SELECT TOP 1 D.UserId, D.NoPaket, P.NoPeserta, D.TimeInput FROM WISECON_PSIKOTEST.dbo.MS_Peserta P LEFT JOIN WISECON_PSIKOTEST.dbo.MS_PesertaDtl D ON D.NoPeserta = P.NoPeserta WHERE P.ID=@id ORDER BY D.TimeInput DESC", conn)
             cmdUser.Parameters.AddWithValue("@id", biodataId) |> ignore
             use rdrUser = cmdUser.ExecuteReader()
             if rdrUser.Read() then
                 userId <- if rdrUser.IsDBNull(0) then "" else rdrUser.GetString(0)
                 noPaket <- if rdrUser.IsDBNull(1) then 0 else Convert.ToInt32(rdrUser.GetValue(1))
                 noPesertaDb <- if rdrUser.IsDBNull(2) then "" else rdrUser.GetString(2)
+                latestAttemptTime <- if rdrUser.IsDBNull(3) then Nullable() else Nullable(rdrUser.GetDateTime(3))
             rdrUser.Close()
             if (String.IsNullOrWhiteSpace(userId) || noPaket <= 0) && not (String.IsNullOrWhiteSpace(bioEmail)) then
-                use cmdUserAlt = new Microsoft.Data.SqlClient.SqlCommand("SELECT TOP 1 D.UserId, D.NoPaket, P.NoPeserta FROM WISECON_PSIKOTEST.dbo.MS_Peserta P LEFT JOIN WISECON_PSIKOTEST.dbo.MS_PesertaDtl D ON D.NoPeserta = P.NoPeserta WHERE P.Email=@email ORDER BY D.TimeInput DESC", conn)
+                use cmdUserAlt = new Microsoft.Data.SqlClient.SqlCommand("SELECT TOP 1 D.UserId, D.NoPaket, P.NoPeserta, D.TimeInput FROM WISECON_PSIKOTEST.dbo.MS_Peserta P LEFT JOIN WISECON_PSIKOTEST.dbo.MS_PesertaDtl D ON D.NoPeserta = P.NoPeserta WHERE P.Email=@email ORDER BY D.TimeInput DESC", conn)
                 cmdUserAlt.Parameters.AddWithValue("@email", bioEmail) |> ignore
                 use rdrUserAlt = cmdUserAlt.ExecuteReader()
                 if rdrUserAlt.Read() then
                     userId <- if rdrUserAlt.IsDBNull(0) then "" else rdrUserAlt.GetString(0)
                     noPaket <- if rdrUserAlt.IsDBNull(1) then 0 else Convert.ToInt32(rdrUserAlt.GetValue(1))
                     noPesertaDb <- if rdrUserAlt.IsDBNull(2) then "" else rdrUserAlt.GetString(2)
+                    latestAttemptTime <- if rdrUserAlt.IsDBNull(3) then Nullable() else Nullable(rdrUserAlt.GetDateTime(3))
                 rdrUserAlt.Close()
-
-            let altUserIds = ResizeArray<string * int>()
-            if not (String.IsNullOrWhiteSpace(noPesertaDb)) then
-                use cmdUserList = new Microsoft.Data.SqlClient.SqlCommand("SELECT UserId, NoPaket FROM WISECON_PSIKOTEST.dbo.MS_PesertaDtl WHERE NoPeserta=@np ORDER BY TimeInput DESC", conn)
-                cmdUserList.Parameters.AddWithValue("@np", noPesertaDb) |> ignore
-                use rdrUserList = cmdUserList.ExecuteReader()
-                while rdrUserList.Read() do
-                    let u = if rdrUserList.IsDBNull(0) then "" else rdrUserList.GetString(0)
-                    let p = if rdrUserList.IsDBNull(1) then 0 else Convert.ToInt32(rdrUserList.GetValue(1))
-                    if not (String.IsNullOrWhiteSpace(u)) && p > 0 then
-                        altUserIds.Add((u, p))
-                rdrUserList.Close()
 
             let psiko = ResizeArray<obj>()
             let psikoDetail = ResizeArray<obj>()
             let psikoGroupMeta = ResizeArray<obj>()
-            let hasCandidate = (not (String.IsNullOrWhiteSpace(userId)) && noPaket > 0) || altUserIds.Count > 0
+            let mutable sumStandar = 0
+            let mutable sumHasil = 0
+            let mutable psikoCount = 0
+            let hasCandidate = (not (String.IsNullOrWhiteSpace(userId)) && noPaket > 0)
             if hasCandidate then
-                let mutable chosenUserId = userId
-                let mutable chosenNoPaket = noPaket
-                if (String.IsNullOrWhiteSpace(chosenUserId) || chosenNoPaket <= 0) && altUserIds.Count > 0 then
-                    let (u0, p0) = altUserIds.[0]
-                    chosenUserId <- u0
-                    chosenNoPaket <- p0
-
-                let getCount (u: string) (p: int) =
-                    use cmdCount = new Microsoft.Data.SqlClient.SqlCommand("SELECT COUNT(1) FROM WISECON_PSIKOTEST.dbo.TR_Psikotest WHERE UserId=@u AND NoPaket=@p", conn)
-                    cmdCount.Parameters.AddWithValue("@u", u) |> ignore
-                    cmdCount.Parameters.AddWithValue("@p", p) |> ignore
-                    let obj = cmdCount.ExecuteScalar()
-                    if isNull obj then 0 else Convert.ToInt32(obj)
-
-                let mutable rowCount = if String.IsNullOrWhiteSpace(chosenUserId) || chosenNoPaket <= 0 then 0 else getCount chosenUserId chosenNoPaket
-                if rowCount = 0 && altUserIds.Count > 0 then
-                    for (u, p) in altUserIds do
-                        if rowCount = 0 then
-                            let c = getCount u p
-                            if c > 0 then
-                                chosenUserId <- u
-                                chosenNoPaket <- p
-                                rowCount <- c
-
                 use cmdPs = new Microsoft.Data.SqlClient.SqlCommand("SELECT R.GroupSoal, ISNULL(R.NilaiStandard, G.NilaiStandar) AS NilaiStandard, R.NilaiGroupResult, G.NamaGroup, (SELECT SUM(mx) FROM (SELECT MAX(ISNULL(J.NoJawabanBenar,0)) mx FROM WISECON_PSIKOTEST.dbo.MS_PaketSoalGroupDtlJawaban J WHERE J.NoPaket=@p AND J.NoGroup = G.NoGroup GROUP BY J.NoUrut) X) AS NilaiMax FROM WISECON_PSIKOTEST.dbo.TR_PsikotestResult R LEFT JOIN WISECON_PSIKOTEST.dbo.MS_PaketSoalGroup G ON G.NoPaket=@p AND G.NoGroup = TRY_CONVERT(int, R.GroupSoal) WHERE (R.NoPeserta=@np OR R.UserId=@u) ORDER BY R.GroupSoal", conn)
-                cmdPs.Parameters.AddWithValue("@p", chosenNoPaket) |> ignore
-                cmdPs.Parameters.AddWithValue("@u", chosenUserId) |> ignore
+                cmdPs.Parameters.AddWithValue("@p", noPaket) |> ignore
+                cmdPs.Parameters.AddWithValue("@u", userId) |> ignore
                 cmdPs.Parameters.AddWithValue("@np", noPesertaDb) |> ignore
                 use rdrPs = cmdPs.ExecuteReader()
                 while rdrPs.Read() do
@@ -472,11 +464,14 @@ type ScreeningController (db: IDbConnection) =
                     let hasil = if rdrPs.IsDBNull(2) then 0 else Convert.ToInt32(rdrPs.GetValue(2))
                     let namaGroup = if rdrPs.IsDBNull(3) then "" else rdrPs.GetString(3)
                     let nilaiMax = if rdrPs.IsDBNull(4) then 0 else Convert.ToInt32(rdrPs.GetValue(4))
+                    sumStandar <- sumStandar + standar
+                    sumHasil <- sumHasil + hasil
+                    psikoCount <- psikoCount + 1
                     psiko.Add(box {| noGroup = noGroup; namaGroup = namaGroup; nilaiStandard = standar; nilaiGroupResult = hasil; nilaiMax = nilaiMax |})
                 rdrPs.Close()
 
                 use cmdMeta = new Microsoft.Data.SqlClient.SqlCommand("SELECT NoGroup, NamaGroup, NilaiStandar, IsPrioritas FROM WISECON_PSIKOTEST.dbo.MS_PaketSoalGroup WHERE NoPaket=@p ORDER BY NoGroup", conn)
-                cmdMeta.Parameters.AddWithValue("@p", chosenNoPaket) |> ignore
+                cmdMeta.Parameters.AddWithValue("@p", noPaket) |> ignore
                 use rdrMeta = cmdMeta.ExecuteReader()
                 while rdrMeta.Read() do
                     let noGroup = if rdrMeta.IsDBNull(0) then 0 else Convert.ToInt32(rdrMeta.GetValue(0))
@@ -487,8 +482,8 @@ type ScreeningController (db: IDbConnection) =
                 rdrMeta.Close()
 
                 use cmdDtl = new Microsoft.Data.SqlClient.SqlCommand("SELECT A.NoGroup, G.NamaGroup, A.NoUrut, D.Judul, D.Deskripsi, A.JawabanDiPilih, J.Jawaban AS JawabanDipilih, (SELECT TOP 1 JJ.Jawaban FROM WISECON_PSIKOTEST.dbo.MS_PaketSoalGroupDtlJawaban JJ WHERE JJ.NoPaket=A.NoPaket AND JJ.NoGroup=A.NoGroup AND JJ.NoUrut=A.NoUrut ORDER BY ISNULL(JJ.NoJawabanBenar,0) DESC, JJ.NoJawaban) AS JawabanBenar, ISNULL(J.NoJawabanBenar,0) AS Poin FROM WISECON_PSIKOTEST.dbo.TR_Psikotest A JOIN WISECON_PSIKOTEST.dbo.MS_PaketSoalGroupDtl D ON D.NoPaket=A.NoPaket AND D.NoGroup=A.NoGroup AND D.NoUrut=A.NoUrut JOIN WISECON_PSIKOTEST.dbo.MS_PaketSoalGroup G ON G.NoPaket=A.NoPaket AND G.NoGroup=A.NoGroup LEFT JOIN WISECON_PSIKOTEST.dbo.MS_PaketSoalGroupDtlJawaban J ON J.NoPaket=A.NoPaket AND J.NoGroup=A.NoGroup AND J.NoUrut=A.NoUrut AND J.NoJawaban=A.JawabanDiPilih WHERE A.UserId=@u AND A.NoPaket=@p ORDER BY A.NoGroup, A.NoUrut", conn)
-                cmdDtl.Parameters.AddWithValue("@u", chosenUserId) |> ignore
-                cmdDtl.Parameters.AddWithValue("@p", chosenNoPaket) |> ignore
+                cmdDtl.Parameters.AddWithValue("@u", userId) |> ignore
+                cmdDtl.Parameters.AddWithValue("@p", noPaket) |> ignore
                 use rdrDtl = cmdDtl.ExecuteReader()
                 while rdrDtl.Read() do
                     let noGroup = if rdrDtl.IsDBNull(0) then 0 else Convert.ToInt32(rdrDtl.GetValue(0))
@@ -502,6 +497,11 @@ type ScreeningController (db: IDbConnection) =
                     psikoDetail.Add(box {| noGroup = noGroup; namaGroup = namaGroup; noUrut = noUrut; judul = judul; deskripsi = deskripsi; jawabanDipilih = jawabanDipilih; poin = poin; jawabanBenar = jawabanBenar; poinBenar = if poin > 0 then 1 else 0 |})
                 rdrDtl.Close()
 
+            if statusTime.HasValue && latestAttemptTime.HasValue && statusTime.Value < latestAttemptTime.Value then
+                statusHasilPsikotest <- ""
+            if String.IsNullOrWhiteSpace(statusHasilPsikotest) && psikoCount > 0 then
+                statusHasilPsikotest <- if sumHasil >= sumStandar then "Lulus" else "Tidak Lulus"
+            let statusObj = box {| hasilInterview = statusHasilInterview; remarks = statusRemarks; interviewFile = statusInterviewFile; hasilPsikotest = statusHasilPsikotest; psikotestFile = statusPsikotestFile; strengthWeakness = statusStrengthWeakness; likeDislike = statusLikeDislike |}
             this.ViewData.["BiodataJson"] <- JsonSerializer.Serialize(biodataObj, options)
             this.ViewData.["PersonalJson"] <- JsonSerializer.Serialize(personal, options)
             this.ViewData.["ExperienceJson"] <- JsonSerializer.Serialize(experience, options)
@@ -684,7 +684,9 @@ type ScreeningController (db: IDbConnection) =
             let user = this.getUserName()
             conn.Open()
             try
-                let warn = ResizeArray<string>()
+                let invalidStatus = ResizeArray<string>()
+                let invalidScreening = ResizeArray<string>()
+                let rows = ResizeArray<int * string * string * string>()
                 for item in req.items do
                     let sid = if isNull item.kodeBiodata then 0 else Int32.Parse(item.kodeBiodata)
                     use cmd = new Microsoft.Data.SqlClient.SqlCommand("SELECT StatusScreening, ResultInterviewTes, StatusPsikotes, StatusVerif FROM WISECON_PSIKOTEST.dbo.VW_REC_Screening WHERE SeqNo=@id", conn)
@@ -700,9 +702,20 @@ type ScreeningController (db: IDbConnection) =
                         hasilPsikotes <- if rdr.IsDBNull(2) then "" else rdr.GetString(2)
                         statusVerif <- if rdr.IsDBNull(3) then "" else rdr.GetString(3)
                     rdr.Close()
-                    if String.IsNullOrWhiteSpace(statusScreening) || statusScreening = "Belum Proses" then
-                        warn.Add(string sid)
-                    else
+                    let isScreeningInvalid = String.IsNullOrWhiteSpace(statusScreening) || statusScreening = "Belum Proses"
+                    let isInterviewInvalid = String.IsNullOrWhiteSpace(hasilInterview) || String.Equals(hasilInterview, "Tidak Lulus", StringComparison.OrdinalIgnoreCase)
+                    let isPsikoInvalid = String.IsNullOrWhiteSpace(hasilPsikotes) || String.Equals(hasilPsikotes, "Tidak Lulus", StringComparison.OrdinalIgnoreCase)
+                    if isScreeningInvalid then invalidScreening.Add(string sid)
+                    if isInterviewInvalid || isPsikoInvalid then invalidStatus.Add(string sid)
+                    rows.Add(sid, hasilInterview, hasilPsikotes, statusVerif)
+
+                if invalidStatus.Count > 0 || invalidScreening.Count > 0 then
+                    let messages = ResizeArray<string>()
+                    if invalidStatus.Count > 0 then
+                        messages.Add("Tidak dapat approve karena status Psikotest atau Interview tidak lulus atau belum diproses")
+                    this.BadRequest(box {| error = String.Join(" | ", messages) |}) :> IActionResult
+                else
+                    for (sid, hasilInterview, hasilPsikotes, statusVerif) in rows do
                         let mutable newVerif = statusVerif
                         if String.Equals(hasilInterview, "Tidak Lulus", StringComparison.OrdinalIgnoreCase) || String.Equals(hasilPsikotes, "Tidak Lulus", StringComparison.OrdinalIgnoreCase) then
                             newVerif <- "Tidak Lulus"
@@ -711,22 +724,35 @@ type ScreeningController (db: IDbConnection) =
                         let existsCmd = new Microsoft.Data.SqlClient.SqlCommand("SELECT COUNT(1) FROM WISECON_PSIKOTEST.dbo.REC_ScreeningStatus WHERE JobVacancySubmittedSeqNo=@id", conn)
                         existsCmd.Parameters.AddWithValue("@id", sid) |> ignore
                         let count = Convert.ToInt32(existsCmd.ExecuteScalar())
+                        let isLulus = String.Equals(newVerif, "Lulus", StringComparison.OrdinalIgnoreCase)
                         if count > 0 then
-                            use upd = new Microsoft.Data.SqlClient.SqlCommand("UPDATE WISECON_PSIKOTEST.dbo.REC_ScreeningStatus SET StatusVerif=@v, UserVerif=@u, TimeEdit=GETDATE() WHERE JobVacancySubmittedSeqNo=@id", conn)
-                            upd.Parameters.AddWithValue("@v", (if isNull newVerif then "" else newVerif)) |> ignore
-                            upd.Parameters.AddWithValue("@u", user) |> ignore
-                            upd.Parameters.AddWithValue("@id", sid) |> ignore
-                            upd.ExecuteNonQuery() |> ignore
+                            if isLulus then
+                                use upd = new Microsoft.Data.SqlClient.SqlCommand("UPDATE WISECON_PSIKOTEST.dbo.REC_ScreeningStatus SET StatusVerif=@v, StatusScreening=@s, UserVerif=@u, UserEdit=@u, TimeEdit=GETDATE() WHERE JobVacancySubmittedSeqNo=@id", conn)
+                                upd.Parameters.AddWithValue("@v", (if isNull newVerif then "" else newVerif)) |> ignore
+                                upd.Parameters.AddWithValue("@s", "Lulus") |> ignore
+                                upd.Parameters.AddWithValue("@u", user) |> ignore
+                                upd.Parameters.AddWithValue("@id", sid) |> ignore
+                                upd.ExecuteNonQuery() |> ignore
+                            else
+                                use upd = new Microsoft.Data.SqlClient.SqlCommand("UPDATE WISECON_PSIKOTEST.dbo.REC_ScreeningStatus SET StatusVerif=@v, UserVerif=@u, UserEdit=@u, TimeEdit=GETDATE() WHERE JobVacancySubmittedSeqNo=@id", conn)
+                                upd.Parameters.AddWithValue("@v", (if isNull newVerif then "" else newVerif)) |> ignore
+                                upd.Parameters.AddWithValue("@u", user) |> ignore
+                                upd.Parameters.AddWithValue("@id", sid) |> ignore
+                                upd.ExecuteNonQuery() |> ignore
                         else
-                            use ins = new Microsoft.Data.SqlClient.SqlCommand("INSERT INTO WISECON_PSIKOTEST.dbo.REC_ScreeningStatus (JobVacancySubmittedSeqNo, StatusVerif, UserVerif, UserInput, TimeInput, UserEdit, TimeEdit) VALUES (@id, @v, @u, @u, GETDATE(), @u, GETDATE())", conn)
-                            ins.Parameters.AddWithValue("@id", sid) |> ignore
-                            ins.Parameters.AddWithValue("@v", (if isNull newVerif then "" else newVerif)) |> ignore
-                            ins.Parameters.AddWithValue("@u", user) |> ignore
-                            ins.ExecuteNonQuery() |> ignore
-                let msg =
-                    if warn.Count > 0 then
-                        "Status screening belum diproses untuk kode biodata: " + String.Join(", ", warn)
-                    else ""
-                this.Ok(box {| ok = true; message = msg |})
+                            if isLulus then
+                                use ins = new Microsoft.Data.SqlClient.SqlCommand("INSERT INTO WISECON_PSIKOTEST.dbo.REC_ScreeningStatus (JobVacancySubmittedSeqNo, StatusVerif, StatusScreening, UserVerif, UserInput, TimeInput, UserEdit, TimeEdit) VALUES (@id, @v, @s, @u, @u, GETDATE(), @u, GETDATE())", conn)
+                                ins.Parameters.AddWithValue("@id", sid) |> ignore
+                                ins.Parameters.AddWithValue("@v", (if isNull newVerif then "" else newVerif)) |> ignore
+                                ins.Parameters.AddWithValue("@s", "Lulus") |> ignore
+                                ins.Parameters.AddWithValue("@u", user) |> ignore
+                                ins.ExecuteNonQuery() |> ignore
+                            else
+                                use ins = new Microsoft.Data.SqlClient.SqlCommand("INSERT INTO WISECON_PSIKOTEST.dbo.REC_ScreeningStatus (JobVacancySubmittedSeqNo, StatusVerif, UserVerif, UserInput, TimeInput, UserEdit, TimeEdit) VALUES (@id, @v, @u, @u, GETDATE(), @u, GETDATE())", conn)
+                                ins.Parameters.AddWithValue("@id", sid) |> ignore
+                                ins.Parameters.AddWithValue("@v", (if isNull newVerif then "" else newVerif)) |> ignore
+                                ins.Parameters.AddWithValue("@u", user) |> ignore
+                                ins.ExecuteNonQuery() |> ignore
+                    this.Ok(box {| ok = true; message = "" |})
             finally
                 conn.Close()

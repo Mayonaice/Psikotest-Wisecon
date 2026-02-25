@@ -108,6 +108,29 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
 
         baseUrl + urlPathBase + "/TRX_Ujian?Token=" + tokenParam
 
+    let updateScreeningStatusByNoPeserta (conn: Microsoft.Data.SqlClient.SqlConnection) (noPeserta: int64) (status: string) (user: string) =
+        if not (String.IsNullOrWhiteSpace(status)) then
+            use cmdId = new Microsoft.Data.SqlClient.SqlCommand("SELECT TOP 1 ID FROM WISECON_PSIKOTEST.dbo.MS_Peserta WHERE NoPeserta=@np ORDER BY TimeInput DESC", conn)
+            cmdId.Parameters.AddWithValue("@np", noPeserta) |> ignore
+            let idObj = cmdId.ExecuteScalar()
+            if not (isNull idObj) then
+                let sid = Convert.ToInt32(idObj)
+                use countCmd = new Microsoft.Data.SqlClient.SqlCommand("SELECT COUNT(1) FROM WISECON_PSIKOTEST.dbo.REC_ScreeningStatus WHERE JobVacancySubmittedSeqNo=@id", conn)
+                countCmd.Parameters.AddWithValue("@id", sid) |> ignore
+                let count = Convert.ToInt32(countCmd.ExecuteScalar())
+                if count > 0 then
+                    use upd = new Microsoft.Data.SqlClient.SqlCommand("UPDATE WISECON_PSIKOTEST.dbo.REC_ScreeningStatus SET StatusScreening=@s, UserEdit=@u, TimeEdit=GETDATE() WHERE JobVacancySubmittedSeqNo=@id", conn)
+                    upd.Parameters.AddWithValue("@s", status) |> ignore
+                    upd.Parameters.AddWithValue("@u", (if isNull user then "" else user)) |> ignore
+                    upd.Parameters.AddWithValue("@id", sid) |> ignore
+                    upd.ExecuteNonQuery() |> ignore
+                else
+                    use ins = new Microsoft.Data.SqlClient.SqlCommand("INSERT INTO WISECON_PSIKOTEST.dbo.REC_ScreeningStatus (JobVacancySubmittedSeqNo, StatusScreening, UserInput, TimeInput, UserEdit, TimeEdit) VALUES (@id, @s, @u, GETDATE(), @u, GETDATE())", conn)
+                    ins.Parameters.AddWithValue("@id", sid) |> ignore
+                    ins.Parameters.AddWithValue("@s", status) |> ignore
+                    ins.Parameters.AddWithValue("@u", (if isNull user then "" else user)) |> ignore
+                    ins.ExecuteNonQuery() |> ignore
+
     [<Authorize>]
     [<HttpGet>]
     [<Route("Applicants/PaketSoal/List")>]
@@ -198,16 +221,35 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
         try
             try
                 let mutable whereClause = baseWhere
+                let hasilCase =
+                    "CASE " +
+                    "WHEN D.TimeInput IS NULL THEN '' " +
+                    "WHEN D.StartTest IS NULL THEN 'BELUM UJIAN' " +
+                    "WHEN ISNULL(HR.SumStandar,0) > 0 THEN CASE WHEN HR.SumHasil >= HR.SumStandar THEN 'LULUS' ELSE 'TIDAK LULUS' END " +
+                    "WHEN ISNULL(CR.SumStandar,0) > 0 THEN CASE WHEN CR.SumHasil >= CR.SumStandar THEN 'LULUS' ELSE 'TIDAK LULUS' END " +
+                    "ELSE 'BELUM UJIAN' END"
                 match hasil with
                 | null -> ()
                 | h when String.IsNullOrWhiteSpace(h) -> ()
-                | h when String.Equals(h, "BELUM UJIAN", StringComparison.OrdinalIgnoreCase) -> whereClause <- whereClause + " AND P.LblRek='BELUM UJIAN' "
-                | h when String.Equals(h, "LULUS", StringComparison.OrdinalIgnoreCase) -> whereClause <- whereClause + " AND P.LblRek IN ('DISARANKAN','DIPERTIMBANGKAN') "
-                | h when String.Equals(h, "TIDAK LULUS", StringComparison.OrdinalIgnoreCase) -> whereClause <- whereClause + " AND P.LblRek='TIDAK DISARANKAN' "
-                | _ -> ()
+                | h -> whereClause <- whereClause + " AND (" + hasilCase + ") = @hasil "
+                       cmd.Parameters.AddWithValue("@hasil", h) |> ignore
 
-                cmd.CommandText <- "SELECT P.NoPeserta, P.NamaPeserta, P.Alamat, P.Email, P.LamarSebagai, P.NoKTP, P.LblRek, P.TimeInput, P.LastEducation " +
-                                   "FROM WISECON_PSIKOTEST.dbo.VW_MASTER_Peserta P" + whereClause + " ORDER BY P.TimeInput DESC"
+                cmd.CommandText <-
+                    "SELECT P.NoPeserta, P.NamaPeserta, P.Alamat, P.Email, P.LamarSebagai, P.NoKTP, P.LblRek, P.TimeInput, P.LastEducation, " +
+                    "D.TimeInput AS PsikotestTime, I.TimeInput AS InterviewTime, " +
+                    hasilCase + " AS HasilPsikotest " +
+                    "FROM WISECON_PSIKOTEST.dbo.VW_MASTER_Peserta P " +
+                    "OUTER APPLY (SELECT TOP 1 NoPeserta, UserId, NoPaket, TimeInput, StartTest FROM WISECON_PSIKOTEST.dbo.MS_PesertaDtl d WHERE d.NoPeserta = P.NoPeserta ORDER BY d.TimeInput DESC) D " +
+                    "OUTER APPLY (SELECT TOP 1 TimeInput FROM WISECON_PSIKOTEST.dbo.MS_PesertaInterview i WHERE i.NoPeserta = P.NoPeserta ORDER BY i.TimeInput DESC) I " +
+                    "OUTER APPLY (SELECT SUM(ISNULL(R.NilaiGroupResult,0)) AS SumHasil, SUM(ISNULL(G.NilaiStandar,0)) AS SumStandar " +
+                    "FROM WISECON_PSIKOTEST.dbo.TR_PsikotestResultHistory R " +
+                    "LEFT JOIN WISECON_PSIKOTEST.dbo.MS_PaketSoalGroup G ON G.NoPaket=R.NoPaket AND G.NoGroup = TRY_CONVERT(int, R.GroupSoal) " +
+                    "WHERE (R.NoPeserta=D.NoPeserta OR R.UserId=D.UserId) AND CONVERT(VARCHAR(19), R.AttemptTime, 120)=CONVERT(VARCHAR(19), D.TimeInput, 120)) HR " +
+                    "OUTER APPLY (SELECT SUM(ISNULL(R.NilaiGroupResult,0)) AS SumHasil, SUM(ISNULL(G.NilaiStandar,0)) AS SumStandar " +
+                    "FROM WISECON_PSIKOTEST.dbo.TR_PsikotestResult R " +
+                    "LEFT JOIN WISECON_PSIKOTEST.dbo.MS_PaketSoalGroup G ON G.NoPaket=D.NoPaket AND G.NoGroup = TRY_CONVERT(int, R.GroupSoal) " +
+                    "WHERE (R.NoPeserta=D.NoPeserta OR R.UserId=D.UserId)) CR " +
+                    whereClause + " ORDER BY P.TimeInput DESC"
                 use rdr = cmd.ExecuteReader()
                 let rows = ResizeArray<obj>()
                 let mutable i = 0
@@ -222,6 +264,9 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
                     let lblRek = if rdr.IsDBNull(6) then "" else rdr.GetString(6)
                     let time = if rdr.IsDBNull(7) then Nullable() else Nullable(rdr.GetDateTime(7))
                     let pendidikan = if rdr.IsDBNull(8) then "" else rdr.GetString(8)
+                    let psikoTime = if rdr.IsDBNull(9) then Nullable() else Nullable(rdr.GetDateTime(9))
+                    let interviewTime = if rdr.IsDBNull(10) then Nullable() else Nullable(rdr.GetDateTime(10))
+                    let psikoHasil = if rdr.IsDBNull(11) then "" else rdr.GetString(11)
                     let hasil =
                         match lblRek with
                         | null -> ""
@@ -230,14 +275,21 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
                         | s when String.Equals(s, "DIPERTIMBANGKAN", StringComparison.OrdinalIgnoreCase) -> "LULUS"
                         | s when String.Equals(s, "TIDAK DISARANKAN", StringComparison.OrdinalIgnoreCase) -> "TIDAK LULUS"
                         | s -> s
-                    rows.Add(box {| num = i; nomor = nomor; nama = nama; alamat = alamat; email = email; pendidikan = pendidikan; posisi = posisi; ktp = ktp; hasil = hasil; time = time |})
+                    let finalHasil = if String.IsNullOrWhiteSpace(psikoHasil) then hasil else psikoHasil
+                    rows.Add(box {| num = i; nomor = nomor; nama = nama; alamat = alamat; email = email; pendidikan = pendidikan; posisi = posisi; ktp = ktp; hasil = finalHasil; time = time; psikoTime = psikoTime; interviewTime = interviewTime; psikoHasil = psikoHasil |})
                 this.Ok(rows)
             with _ ->
                 if (not (isNull hasil)) && (not (String.IsNullOrWhiteSpace(hasil))) && (not (String.Equals(hasil, "BELUM UJIAN", StringComparison.OrdinalIgnoreCase))) then
                     this.Ok(Array.empty<obj>)
                 else
-                    cmd.CommandText <- "SELECT P.NoPeserta, P.NamaPeserta, P.Alamat, P.Email, P.LamarSebagai, P.NoKTP, P.TimeInput, P.PendidikanTerakhir " +
-                                       "FROM WISECON_PSIKOTEST.dbo.MS_Peserta P" + baseWhere + " ORDER BY P.TimeInput DESC"
+                    cmd.CommandText <-
+                        "SELECT P.NoPeserta, P.NamaPeserta, P.Alamat, P.Email, P.LamarSebagai, P.NoKTP, P.TimeInput, P.PendidikanTerakhir, " +
+                        "D.TimeInput AS PsikotestTime, I.TimeInput AS InterviewTime, " +
+                        "CASE WHEN D.TimeInput IS NULL THEN 'BELUM UJIAN' ELSE CASE WHEN D.StartTest IS NULL THEN 'BELUM UJIAN' ELSE 'BELUM UJIAN' END END AS HasilPsikotest " +
+                        "FROM WISECON_PSIKOTEST.dbo.MS_Peserta P " +
+                        "OUTER APPLY (SELECT TOP 1 NoPeserta, UserId, NoPaket, TimeInput, StartTest FROM WISECON_PSIKOTEST.dbo.MS_PesertaDtl d WHERE d.NoPeserta = P.NoPeserta ORDER BY d.TimeInput DESC) D " +
+                        "OUTER APPLY (SELECT TOP 1 TimeInput FROM WISECON_PSIKOTEST.dbo.MS_PesertaInterview i WHERE i.NoPeserta = P.NoPeserta ORDER BY i.TimeInput DESC) I " +
+                        baseWhere + " ORDER BY P.TimeInput DESC"
                     use rdr = cmd.ExecuteReader()
                     let rows = ResizeArray<obj>()
                     let mutable i = 0
@@ -251,8 +303,38 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
                         let ktp = if rdr.IsDBNull(5) then "" else rdr.GetString(5)
                         let time = if rdr.IsDBNull(6) then Nullable() else Nullable(rdr.GetDateTime(6))
                         let pendidikan = if rdr.IsDBNull(7) then "" else rdr.GetString(7)
-                        rows.Add(box {| num = i; nomor = nomor; nama = nama; alamat = alamat; email = email; pendidikan = pendidikan; posisi = posisi; ktp = ktp; hasil = "BELUM UJIAN"; time = time |})
+                        let psikoTime = if rdr.IsDBNull(8) then Nullable() else Nullable(rdr.GetDateTime(8))
+                        let interviewTime = if rdr.IsDBNull(9) then Nullable() else Nullable(rdr.GetDateTime(9))
+                        let psikoHasil = if rdr.IsDBNull(10) then "" else rdr.GetString(10)
+                        rows.Add(box {| num = i; nomor = nomor; nama = nama; alamat = alamat; email = email; pendidikan = pendidikan; posisi = posisi; ktp = ktp; hasil = psikoHasil; time = time; psikoTime = psikoTime; interviewTime = interviewTime; psikoHasil = psikoHasil |})
                     this.Ok(rows)
+        finally
+            conn.Close()
+
+    [<Authorize>]
+    [<HttpGet>]
+    [<Route("Applicants/Screening/CheckStatus")>]
+    member this.CheckScreeningStatus([<FromQuery>] ids: string) : IActionResult =
+        let conn = db :?> Microsoft.Data.SqlClient.SqlConnection
+        use cmd = new Microsoft.Data.SqlClient.SqlCommand()
+        cmd.Connection <- conn
+        cmd.CommandType <- CommandType.Text
+        let idsValue = if isNull ids then "" else ids
+        cmd.CommandText <-
+            "SELECT x.NoPeserta, ISNULL(s.StatusScreening,'') AS StatusScreening " +
+            "FROM (SELECT DISTINCT TRY_CONVERT(bigint, value) AS NoPeserta FROM STRING_SPLIT(@ids, ',') WHERE TRY_CONVERT(bigint, value) IS NOT NULL) x " +
+            "OUTER APPLY (SELECT TOP 1 ID, NoPeserta FROM WISECON_PSIKOTEST.dbo.MS_Peserta p WHERE p.NoPeserta=x.NoPeserta ORDER BY p.TimeInput DESC) p " +
+            "LEFT JOIN WISECON_PSIKOTEST.dbo.REC_ScreeningStatus s ON s.JobVacancySubmittedSeqNo = p.ID"
+        cmd.Parameters.AddWithValue("@ids", idsValue) |> ignore
+        conn.Open()
+        try
+            use rdr = cmd.ExecuteReader()
+            let rows = ResizeArray<obj>()
+            while rdr.Read() do
+                let noPeserta = if rdr.IsDBNull(0) then "" else Convert.ToString(rdr.GetValue(0))
+                let statusScreening = if rdr.IsDBNull(1) then "" else rdr.GetString(1)
+                rows.Add(box {| noPeserta = noPeserta; statusScreening = statusScreening |})
+            this.Ok(rows)
         finally
             conn.Close()
 
@@ -283,11 +365,24 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
         | s when String.Equals(s, "Selesai Ujian", StringComparison.OrdinalIgnoreCase) ->
             whereClause <- whereClause + " AND A.StartTest IS NOT NULL AND A.TimeEdit IS NOT NULL "
         | _ -> ()
+        let hasilCase =
+            "CASE " +
+            "WHEN A.StartTest IS NULL THEN 'BELUM UJIAN' " +
+            "WHEN ISNULL(HR.SumStandar,0) > 0 THEN CASE WHEN HR.SumHasil >= HR.SumStandar THEN 'LULUS' ELSE 'TIDAK LULUS' END " +
+            "WHEN ISNULL(CR.SumStandar,0) > 0 THEN CASE WHEN CR.SumHasil >= CR.SumStandar THEN 'LULUS' ELSE 'TIDAK LULUS' END " +
+            "ELSE 'BELUM UJIAN' END"
         match hasil with
         | null -> ()
         | s when String.IsNullOrWhiteSpace(s) -> ()
         | s when String.Equals(s, "BELUM UJIAN", StringComparison.OrdinalIgnoreCase) ->
-            whereClause <- whereClause + " AND A.StartTest IS NULL "
+            whereClause <- whereClause + " AND (" + hasilCase + ") = @hasil "
+            cmd.Parameters.AddWithValue("@hasil", "BELUM UJIAN") |> ignore
+        | s when String.Equals(s, "LULUS", StringComparison.OrdinalIgnoreCase) ->
+            whereClause <- whereClause + " AND (" + hasilCase + ") = @hasil "
+            cmd.Parameters.AddWithValue("@hasil", "LULUS") |> ignore
+        | s when String.Equals(s, "TIDAK LULUS", StringComparison.OrdinalIgnoreCase) ->
+            whereClause <- whereClause + " AND (" + hasilCase + ") = @hasil "
+            cmd.Parameters.AddWithValue("@hasil", "TIDAK LULUS") |> ignore
         | _ -> ()
 
         match noPeserta with
@@ -308,7 +403,7 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
             "WHEN A.StartTest IS NULL THEN 'Belum Ujian' " +
             "WHEN A.TimeEdit IS NULL THEN 'Sedang Ujian' " +
             "ELSE 'Selesai Ujian' END AS StatusPengerjaan, " +
-            "ISNULL(P.LblRek,'') AS LblRek, " +
+            hasilCase + " AS HasilPsikotest, " +
             "ISNULL(PS.NamaPaket,'') AS NamaPaket, " +
             "A.Url, " +
             "A.WaktuTest, " +
@@ -323,6 +418,14 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
             "FROM WISECON_PSIKOTEST.dbo.VW_MASTER_PesertaDtl A " +
             "LEFT JOIN WISECON_PSIKOTEST.dbo.VW_MASTER_Peserta P ON P.NoPeserta=A.NoPeserta " +
             "LEFT JOIN WISECON_PSIKOTEST.dbo.MS_PaketSoal PS ON PS.NoPaket=A.NoPaket " +
+            "OUTER APPLY (SELECT SUM(ISNULL(R.NilaiGroupResult,0)) AS SumHasil, SUM(ISNULL(ISNULL(R.NilaiStandard, G.NilaiStandar),0)) AS SumStandar " +
+            "FROM WISECON_PSIKOTEST.dbo.TR_PsikotestResultHistory R " +
+            "LEFT JOIN WISECON_PSIKOTEST.dbo.MS_PaketSoalGroup G ON G.NoPaket=R.NoPaket AND G.NoGroup = TRY_CONVERT(int, R.GroupSoal) " +
+            "WHERE (R.NoPeserta=A.NoPeserta OR R.UserId=A.UserId) AND CONVERT(VARCHAR(19), R.AttemptTime, 120)=CONVERT(VARCHAR(19), A.TimeInput, 120)) HR " +
+            "OUTER APPLY (SELECT SUM(ISNULL(R.NilaiGroupResult,0)) AS SumHasil, SUM(ISNULL(ISNULL(R.NilaiStandard, G.NilaiStandar),0)) AS SumStandar " +
+            "FROM WISECON_PSIKOTEST.dbo.TR_PsikotestResult R " +
+            "LEFT JOIN WISECON_PSIKOTEST.dbo.MS_PaketSoalGroup G ON G.NoPaket=A.NoPaket AND G.NoGroup = TRY_CONVERT(int, R.GroupSoal) " +
+            "WHERE (R.NoPeserta=A.NoPeserta OR R.UserId=A.UserId)) CR " +
             "OUTER APPLY (SELECT TOP 1 TimeInput FROM WISECON_PSIKOTEST.dbo.Trx_SendMessageWhatsApp WHERE idclient = P.NoHP ORDER BY Id DESC) WA " +
             whereClause + " ORDER BY A.TimeInput DESC"
         conn.Open()
@@ -338,7 +441,7 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
                 let userId = if rdr.IsDBNull(3) then "" else rdr.GetString(3)
                 let undangKe = if rdr.IsDBNull(4) then 0 else Convert.ToInt32(rdr.GetValue(4))
                 let status = if rdr.IsDBNull(5) then "" else rdr.GetString(5)
-                let lblRek = if rdr.IsDBNull(6) then "" else rdr.GetString(6)
+                let hasil = if rdr.IsDBNull(6) then "" else rdr.GetString(6)
                 let paket = if rdr.IsDBNull(7) then "" else rdr.GetString(7)
                 let link = if rdr.IsDBNull(8) then "" else rdr.GetString(8)
                 let waktuTest = if rdr.IsDBNull(9) then Nullable() else Nullable(rdr.GetDateTime(9))
@@ -359,14 +462,6 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
                 let timeInput = if rdr.IsDBNull(15) then Nullable() else Nullable(rdr.GetDateTime(15))
                 let userEdit = if rdr.IsDBNull(16) then "" else rdr.GetString(16)
                 let timeEdit = if rdr.IsDBNull(17) then Nullable() else Nullable(rdr.GetDateTime(17))
-                let hasil =
-                    match lblRek with
-                    | null -> ""
-                    | s when String.IsNullOrWhiteSpace(s) -> ""
-                    | s when String.Equals(s, "DISARANKAN", StringComparison.OrdinalIgnoreCase) -> "LULUS"
-                    | s when String.Equals(s, "DIPERTIMBANGKAN", StringComparison.OrdinalIgnoreCase) -> "LULUS"
-                    | s when String.Equals(s, "TIDAK DISARANKAN", StringComparison.OrdinalIgnoreCase) -> "TIDAK LULUS"
-                    | s -> s
                 rows.Add(box {| num = i; batch = batch; nomor = nomor; nama = nama; userId = userId; undangKe = undangKe; status = status; hasil = hasil; link = link; paket = paket; waktuTest = waktuTest; waktuMulai = waktuMulai; statusPesan = statusPesan; kirim = kirim; baca = baca; userInput = userInput; timeInput = timeInput; userEdit = userEdit; timeEdit = timeEdit |})
             this.Ok(rows)
         finally
@@ -988,6 +1083,7 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
             cmdMsg.CommandText <- "dbo.Insert_MessageWhatsapp_Psikotest"
             cmdMsg.Parameters.AddWithValue("@NoPeserta", req.NoPeserta) |> ignore
             cmdMsg.ExecuteNonQuery() |> ignore
+            updateScreeningStatusByNoPeserta conn req.NoPeserta "Psikotest Proses" req.User
             this.Ok()
         finally
             conn.Close()
@@ -1066,6 +1162,7 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
                     cmdMsg.CommandText <- "dbo.Insert_MessageWhatsapp_Psikotest"
                     cmdMsg.Parameters.AddWithValue("@NoPeserta", noPeserta) |> ignore
                     cmdMsg.ExecuteNonQuery() |> ignore
+                    updateScreeningStatusByNoPeserta conn noPeserta "Psikotest Proses" user
                 this.Ok()
             finally
                 conn.Close()
@@ -1143,6 +1240,7 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
             cmdMsg.CommandText <- "dbo.Insert_MessageWhatsapp_Interview"
             cmdMsg.Parameters.AddWithValue("@NoPeserta", req.NoPeserta) |> ignore
             cmdMsg.ExecuteNonQuery() |> ignore
+            updateScreeningStatusByNoPeserta conn req.NoPeserta "Interview Proses" req.User
             this.Ok()
         finally
             conn.Close()
@@ -1182,6 +1280,7 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
                 cmdMsg.CommandText <- "dbo.Insert_MessageWhatsapp_Interview"
                 cmdMsg.Parameters.AddWithValue("@NoPeserta", noPeserta) |> ignore
                 cmdMsg.ExecuteNonQuery() |> ignore
+                updateScreeningStatusByNoPeserta conn noPeserta "Interview Proses" user
             this.Ok()
         finally
             conn.Close()

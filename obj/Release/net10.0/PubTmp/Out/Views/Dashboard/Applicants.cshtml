@@ -583,6 +583,9 @@
   .date-formatted{ position:relative; padding-right:2.25rem; }
   #invite-overlay .dct-header, #edit-overlay .dct-header{ border-bottom:1px solid #e5e7eb; padding-bottom:10px; }
   #invite-overlay .dct-actions, #edit-overlay .dct-actions{ border-top:1px solid #e5e7eb; padding-top:10px; }
+  #invite-overlay, #edit-overlay{ align-items:center; overflow-y:auto; padding:3vh 0; }
+  #invite-overlay .dct-modal, #edit-overlay .dct-modal{ display:flex; flex-direction:column; max-height:calc(100vh - 24px); }
+  #invite-overlay .dct-body, #edit-overlay .dct-body{ flex:1 1 auto; overflow-y:auto; }
   .date-formatted::before{ content: attr(data-display); position:absolute; left:.5rem; right:2.25rem; top:50%; transform:translateY(-50%); color:#111827; pointer-events:none; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .date-formatted::-webkit-datetime-edit{ color:transparent; }
   .date-formatted::-webkit-calendar-picker-indicator{ opacity:1; position:absolute; right:.5rem; top:50%; transform:translateY(-50%); margin:0; padding:0; cursor:pointer; }
@@ -608,9 +611,7 @@
   #invite-overlay .dct-btn, #edit-overlay .dct-btn{ display:inline-flex; align-items:center; gap:8px; white-space:nowrap; border:1px solid #d1d5db; background:#FFFFFF; }
   #invite-overlay .dct-btn img, #edit-overlay .dct-btn img{ width:18px; height:18px; display:inline-block; }
   #invite-overlay .dct-btn:hover, #edit-overlay .dct-btn:hover{ background:#F9FAFB; }
-  #edit-overlay .dct-modal{ max-height:90vh; display:flex; flex-direction:column; }
   #edit-overlay .dct-header, #edit-overlay .dct-actions{ flex:0 0 auto; }
-  #edit-overlay .dct-body{ flex:1 1 auto; overflow-y:auto; }
   </style>
 
 <script>
@@ -676,6 +677,39 @@
       });
       return Object.keys(set);
     }
+    function getPesertaById(id){
+      var key = ''+id;
+      for(var i=0;i<rawData.length;i++){
+        var r = rawData[i];
+        var nomor = r && r.nomor!=null ? (''+r.nomor) : '';
+        if(nomor === key) return r;
+      }
+      return null;
+    }
+    function canInviteInterviewForRow(r){
+      if(!r) return false;
+      var psikoTime = parseDateValue(r.psikoTime);
+      if(!psikoTime || isNaN(psikoTime.getTime())) return false;
+      var interviewTime = parseDateValue(r.interviewTime);
+      var psikoHasil = (r.psikoHasil || r.hasil || '').toString().trim().toUpperCase();
+      var hasResult = psikoHasil && psikoHasil !== 'BELUM UJIAN';
+      if(interviewTime && !isNaN(interviewTime.getTime())){
+        if(interviewTime >= psikoTime) return true;
+      }
+      return !!hasResult;
+    }
+    function updateInviteInterviewAvailability(){
+      var interviewRadio = document.querySelector('input[name="inviteType"][value="interview"]');
+      if(!interviewRadio) return;
+      var ids = inviteState.ids || [];
+      var invalid = ids.some(function(id){ return !canInviteInterviewForRow(getPesertaById(id)); });
+      interviewRadio.disabled = invalid;
+      if(invalid && interviewRadio.checked){
+        inviteState.type = 'psikotest';
+        document.querySelectorAll('input[name="inviteType"]').forEach(function(r){ r.checked = (r.value === inviteState.type); });
+        applyInviteType('psikotest');
+      }
+    }
     function openInvite(ids, type){
       inviteState.ids = (ids || []).map(function(x){ return ''+x; }).filter(function(x){ return x; });
       inviteState.type = type || inviteState.type || 'psikotest';
@@ -687,6 +721,7 @@
       }
       var radios = document.querySelectorAll('input[name="inviteType"]');
       radios.forEach(function(r){ r.checked = (r.value === inviteState.type); });
+      updateInviteInterviewAvailability();
       ensurePaketSoal(inviteState.posisi);
       ensureBatchList();
       if(inviteOverlay){ inviteOverlay.style.display = 'flex'; inviteOverlay.classList.remove('dct-hidden'); inviteOverlay.setAttribute('aria-hidden','false'); }
@@ -798,8 +833,21 @@
         });
     }
 
-    function saveInvite(){
-      var ids = inviteState.ids.map(function(x){ return parseInt(x,10); }).filter(function(x){ return !isNaN(x); });
+    function checkScreeningLulus(ids){
+      if(!ids || ids.length === 0) return Promise.resolve(false);
+      var url = '@Url.Content("~/Applicants/Screening/CheckStatus")' + '?ids=' + encodeURIComponent(ids.join(','));
+      return fetch(url, { method:'GET', credentials:'same-origin' })
+        .then(function(r){ return r.ok ? r.json() : []; })
+        .then(function(rows){
+          return (rows||[]).some(function(x){
+            var s = (x && (x.statusScreening || x.status || '') || '').toString().trim().toUpperCase();
+            return s === 'LULUS';
+          });
+        })
+        .catch(function(){ return false; });
+    }
+
+    function doSaveInvite(ids){
       if(ids.length === 0){ showError('Pilih minimal 1 peserta'); return; }
 
       updateBatchVisibility();
@@ -809,6 +857,11 @@
       var time = inviteTime ? (inviteTime.value||'') : '';
       if(!time){ showError('Waktu wajib diisi'); return; }
       var waktuIso = date + 'T' + time + ':00';
+
+      if(inviteState.type === 'interview'){
+        var invalidInterview = inviteState.ids.some(function(id){ return !canInviteInterviewForRow(getPesertaById(id)); });
+        if(invalidInterview){ showError('Peserta belum memiliki data psikotest lengkap'); return; }
+      }
 
       if(inviteState.type === 'psikotest'){
         var batch = (inviteBatchType && inviteBatchType.value === '1') ? (inviteBatch ? (inviteBatch.value||'').trim() : '') : '';
@@ -857,6 +910,15 @@
           applyFilters();
         }).catch(function(){ showError('Gagal menyimpan undangan Interview'); });
       }
+    }
+
+    function saveInvite(){
+      var ids = inviteState.ids.map(function(x){ return parseInt(x,10); }).filter(function(x){ return !isNaN(x); });
+      if(ids.length === 0){ showError('Pilih minimal 1 peserta'); return; }
+      checkScreeningLulus(ids).then(function(isLulus){
+        if(isLulus){ ModalAlert('Peserta yang sudah lulus screening tidak dapat di undang kembali'); return; }
+        doSaveInvite(ids);
+      });
     }
 
     function updatePositions(){ var positions = Array.from(new Set(rawData.map(function(d){ return d.posisi; }))).filter(function(x){ return x; }); ddPosisi.innerHTML = '<option value="">Semua Posisi</option>'; positions.forEach(function(p){ var opt = document.createElement('option'); opt.value = p; opt.textContent = p; ddPosisi.appendChild(opt); }); }
@@ -1122,7 +1184,10 @@
           var tr = btn.closest('tr');
           var id = tr ? (tr.dataset.nopeserta||'') : '';
           if(!id){ showError('Nomor peserta tidak ditemukan'); return; }
+        checkScreeningLulus([id]).then(function(isLulus){
+          if(isLulus){ ModalAlert('Peserta yang sudah lulus screening tidak dapat di undang kembali'); return; }
           openInvite([id], 'psikotest');
+        });
         });
       });
     }
@@ -1158,7 +1223,10 @@
     document.getElementById('btnBulkInvite').addEventListener('click', function(){
       var ids = Array.from(selectedPesertaIds.values());
       if(ids.length === 0){ ModalAlert('Ceklis data pelamar yang ingin diundang'); return; }
-      openInvite(ids, 'psikotest');
+      checkScreeningLulus(ids).then(function(isLulus){
+        if(isLulus){ ModalAlert('Peserta yang sudah lulus screening tidak dapat di undang kembali'); return; }
+        openInvite(ids, 'psikotest');
+      });
     });
     // Selection handled via select-square click, no default checkbox
     window.addEventListener('applicants:select', function(e){
@@ -1292,7 +1360,7 @@
       }
       return null;
     }
-    function fmtDateTime(d){ var m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; var dd=(''+('0'+d.getDate()).slice(-2)); var mm=m[d.getMonth()]; var yy=d.getFullYear(); var hh=('0'+d.getHours()).slice(-2); var mi=('0'+d.getMinutes()).slice(-2); return dd+' '+mm+' '+yy+' '+hh+':'+mi; }
+    function fmtDateTime(d){ var m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; var dd=(''+('0'+d.getDate()).slice(-2)); var mm=m[d.getMonth()]; var yy=d.getFullYear(); var hh=('0'+d.getHours()).slice(-2); var mi=('0'+d.getMinutes()).slice(-2); if(d.getHours()===0 && d.getMinutes()===0) return dd+' '+mm+' '+yy; return dd+' '+mm+' '+yy+' '+hh+':'+mi; }
     function within(d, s, e){ var ds=new Date(s+"T00:00:00"); var de=new Date(e+"T23:59:59"); return d>=ds && d<=de; }
     function fmtDateOnly(d){ var m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; var dd=('0'+d.getDate()).slice(-2); var mm=m[d.getMonth()]; var yy=d.getFullYear(); return dd+' '+mm+' '+yy; }
     function enhanceDateInput(input){ var iso=input.value; input.classList.add('date-formatted'); var d = iso ? new Date(iso) : null; input.dataset.display = d ? fmtDateOnly(d) : ''; input.addEventListener('change', function(){ var iso2 = input.value; var d2 = iso2 ? new Date(iso2) : null; input.dataset.display = d2 ? fmtDateOnly(d2) : ''; }); }
@@ -1368,11 +1436,19 @@
     }
 
     function normaLabel(result, standard){
-      return (result || 0) >= (standard || 0) ? 'Cukup' : 'Rendah';
+      var r = result || 0;
+      var s = standard || 0;
+      if(r > s) return 'Tinggi';
+      if(r === s) return 'Cukup';
+      return 'Rendah';
     }
 
     function normaClass(result, standard){
-      return (result || 0) >= (standard || 0) ? 'bg-amber-400' : 'bg-red-500';
+      var r = result || 0;
+      var s = standard || 0;
+      if(r > s) return 'bg-green-500';
+      if(r === s) return 'bg-amber-400';
+      return 'bg-red-500';
     }
 
     function renderViewCards(rows){

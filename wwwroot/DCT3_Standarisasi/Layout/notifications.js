@@ -18,6 +18,17 @@
     const message = (opts && opts.message) || '';
     if (opts && opts.html) { msgEl.innerHTML = message; } else { msgEl.textContent = message; }
     overlay.style.display = 'flex';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.style.overflowY = 'auto';
+    overlay.style.padding = '3vh 0';
+    const modal = overlay.querySelector('.dct-modal');
+    if (modal) {
+      modal.style.position = 'absolute';
+      modal.style.top = '50%';
+      modal.style.left = '50%';
+      modal.style.transform = 'translate(-50%, -50%)';
+    }
     // Optional title override
     const titleEl = overlay.querySelector('.dct-title');
     if (titleEl && opts && typeof opts.title === 'string') {
