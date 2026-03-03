@@ -14,6 +14,7 @@
     <title>Ujian Psikotest</title>
     <base href="@Url.Content("~/")">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="@Url.Content("~/DCT3_Standarisasi/Layout/notifications.css")" />
     <style>
         .nav-dot { width: 30px; height: 30px; border-radius: 9999px; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; }
         .nav-unanswered { background: #D1D5DB; color: #ffffff; }
@@ -101,6 +102,9 @@
         </div>
     </div>
 
+    @await Html.PartialAsync("_DCT3Notifications")
+
+    <script src="@Url.Content("~/DCT3_Standarisasi/Layout/notifications.js")"></script>
     <script>
         const token = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(token));
         const groups = @Html.Raw(questionsJson);
@@ -530,10 +534,35 @@
         }
         document.getElementById('finishBtn').addEventListener('click', function(){
             const isLastGroup = !(groups && groups.length) || state.groupIndex >= (groups.length - 1);
+            
             if(isLastGroup){
-                finish();
+                // Konfirmasi akhiri sesi
+                if(window.DCT3Modals && typeof DCT3Modals.open === 'function'){
+                    DCT3Modals.open('confirmation', {
+                        message: 'Yakin ingin mengakhiri sesi?',
+                        onYes: function(){
+                            finish();
+                        }
+                    });
+                } else {
+                    if(confirm('Yakin ingin mengakhiri sesi?')){
+                        finish();
+                    }
+                }
             }else{
-                moveToNextGroup();
+                // Konfirmasi pindah ke group berikutnya
+                if(window.DCT3Modals && typeof DCT3Modals.open === 'function'){
+                    DCT3Modals.open('confirmation', {
+                        message: 'Yakin ingin lanjut ke group soal berikutnya?',
+                        onYes: function(){
+                            moveToNextGroup();
+                        }
+                    });
+                } else {
+                    if(confirm('Yakin ingin lanjut ke group soal berikutnya?')){
+                        moveToNextGroup();
+                    }
+                }
             }
         });
         document.getElementById('prevQuestionBtn').addEventListener('click', function(){

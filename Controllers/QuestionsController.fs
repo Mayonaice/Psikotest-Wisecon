@@ -384,16 +384,111 @@ type QuestionsController (db: System.Data.IDbConnection) =
             let aktif = if isNull r then 0 else (try Convert.ToInt32(r) with _ -> 0)
             if aktif = 1 then this.BadRequest(box {| error = "Group tujuan aktif" |})
             else
-                use cmd = new Microsoft.Data.SqlClient.SqlCommand()
-                cmd.Connection <- conn
-                cmd.CommandText <- "WISECON_PSIKOTEST.dbo.SP_PaketSoalGroupDtl"
-                cmd.CommandType <- CommandType.StoredProcedure
-                cmd.Parameters.AddWithValue("@SeqNo", req.SeqNo) |> ignore
-                cmd.Parameters.AddWithValue("@NoGroupTujuan", req.DestNoGroup) |> ignore
-                cmd.Parameters.AddWithValue("@User", (if isNull req.User then "" else req.User)) |> ignore
-                cmd.Parameters.AddWithValue("@Act", "COPY") |> ignore
-                let _ = cmd.ExecuteNonQuery()
-                this.Ok()
+                // Get detail soal yang akan dicopy
+                use cmdGet = new Microsoft.Data.SqlClient.SqlCommand()
+                cmdGet.Connection <- conn
+                cmdGet.CommandText <- "SELECT NoPaket, NoGroup, NoUrut, Judul, Deskripsi, IsDownload, bAktif, MediaFileName, UrlMedia, TipeMedia FROM WISECON_PSIKOTEST.dbo.MS_PaketSoalGroupDtl WHERE SeqNo=@SeqNo"
+                cmdGet.CommandType <- CommandType.Text
+                cmdGet.Parameters.AddWithValue("@SeqNo", req.SeqNo) |> ignore
+                use rdr = cmdGet.ExecuteReader()
+                if rdr.Read() then
+                    let noPaket = if rdr.IsDBNull(0) then 0L else Convert.ToInt64(rdr.GetValue(0))
+                    let noGroupAsal = if rdr.IsDBNull(1) then 0L else Convert.ToInt64(rdr.GetValue(1))
+                    let noUrutAsal = if rdr.IsDBNull(2) then 0 else Convert.ToInt32(rdr.GetValue(2))
+                    let judul = if rdr.IsDBNull(3) then "" else rdr.GetString(3)
+                    let deskripsi = if rdr.IsDBNull(4) then "" else rdr.GetString(4)
+                    let isDownload = if rdr.IsDBNull(5) then 0 else Convert.ToInt32(rdr.GetValue(5))
+                    let bAktif = if rdr.IsDBNull(6) then 0 else Convert.ToInt32(rdr.GetValue(6))
+                    let mediaFileName = if rdr.IsDBNull(7) then "NOMEDIA" else rdr.GetString(7)
+                    let urlMedia = if rdr.IsDBNull(8) then "" else rdr.GetString(8)
+                    let tipeMedia = if rdr.IsDBNull(9) then "NOMEDIA" else rdr.GetString(9)
+                    rdr.Close()
+                    
+                    // Cari NoUrut maksimal di group tujuan untuk menghindari duplicate key
+                    use cmdMaxUrut = new Microsoft.Data.SqlClient.SqlCommand()
+                    cmdMaxUrut.Connection <- conn
+                    cmdMaxUrut.CommandText <- "SELECT ISNULL(MAX(NoUrut), 0) FROM WISECON_PSIKOTEST.dbo.MS_PaketSoalGroupDtl WHERE NoPaket=@NoPaket AND NoGroup=@NoGroup"
+                    cmdMaxUrut.CommandType <- CommandType.Text
+                    cmdMaxUrut.Parameters.AddWithValue("@NoPaket", noPaket) |> ignore
+                    cmdMaxUrut.Parameters.AddWithValue("@NoGroup", req.DestNoGroup) |> ignore
+                    let maxUrutObj = cmdMaxUrut.ExecuteScalar()
+                    let maxUrut = if isNull maxUrutObj then 0 else Convert.ToInt32(maxUrutObj)
+                    let noUrutBaru = maxUrut + 1
+                    
+                    // Insert ke group tujuan dengan SP
+                    use cmd = new Microsoft.Data.SqlClient.SqlCommand()
+                    cmd.Connection <- conn
+                    cmd.CommandText <- "WISECON_PSIKOTEST.dbo.SP_PaketSoalGroupDtl"
+                    cmd.CommandType <- CommandType.StoredProcedure
+                    cmd.Parameters.AddWithValue("@SeqNo", 0L) |> ignore
+                    cmd.Parameters.AddWithValue("@NoPaket", noPaket) |> ignore
+                    cmd.Parameters.AddWithValue("@NoGroup", req.DestNoGroup) |> ignore
+                    cmd.Parameters.AddWithValue("@NoUrut", noUrutBaru) |> ignore
+                    cmd.Parameters.AddWithValue("@Judul", judul) |> ignore
+                    cmd.Parameters.AddWithValue("@Deskripsi", deskripsi) |> ignore
+                    cmd.Parameters.AddWithValue("@IsDownload", isDownload) |> ignore
+                    cmd.Parameters.AddWithValue("@bAktif", bAktif) |> ignore
+                    cmd.Parameters.AddWithValue("@MediaFileName", mediaFileName) |> ignore
+                    cmd.Parameters.AddWithValue("@UrlMedia", urlMedia) |> ignore
+                    cmd.Parameters.AddWithValue("@TipeMedia", tipeMedia) |> ignore
+                    cmd.Parameters.AddWithValue("@User", (if isNull req.User then "" else req.User)) |> ignore
+                    cmd.Parameters.AddWithValue("@Act", "ADD") |> ignore
+                    use rdrInsert = cmd.ExecuteReader()
+                    let mutable newSeqNo = 0L
+                    if rdrInsert.Read() then
+                        try 
+                            newSeqNo <- if rdrInsert.IsDBNull(0) then 0L else Convert.ToInt64(rdrInsert.GetValue(0))
+                        with _ -> ()
+                    rdrInsert.Close()
+                    
+                    // Copy jawaban jika ada
+                    if newSeqNo > 0L then
+                        use cmdJawaban = new Microsoft.Data.SqlClient.SqlCommand()
+                        cmdJawaban.Connection <- conn
+                        cmdJawaban.CommandText <- "SELECT NoJawaban, Jawaban, NoJawabanBenar, MediaFileName, UrlMedia, TipeMedia FROM WISECON_PSIKOTEST.dbo.MS_PaketSoalGroupDtlJawaban WHERE NoPaket=@NoPaket AND NoGroup=@NoGroupAsal AND NoUrut=@NoUrutAsal ORDER BY NoJawaban"
+                        cmdJawaban.CommandType <- CommandType.Text
+                        cmdJawaban.Parameters.AddWithValue("@NoPaket", noPaket) |> ignore
+                        cmdJawaban.Parameters.AddWithValue("@NoGroupAsal", noGroupAsal) |> ignore
+                        cmdJawaban.Parameters.AddWithValue("@NoUrutAsal", noUrutAsal) |> ignore
+                        use rdrJawaban = cmdJawaban.ExecuteReader()
+                        let jawabans = ResizeArray<_>()
+                        while rdrJawaban.Read() do
+                            jawabans.Add((
+                                (if rdrJawaban.IsDBNull(0) then 0 else Convert.ToInt32(rdrJawaban.GetValue(0))),
+                                (if rdrJawaban.IsDBNull(1) then "" else rdrJawaban.GetString(1)),
+                                (if rdrJawaban.IsDBNull(2) then 0 else Convert.ToInt32(rdrJawaban.GetValue(2))),
+                                (if rdrJawaban.IsDBNull(3) then "NOMEDIA" else rdrJawaban.GetString(3)),
+                                (if rdrJawaban.IsDBNull(4) then "" else rdrJawaban.GetString(4)),
+                                (if rdrJawaban.IsDBNull(5) then "NOMEDIA" else rdrJawaban.GetString(5))
+                            ))
+                        rdrJawaban.Close()
+                        
+                        // Insert jawaban
+                        for (noJawaban, jawaban, poinJawaban, mediaFileName, urlMedia, tipeMedia) in jawabans do
+                            use cmdInsJawaban = new Microsoft.Data.SqlClient.SqlCommand()
+                            cmdInsJawaban.Connection <- conn
+                            cmdInsJawaban.CommandText <- "WISECON_PSIKOTEST.dbo.SP_PaketSoalGroupDtlJawaban"
+                            cmdInsJawaban.CommandType <- CommandType.StoredProcedure
+                            cmdInsJawaban.Parameters.AddWithValue("@SeqNo", 0L) |> ignore
+                            cmdInsJawaban.Parameters.AddWithValue("@NoPaket", noPaket) |> ignore
+                            cmdInsJawaban.Parameters.AddWithValue("@NoGroup", req.DestNoGroup) |> ignore
+                            cmdInsJawaban.Parameters.AddWithValue("@NoUrut", noUrutBaru) |> ignore
+                            cmdInsJawaban.Parameters.AddWithValue("@NoJawaban", noJawaban) |> ignore
+                            cmdInsJawaban.Parameters.AddWithValue("@Jawaban", jawaban) |> ignore
+                            cmdInsJawaban.Parameters.AddWithValue("@PoinJawaban", poinJawaban) |> ignore
+                            cmdInsJawaban.Parameters.AddWithValue("@MediaFileName", mediaFileName) |> ignore
+                            cmdInsJawaban.Parameters.AddWithValue("@UrlMedia", urlMedia) |> ignore
+                            cmdInsJawaban.Parameters.AddWithValue("@TipeMedia", tipeMedia) |> ignore
+                            cmdInsJawaban.Parameters.AddWithValue("@TextMedia", "") |> ignore
+                            cmdInsJawaban.Parameters.AddWithValue("@User", (if isNull req.User then "" else req.User)) |> ignore
+                            cmdInsJawaban.Parameters.AddWithValue("@Act", "ADD") |> ignore
+                            use rdrInsJawaban = cmdInsJawaban.ExecuteReader()
+                            rdrInsJawaban.Close()
+                    
+                    this.Ok()
+                else
+                    rdr.Close()
+                    this.BadRequest(box {| error = "Soal tidak ditemukan" |})
         finally
             conn.Close()
 
