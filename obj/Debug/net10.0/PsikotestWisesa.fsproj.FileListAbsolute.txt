@@ -1322,3 +1322,4 @@ c:\Users\vadod\source\repos\PsikotestWisesa\build_out\refs\System.Xml.XmlSeriali
 c:\Users\vadod\source\repos\PsikotestWisesa\build_out\refs\System.Xml.XPath.dll
 c:\Users\vadod\source\repos\PsikotestWisesa\build_out\refs\System.Xml.XPath.XDocument.dll
 c:\Users\vadod\source\repos\PsikotestWisesa\build_out\refs\WindowsBase.dll
+C:\Users\vadod\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt

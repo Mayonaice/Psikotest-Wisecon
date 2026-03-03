@@ -107,6 +107,28 @@
         const namaPaket = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(namaPaket));
 
         function pad2(n){ return String(n).padStart(2,'0'); }
+        function normalizeMediaUrl(url) {
+            if (!url) return '';
+            const urlStr = String(url).trim();
+            
+            // Jika sudah URL lengkap (http/https), return as is
+            if (urlStr.startsWith('http://') || urlStr.startsWith('https://')) {
+                return urlStr;
+            }
+            
+            // Jika path relatif yang dimulai dengan /, tambahkan base href
+            if (urlStr.startsWith('/')) {
+                const baseHref = document.querySelector('base')?.getAttribute('href') || '/';
+                // Hapus trailing slash dari baseHref dan leading slash dari urlStr
+                const cleanBase = baseHref.replace(/\/$/, '');
+                const cleanUrl = urlStr.replace(/^\//, '');
+                return cleanBase + '/' + cleanUrl;
+            }
+            
+            // Jika path relatif tanpa /, return as is
+            return urlStr;
+        }
+        
         function normalizeText(v){
             if(v==null) return '';
             var s = String(v);
@@ -331,7 +353,7 @@
                 const qTipe = q && q.tipeMedia ? String(q.tipeMedia).toUpperCase() : 'NOMEDIA';
                 if(qUrl && qTipe !== 'NOMEDIA'){
                     const img = document.createElement('img');
-                    img.src = qUrl;
+                    img.src = normalizeMediaUrl(qUrl);
                     img.alt = 'media';
                     img.className = 'max-h-64 rounded-md border border-gray-200';
                     soalMedia.appendChild(img);
@@ -370,7 +392,7 @@
                 const aTipe = a && a.tipeMedia ? String(a.tipeMedia).toUpperCase() : 'NOMEDIA';
                 if(aUrl && aTipe !== 'NOMEDIA'){
                     const img = document.createElement('img');
-                    img.src = aUrl;
+                    img.src = normalizeMediaUrl(aUrl);
                     img.alt = 'media';
                     img.className = 'max-h-40 rounded-md border border-gray-200';
                     txtWrap.appendChild(img);

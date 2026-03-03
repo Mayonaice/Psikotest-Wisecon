@@ -171,8 +171,6 @@ module Program =
         if not (String.IsNullOrWhiteSpace(pathBaseCfg)) then
             app.UsePathBase(pathBaseCfg) |> ignore
 
-        ()
-
         app.UseStaticFiles()
         app.UseRouting()
         app.UseAuthentication()

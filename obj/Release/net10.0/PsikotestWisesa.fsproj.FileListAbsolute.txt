@@ -999,8 +999,8 @@ C:\Users\vadod\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Release\net10.0\
 C:\Users\vadod\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Release\net10.0\PsikotestWisesa.genruntimeconfig.cache
 C:\Users\vadod\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Release\net10.0\ref\PsikotestWisesa.dll
 C:\Users\vadod\source\repos\PsikotestWisesa\PsikotestWisesa\bin\Release\net10.0\PsikotestWisesa.exe
-C:\Users\vadod\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Release\net10.0\staticwebassets.upToDateCheck.txt
 C:\Users\vadod\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Release\net10.0\compressed\bnrteh1hhh-{0}-9xvp453ngh-9xvp453ngh.gz
 C:\Users\vadod\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Release\net10.0\compressed\zut9pys375-{0}-1bzaz1hbcr-1bzaz1hbcr.gz
 C:\Users\vadod\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Release\net10.0\compressed\yvbxt8dnhs-{0}-9xvp453ngh-9xvp453ngh.gz
 C:\Users\vadod\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Release\net10.0\compressed\p4m01x6lwj-{0}-lgyzutdgrd-lgyzutdgrd.gz
+C:\Users\vadod\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Release\net10.0\staticwebassets.upToDateCheck.txt

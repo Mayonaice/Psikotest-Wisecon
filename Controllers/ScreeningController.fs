@@ -28,6 +28,36 @@ type InterviewSavePayload = { personal: InterviewItem array; experience: Intervi
 type ScreeningController (db: IDbConnection) =
     inherit Controller()
 
+    let statusScreeningExpr =
+        "CASE " +
+        "WHEN ISNULL(s.ResultInterviewTes,'')='Lulus' AND ISNULL(s.StatusPsikotes,'')='Lulus' THEN 'Lulus' " +
+        "WHEN ISNULL(s.ResultInterviewTes,'')='Tidak Lulus' OR ISNULL(s.StatusPsikotes,'')='Tidak Lulus' THEN 'Tidak Lulus' " +
+        "WHEN ISNULL(s.StatusPsikotes,'')='Lulus' AND (ISNULL(s.ResultInterviewTes,'')='' ) THEN 'Interview Proses' " +
+        "WHEN EXISTS (SELECT 1 FROM WISECON_PSIKOTEST.dbo.MS_PesertaDtl pd WHERE pd.NoPeserta = p.NoPeserta) AND (ISNULL(s.StatusPsikotes,'')='' ) THEN 'Psikotest Proses' " +
+        "ELSE 'Belum Proses' END"
+
+    let statusVerifExpr =
+        "ISNULL(NULLIF(LTRIM(RTRIM(ISNULL(s.StatusVerif,''))),''),'Belum Verifikasi')"
+
+    let baseScreeningSql =
+        "SELECT p.ID AS SeqNo, " +
+        "ISNULL(p.DaftarKe,'') AS JobCode, " +
+        "ISNULL(p.LamarSebagai,'') AS JobPosition, " +
+        "ISNULL(d.Batch,'') AS BatchNo, " +
+        "ISNULL(p.NamaPeserta,'') AS Name, " +
+        "ISNULL(p.JenisKelamin,'') AS Sex, " +
+        "ISNULL(p.Email,'') AS UserEmail, " +
+        "ISNULL(p.NoHP,'') AS PhoneNo, " +
+        "ISNULL(p.PendidikanTerakhir,'') AS PendidikanTerakhir, " +
+        "ISNULL(p.CVFileName,'') AS CVFileName, " +
+        "p.TimeInput, " +
+        statusScreeningExpr + " AS StatusScreening, " +
+        statusVerifExpr + " AS StatusVerif, " +
+        "ISNULL(s.ResultInterviewTes,'') AS ResultInterviewTes, ISNULL(s.StatusPsikotes,'') AS StatusPsikotes " +
+        "FROM WISECON_PSIKOTEST.dbo.MS_Peserta p " +
+        "OUTER APPLY (SELECT TOP 1 Batch FROM WISECON_PSIKOTEST.dbo.MS_PesertaDtl d WHERE d.NoPeserta = p.NoPeserta ORDER BY d.TimeInput DESC) d " +
+        "LEFT JOIN WISECON_PSIKOTEST.dbo.REC_ScreeningStatus s ON s.JobVacancySubmittedSeqNo = p.ID"
+
     member private this.getQueryValue(key: string) =
         if this.Request.Query.ContainsKey(key) then this.Request.Query.[key].ToString() else ""
 
@@ -98,7 +128,7 @@ type ScreeningController (db: IDbConnection) =
             "MAX(TimeInput) AS TimeInput " +
             "FROM (" +
             "SELECT v.JobCode, v.JobPosition, v.StatusVerif, v.TimeInput, v.StatusScreening " +
-            "FROM WISECON_PSIKOTEST.dbo.VW_REC_Screening v " +
+            "FROM (" + baseScreeningSql + ") v " +
             ") x " +
             whereClause +
             "GROUP BY JobPosition " +
@@ -136,7 +166,7 @@ type ScreeningController (db: IDbConnection) =
             "WITH Base AS (" +
             "SELECT v.SeqNo, v.JobCode, v.JobPosition, v.BatchNo, v.Name, v.StatusScreening, " +
             "v.StatusVerif, v.ResultInterviewTes, v.StatusPsikotes, v.Sex, v.UserEmail, v.PhoneNo, v.PendidikanTerakhir, v.TimeInput " +
-            "FROM WISECON_PSIKOTEST.dbo.VW_REC_Screening v " +
+            "FROM (" + baseScreeningSql + ") v " +
             "), " +
             "Ranked AS (" +
             "SELECT b.SeqNo, b.JobCode, b.JobPosition, b.BatchNo, b.Name, b.StatusScreening, b.StatusVerif, b.ResultInterviewTes, b.StatusPsikotes, b.Sex, b.UserEmail, b.PhoneNo, b.PendidikanTerakhir, b.TimeInput, " +
@@ -203,7 +233,7 @@ type ScreeningController (db: IDbConnection) =
             "WITH Base AS (" +
             "SELECT v.SeqNo, v.JobCode, v.JobPosition, v.BatchNo, v.Name, v.StatusScreening, " +
             "v.StatusVerif, v.ResultInterviewTes, v.StatusPsikotes, v.Sex, v.UserEmail, v.PhoneNo, v.PendidikanTerakhir, v.CVFileName, v.TimeInput " +
-            "FROM WISECON_PSIKOTEST.dbo.VW_REC_Screening v " +
+            "FROM (" + baseScreeningSql + ") v " +
             "), " +
             "Ranked AS (" +
             "SELECT b.SeqNo, b.JobCode, b.JobPosition, b.BatchNo, b.Name, b.StatusScreening, b.StatusVerif, b.ResultInterviewTes, b.StatusPsikotes, b.Sex, b.UserEmail, b.PhoneNo, b.PendidikanTerakhir, b.CVFileName, b.TimeInput, " +
@@ -330,7 +360,7 @@ type ScreeningController (db: IDbConnection) =
                 noKtpBio <- if rdrPeserta.IsDBNull(1) then "" else rdrPeserta.GetString(1)
             rdrPeserta.Close()
 
-            use cmdBio = new Microsoft.Data.SqlClient.SqlCommand("SELECT SeqNo, Name, UserEmail, JobPosition, PhoneNo, PendidikanTerakhir, StatusScreening, StatusVerif, ResultInterviewTes, StatusPsikotes FROM WISECON_PSIKOTEST.dbo.VW_REC_Screening WHERE SeqNo=@id", conn)
+            use cmdBio = new Microsoft.Data.SqlClient.SqlCommand("SELECT SeqNo, Name, UserEmail, JobPosition, PhoneNo, PendidikanTerakhir, StatusScreening, StatusVerif, ResultInterviewTes, StatusPsikotes FROM (" + baseScreeningSql + ") v WHERE SeqNo=@id", conn)
             cmdBio.Parameters.AddWithValue("@id", biodataId) |> ignore
             use rdrBio = cmdBio.ExecuteReader()
             let mutable biodataObj = box {| seqNo = biodataId; noPeserta = noPesertaBio; noKtp = noKtpBio; name = ""; email = ""; job = ""; phone = ""; pendidikan = ""; statusScreening = ""; statusVerif = ""; hasilInterview = ""; hasilPsikotest = "" |}
@@ -589,31 +619,27 @@ type ScreeningController (db: IDbConnection) =
                     let existingFileObj = chk.ExecuteScalar()
                     let existingFile = if isNull existingFileObj then "" else existingFileObj.ToString()
                     let finalFile = if String.IsNullOrWhiteSpace(newFile) then existingFile else newFile
-                    let statusScreening = if String.IsNullOrWhiteSpace(hasilInterview) then "Belum Proses" else "Interview Proses"
-
                     let countCmd = new Microsoft.Data.SqlClient.SqlCommand("SELECT COUNT(1) FROM WISECON_PSIKOTEST.dbo.REC_ScreeningStatus WHERE JobVacancySubmittedSeqNo=@id", conn, tran)
                     countCmd.Parameters.AddWithValue("@id", sid) |> ignore
                     let count = Convert.ToInt32(countCmd.ExecuteScalar())
                     if count > 0 then
-                        use upd = new Microsoft.Data.SqlClient.SqlCommand("UPDATE WISECON_PSIKOTEST.dbo.REC_ScreeningStatus SET ResultInterviewTes=@hasil, StatusTesInterview=@hasil, InterviewResultRemarks=@remarks, InterviewResultFileName=@file, InterviewStrengthWeakness=@strength, InterviewLikeDislike=@likeDislike, StatusScreening=@screening, UserEdit=@u, TimeEdit=GETDATE() WHERE JobVacancySubmittedSeqNo=@id", conn, tran)
+                        use upd = new Microsoft.Data.SqlClient.SqlCommand("UPDATE WISECON_PSIKOTEST.dbo.REC_ScreeningStatus SET ResultInterviewTes=@hasil, StatusTesInterview=@hasil, InterviewResultRemarks=@remarks, InterviewResultFileName=@file, InterviewStrengthWeakness=@strength, InterviewLikeDislike=@likeDislike, UserEdit=@u, TimeEdit=GETDATE() WHERE JobVacancySubmittedSeqNo=@id", conn, tran)
                         upd.Parameters.AddWithValue("@hasil", (if isNull hasilInterview then "" else hasilInterview)) |> ignore
                         upd.Parameters.AddWithValue("@remarks", (if isNull remarks then "" else remarks)) |> ignore
                         upd.Parameters.AddWithValue("@file", (if isNull finalFile then "" else finalFile)) |> ignore
                         upd.Parameters.AddWithValue("@strength", (if isNull strengthWeakness then "" else strengthWeakness)) |> ignore
                         upd.Parameters.AddWithValue("@likeDislike", (if isNull likeDislike then "" else likeDislike)) |> ignore
-                        upd.Parameters.AddWithValue("@screening", statusScreening) |> ignore
                         upd.Parameters.AddWithValue("@u", user) |> ignore
                         upd.Parameters.AddWithValue("@id", sid) |> ignore
                         upd.ExecuteNonQuery() |> ignore
                     else
-                        use ins = new Microsoft.Data.SqlClient.SqlCommand("INSERT INTO WISECON_PSIKOTEST.dbo.REC_ScreeningStatus (JobVacancySubmittedSeqNo, ResultInterviewTes, StatusTesInterview, InterviewResultRemarks, InterviewResultFileName, InterviewStrengthWeakness, InterviewLikeDislike, StatusScreening, UserInput, TimeInput, UserEdit, TimeEdit) VALUES (@id, @hasil, @hasil, @remarks, @file, @strength, @likeDislike, @screening, @u, GETDATE(), @u, GETDATE())", conn, tran)
+                        use ins = new Microsoft.Data.SqlClient.SqlCommand("INSERT INTO WISECON_PSIKOTEST.dbo.REC_ScreeningStatus (JobVacancySubmittedSeqNo, ResultInterviewTes, StatusTesInterview, InterviewResultRemarks, InterviewResultFileName, InterviewStrengthWeakness, InterviewLikeDislike, UserInput, TimeInput, UserEdit, TimeEdit) VALUES (@id, @hasil, @hasil, @remarks, @file, @strength, @likeDislike, @u, GETDATE(), @u, GETDATE())", conn, tran)
                         ins.Parameters.AddWithValue("@id", sid) |> ignore
                         ins.Parameters.AddWithValue("@hasil", (if isNull hasilInterview then "" else hasilInterview)) |> ignore
                         ins.Parameters.AddWithValue("@remarks", (if isNull remarks then "" else remarks)) |> ignore
                         ins.Parameters.AddWithValue("@file", (if isNull finalFile then "" else finalFile)) |> ignore
                         ins.Parameters.AddWithValue("@strength", (if isNull strengthWeakness then "" else strengthWeakness)) |> ignore
                         ins.Parameters.AddWithValue("@likeDislike", (if isNull likeDislike then "" else likeDislike)) |> ignore
-                        ins.Parameters.AddWithValue("@screening", statusScreening) |> ignore
                         ins.Parameters.AddWithValue("@u", user) |> ignore
                         ins.ExecuteNonQuery() |> ignore
 
@@ -645,25 +671,21 @@ type ScreeningController (db: IDbConnection) =
                     let existingFileObj = chk.ExecuteScalar()
                     let existingFile = if isNull existingFileObj then "" else existingFileObj.ToString()
                     let finalFile = if String.IsNullOrWhiteSpace(newFile) then existingFile else newFile
-                    let statusScreening = if String.IsNullOrWhiteSpace(hasilPsikotest) then "Belum Proses" else "Psikotest Proses"
-
                     let countCmd = new Microsoft.Data.SqlClient.SqlCommand("SELECT COUNT(1) FROM WISECON_PSIKOTEST.dbo.REC_ScreeningStatus WHERE JobVacancySubmittedSeqNo=@id", conn, tran)
                     countCmd.Parameters.AddWithValue("@id", sid) |> ignore
                     let count = Convert.ToInt32(countCmd.ExecuteScalar())
                     if count > 0 then
-                        use upd = new Microsoft.Data.SqlClient.SqlCommand("UPDATE WISECON_PSIKOTEST.dbo.REC_ScreeningStatus SET StatusPsikotes=@hasil, StatusTesPsikotes=@hasil, PsikotesResultFileName=@file, StatusScreening=@screening, UserEdit=@u, TimeEdit=GETDATE() WHERE JobVacancySubmittedSeqNo=@id", conn, tran)
+                        use upd = new Microsoft.Data.SqlClient.SqlCommand("UPDATE WISECON_PSIKOTEST.dbo.REC_ScreeningStatus SET StatusPsikotes=@hasil, StatusTesPsikotes=@hasil, PsikotesResultFileName=@file, UserEdit=@u, TimeEdit=GETDATE() WHERE JobVacancySubmittedSeqNo=@id", conn, tran)
                         upd.Parameters.AddWithValue("@hasil", (if isNull hasilPsikotest then "" else hasilPsikotest)) |> ignore
                         upd.Parameters.AddWithValue("@file", (if isNull finalFile then "" else finalFile)) |> ignore
-                        upd.Parameters.AddWithValue("@screening", statusScreening) |> ignore
                         upd.Parameters.AddWithValue("@u", user) |> ignore
                         upd.Parameters.AddWithValue("@id", sid) |> ignore
                         upd.ExecuteNonQuery() |> ignore
                     else
-                        use ins = new Microsoft.Data.SqlClient.SqlCommand("INSERT INTO WISECON_PSIKOTEST.dbo.REC_ScreeningStatus (JobVacancySubmittedSeqNo, StatusPsikotes, StatusTesPsikotes, PsikotesResultFileName, StatusScreening, UserInput, TimeInput, UserEdit, TimeEdit) VALUES (@id, @hasil, @hasil, @file, @screening, @u, GETDATE(), @u, GETDATE())", conn, tran)
+                        use ins = new Microsoft.Data.SqlClient.SqlCommand("INSERT INTO WISECON_PSIKOTEST.dbo.REC_ScreeningStatus (JobVacancySubmittedSeqNo, StatusPsikotes, StatusTesPsikotes, PsikotesResultFileName, UserInput, TimeInput, UserEdit, TimeEdit) VALUES (@id, @hasil, @hasil, @file, @u, GETDATE(), @u, GETDATE())", conn, tran)
                         ins.Parameters.AddWithValue("@id", sid) |> ignore
                         ins.Parameters.AddWithValue("@hasil", (if isNull hasilPsikotest then "" else hasilPsikotest)) |> ignore
                         ins.Parameters.AddWithValue("@file", (if isNull finalFile then "" else finalFile)) |> ignore
-                        ins.Parameters.AddWithValue("@screening", statusScreening) |> ignore
                         ins.Parameters.AddWithValue("@u", user) |> ignore
                         ins.ExecuteNonQuery() |> ignore
                     tran.Commit()
@@ -689,7 +711,7 @@ type ScreeningController (db: IDbConnection) =
                 let rows = ResizeArray<int * string * string * string>()
                 for item in req.items do
                     let sid = if isNull item.kodeBiodata then 0 else Int32.Parse(item.kodeBiodata)
-                    use cmd = new Microsoft.Data.SqlClient.SqlCommand("SELECT StatusScreening, ResultInterviewTes, StatusPsikotes, StatusVerif FROM WISECON_PSIKOTEST.dbo.VW_REC_Screening WHERE SeqNo=@id", conn)
+                    use cmd = new Microsoft.Data.SqlClient.SqlCommand("SELECT StatusScreening, ResultInterviewTes, StatusPsikotes, StatusVerif FROM (" + baseScreeningSql + ") v WHERE SeqNo=@id", conn)
                     cmd.Parameters.AddWithValue("@id", sid) |> ignore
                     use rdr = cmd.ExecuteReader()
                     let mutable statusScreening = ""
@@ -727,9 +749,8 @@ type ScreeningController (db: IDbConnection) =
                         let isLulus = String.Equals(newVerif, "Lulus", StringComparison.OrdinalIgnoreCase)
                         if count > 0 then
                             if isLulus then
-                                use upd = new Microsoft.Data.SqlClient.SqlCommand("UPDATE WISECON_PSIKOTEST.dbo.REC_ScreeningStatus SET StatusVerif=@v, StatusScreening=@s, UserVerif=@u, UserEdit=@u, TimeEdit=GETDATE() WHERE JobVacancySubmittedSeqNo=@id", conn)
+                                use upd = new Microsoft.Data.SqlClient.SqlCommand("UPDATE WISECON_PSIKOTEST.dbo.REC_ScreeningStatus SET StatusVerif=@v, UserVerif=@u, UserEdit=@u, TimeEdit=GETDATE() WHERE JobVacancySubmittedSeqNo=@id", conn)
                                 upd.Parameters.AddWithValue("@v", (if isNull newVerif then "" else newVerif)) |> ignore
-                                upd.Parameters.AddWithValue("@s", "Lulus") |> ignore
                                 upd.Parameters.AddWithValue("@u", user) |> ignore
                                 upd.Parameters.AddWithValue("@id", sid) |> ignore
                                 upd.ExecuteNonQuery() |> ignore
@@ -741,10 +762,9 @@ type ScreeningController (db: IDbConnection) =
                                 upd.ExecuteNonQuery() |> ignore
                         else
                             if isLulus then
-                                use ins = new Microsoft.Data.SqlClient.SqlCommand("INSERT INTO WISECON_PSIKOTEST.dbo.REC_ScreeningStatus (JobVacancySubmittedSeqNo, StatusVerif, StatusScreening, UserVerif, UserInput, TimeInput, UserEdit, TimeEdit) VALUES (@id, @v, @s, @u, @u, GETDATE(), @u, GETDATE())", conn)
+                                use ins = new Microsoft.Data.SqlClient.SqlCommand("INSERT INTO WISECON_PSIKOTEST.dbo.REC_ScreeningStatus (JobVacancySubmittedSeqNo, StatusVerif, UserVerif, UserInput, TimeInput, UserEdit, TimeEdit) VALUES (@id, @v, @u, @u, GETDATE(), @u, GETDATE())", conn)
                                 ins.Parameters.AddWithValue("@id", sid) |> ignore
                                 ins.Parameters.AddWithValue("@v", (if isNull newVerif then "" else newVerif)) |> ignore
-                                ins.Parameters.AddWithValue("@s", "Lulus") |> ignore
                                 ins.Parameters.AddWithValue("@u", user) |> ignore
                                 ins.ExecuteNonQuery() |> ignore
                             else

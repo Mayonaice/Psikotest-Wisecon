@@ -253,7 +253,7 @@
   document.getElementById("likeDislike").value = statusData.likeDislike || "";
   if (statusData.interviewFile) {
     const link = document.getElementById("downloadInterview");
-    link.href = `/Screening/Biodata/Interview/Download?kodeBiodata=${biodata.seqNo}`;
+    link.href = `@Url.Content("~/Screening/Biodata/Interview/Download")?kodeBiodata=${biodata.seqNo}`;
     link.style.display = "inline-block";
   }
 
@@ -507,7 +507,7 @@
   document.getElementById("hasilPsikotest").value = statusData.hasilPsikotest || "";
   if (statusData.psikotestFile) {
     const link = document.getElementById("downloadPsikotest");
-    link.href = `/Screening/Biodata/Psikotest/Download?kodeBiodata=${biodata.seqNo}`;
+    link.href = `@Url.Content("~/Screening/Biodata/Psikotest/Download")?kodeBiodata=${biodata.seqNo}`;
     link.style.display = "inline-block";
   }
 

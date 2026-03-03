@@ -395,6 +395,29 @@
 
   <script src="https://cdn.ckeditor.com/4.25.1/standard/ckeditor.js"></script>
   <script>
+    // Fungsi untuk menormalkan URL media agar kompatibel dengan PathBase
+    function normalizeMediaUrl(url) {
+      if (!url) return '';
+      const urlStr = String(url).trim();
+      
+      // Jika sudah URL lengkap (http/https), return as is
+      if (urlStr.startsWith('http://') || urlStr.startsWith('https://')) {
+        return urlStr;
+      }
+      
+      // Jika path relatif yang dimulai dengan /, tambahkan base href
+      if (urlStr.startsWith('/')) {
+        const baseHref = document.querySelector('base')?.getAttribute('href') || '/';
+        // Hapus trailing slash dari baseHref dan leading slash dari urlStr
+        const cleanBase = baseHref.replace(/\/$/, '');
+        const cleanUrl = urlStr.replace(/^\//, '');
+        return cleanBase + '/' + cleanUrl;
+      }
+      
+      // Jika path relatif tanpa /, return as is
+      return urlStr;
+    }
+    
     (function(){
       var iconBase = '@Url.Content("~/DCT3_Standarisasi/assets/icons/")';
       var ICON_DEBUG = false;
@@ -802,7 +825,7 @@
             '<input id="dUploadFile" type="file" accept="image/png,image/jpeg" style="display:none" />'+
             '<label for="dUploadFile" id="dUploadPlaceholder" class="upload-placeholder" style="display:'+(tm==='UPLOAD'?'flex':'none')+'"><span class="upload-title">Pilih gambar</span><span class="upload-hint">PNG/JPG, maks 2MB</span></label>'+
           '</div>'+
-          '<div class="modal-label">Preview Gambar:</div><div class="modal-field"><div id="dPreview" class="upload-preview" style="display:'+(tm==='UPLOAD'?'block':'none')+'"><img id="dPreviewImg" alt="preview" style="max-width:100%; max-height:140px; display:'+(um?'block':'none')+'" src="'+(um||'')+'" /></div></div>'+
+          '<div class="modal-label">Preview Gambar:</div><div class="modal-field"><div id="dPreview" class="upload-preview" style="display:'+(tm==='UPLOAD'?'block':'none')+'"><img id="dPreviewImg" alt="preview" style="max-width:100%; max-height:140px; display:'+(um?'block':'none')+'" src="'+normalizeMediaUrl(um||'')+'" /></div></div>'+
           '<div class="modal-label">IsDownload:</div><div class="modal-field">'+
             '<label class="inline-flex items-center gap-2"><input type="radio" name="dIsDownload" value="Ya"'+(id==='Ya'?' checked':'')+' /> <span>Aktif</span></label>'+
             '<label class="inline-flex items-center gap-2"><input type="radio" name="dIsDownload" value="Tidak"'+(id!=='Ya'?' checked':'')+' /> <span>Nonaktif</span></label>'+
@@ -980,7 +1003,7 @@
             '<input id="jUploadFile" type="file" accept="image/png,image/jpeg" style="display:none" />'+
             '<label for="jUploadFile" id="jUploadPlaceholder" class="upload-placeholder" style="display:'+(tm==='UPLOAD'?'flex':'none')+'"><span class="upload-title">Pilih gambar</span><span class="upload-hint">PNG/JPG, maks 2MB</span></label>'+
           '</div>'+
-          '<div class="modal-label">Preview Gambar:</div><div class="modal-field"><div id="jPreview" class="upload-preview" style="display:'+(tm==='UPLOAD'?'block':'none')+'"><img id="jPreviewImg" alt="preview" style="max-width:100%; max-height:140px; display:'+(um?'block':'none')+'" src="'+(um||'')+'" /></div></div>'+
+          '<div class="modal-label">Preview Gambar:</div><div class="modal-field"><div id="jPreview" class="upload-preview" style="display:'+(tm==='UPLOAD'?'block':'none')+'"><img id="jPreviewImg" alt="preview" style="max-width:100%; max-height:140px; display:'+(um?'block':'none')+'" src="'+normalizeMediaUrl(um||'')+'" /></div></div>'+
           '<div class="modal-label">Text Media:</div><div class="modal-field"><input id="jTextMedia" value="'+txt+'" /></div>'+
           '<div class="modal-label">Poin:</div><div class="modal-field"><input id="jPoin" type="number" class="w-24" value="'+pn+'" /> <span>Poin</span></div>'+
           '<input id="jSeqNo" value="'+sq+'" style="display:none" />'+

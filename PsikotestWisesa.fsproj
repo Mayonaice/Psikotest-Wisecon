@@ -27,4 +27,10 @@
     <PackageReference Include="ClosedXML" Version="0.104.2" />
   </ItemGroup>
 
+  <!-- Exclude uploads folder from build and publish -->
+  <ItemGroup>
+    <Content Remove="wwwroot/uploads/**" />
+    <None Remove="wwwroot/uploads/**" />
+  </ItemGroup>
+
 </Project>

@@ -108,32 +108,11 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
 
         baseUrl + urlPathBase + "/TRX_Ujian?Token=" + tokenParam
 
-    let updateScreeningStatusByNoPeserta (conn: Microsoft.Data.SqlClient.SqlConnection) (noPeserta: int64) (status: string) (user: string) =
-        if not (String.IsNullOrWhiteSpace(status)) then
-            use cmdId = new Microsoft.Data.SqlClient.SqlCommand("SELECT TOP 1 ID FROM WISECON_PSIKOTEST.dbo.MS_Peserta WHERE NoPeserta=@np ORDER BY TimeInput DESC", conn)
-            cmdId.Parameters.AddWithValue("@np", noPeserta) |> ignore
-            let idObj = cmdId.ExecuteScalar()
-            if not (isNull idObj) then
-                let sid = Convert.ToInt32(idObj)
-                use countCmd = new Microsoft.Data.SqlClient.SqlCommand("SELECT COUNT(1) FROM WISECON_PSIKOTEST.dbo.REC_ScreeningStatus WHERE JobVacancySubmittedSeqNo=@id", conn)
-                countCmd.Parameters.AddWithValue("@id", sid) |> ignore
-                let count = Convert.ToInt32(countCmd.ExecuteScalar())
-                if count > 0 then
-                    use upd = new Microsoft.Data.SqlClient.SqlCommand("UPDATE WISECON_PSIKOTEST.dbo.REC_ScreeningStatus SET StatusScreening=@s, UserEdit=@u, TimeEdit=GETDATE() WHERE JobVacancySubmittedSeqNo=@id", conn)
-                    upd.Parameters.AddWithValue("@s", status) |> ignore
-                    upd.Parameters.AddWithValue("@u", (if isNull user then "" else user)) |> ignore
-                    upd.Parameters.AddWithValue("@id", sid) |> ignore
-                    upd.ExecuteNonQuery() |> ignore
-                else
-                    use ins = new Microsoft.Data.SqlClient.SqlCommand("INSERT INTO WISECON_PSIKOTEST.dbo.REC_ScreeningStatus (JobVacancySubmittedSeqNo, StatusScreening, UserInput, TimeInput, UserEdit, TimeEdit) VALUES (@id, @s, @u, GETDATE(), @u, GETDATE())", conn)
-                    ins.Parameters.AddWithValue("@id", sid) |> ignore
-                    ins.Parameters.AddWithValue("@s", status) |> ignore
-                    ins.Parameters.AddWithValue("@u", (if isNull user then "" else user)) |> ignore
-                    ins.ExecuteNonQuery() |> ignore
+    // Fungsi updateScreeningStatusByNoPeserta dihapus karena StatusScreening sekarang computed di view
 
     [<Authorize>]
     [<HttpGet>]
-    [<Route("Applicants/PaketSoal/List")>]
+    [<Route("~/Applicants/PaketSoal/List")>]
     member this.ListPaketSoal([<FromQuery>] posisi: string) : IActionResult =
         let conn = db :?> Microsoft.Data.SqlClient.SqlConnection
         use cmd = new Microsoft.Data.SqlClient.SqlCommand()
@@ -175,7 +154,7 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
 
     [<Authorize>]
     [<HttpGet>]
-    [<Route("Applicants/Batch/List")>]
+    [<Route("~/Applicants/Batch/List")>]
     member this.ListBatch() : IActionResult =
         let conn = db :?> Microsoft.Data.SqlClient.SqlConnection
         use cmd = new Microsoft.Data.SqlClient.SqlCommand()
@@ -200,7 +179,7 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
 
     [<Authorize>]
     [<HttpGet>]
-    [<Route("Applicants/Peserta/List")>]
+    [<Route("~/Applicants/Peserta/List")>]
     member this.ListPeserta([<FromQuery>] inputStart: Nullable<DateTime>, [<FromQuery>] inputEnd: Nullable<DateTime>, [<FromQuery>] posisi: string, [<FromQuery>] hasil: string) : IActionResult =
         let conn = db :?> Microsoft.Data.SqlClient.SqlConnection
         use cmd = new Microsoft.Data.SqlClient.SqlCommand()
@@ -313,7 +292,7 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
 
     [<Authorize>]
     [<HttpGet>]
-    [<Route("Applicants/Screening/CheckStatus")>]
+    [<Route("~/Applicants/Screening/CheckStatus")>]
     member this.CheckScreeningStatus([<FromQuery>] ids: string) : IActionResult =
         let conn = db :?> Microsoft.Data.SqlClient.SqlConnection
         use cmd = new Microsoft.Data.SqlClient.SqlCommand()
@@ -321,7 +300,13 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
         cmd.CommandType <- CommandType.Text
         let idsValue = if isNull ids then "" else ids
         cmd.CommandText <-
-            "SELECT x.NoPeserta, ISNULL(s.StatusScreening,'') AS StatusScreening " +
+            "SELECT x.NoPeserta, " +
+            "CASE " +
+            "WHEN ISNULL(s.ResultInterviewTes,'')='Lulus' AND ISNULL(s.StatusPsikotes,'')='Lulus' THEN 'Lulus' " +
+            "WHEN ISNULL(s.ResultInterviewTes,'')='Tidak Lulus' OR ISNULL(s.StatusPsikotes,'')='Tidak Lulus' THEN 'Tidak Lulus' " +
+            "WHEN ISNULL(s.StatusPsikotes,'')='Lulus' AND (ISNULL(s.ResultInterviewTes,'')='' ) THEN 'Interview Proses' " +
+            "WHEN EXISTS (SELECT 1 FROM WISECON_PSIKOTEST.dbo.MS_PesertaDtl pd WHERE pd.NoPeserta = p.NoPeserta) AND (ISNULL(s.StatusPsikotes,'')='' ) THEN 'Psikotest Proses' " +
+            "ELSE 'Belum Proses' END AS StatusScreening " +
             "FROM (SELECT DISTINCT TRY_CONVERT(bigint, value) AS NoPeserta FROM STRING_SPLIT(@ids, ',') WHERE TRY_CONVERT(bigint, value) IS NOT NULL) x " +
             "OUTER APPLY (SELECT TOP 1 ID, NoPeserta FROM WISECON_PSIKOTEST.dbo.MS_Peserta p WHERE p.NoPeserta=x.NoPeserta ORDER BY p.TimeInput DESC) p " +
             "LEFT JOIN WISECON_PSIKOTEST.dbo.REC_ScreeningStatus s ON s.JobVacancySubmittedSeqNo = p.ID"
@@ -340,7 +325,7 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
 
     [<Authorize>]
     [<HttpGet>]
-    [<Route("Applicants/Ujian/List")>]
+    [<Route("~/Applicants/Ujian/List")>]
     member this.ListUjian([<FromQuery>] inputStart: Nullable<DateTime>, [<FromQuery>] inputEnd: Nullable<DateTime>, [<FromQuery>] ujianStart: Nullable<DateTime>, [<FromQuery>] ujianEnd: Nullable<DateTime>, [<FromQuery>] status: string, [<FromQuery>] hasil: string, [<FromQuery>] noPeserta: string) : IActionResult =
         let conn = db :?> Microsoft.Data.SqlClient.SqlConnection
         use cmd = new Microsoft.Data.SqlClient.SqlCommand()
@@ -469,7 +454,7 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
 
     [<Authorize>]
     [<HttpGet>]
-    [<Route("Applicants/Ujian/Result")>]
+    [<Route("~/Applicants/Ujian/Result")>]
     member this.ResultUjian([<FromQuery>] noPeserta: string, [<FromQuery>] userId: string, [<FromQuery>] attemptTime: Nullable<DateTime>) : IActionResult =
         let conn = db :?> Microsoft.Data.SqlClient.SqlConnection
         let mutable noPesertaVal = if String.IsNullOrWhiteSpace(noPeserta) then "" else noPeserta.Trim()
@@ -569,7 +554,7 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
 
     [<Authorize>]
     [<HttpGet>]
-    [<Route("Applicants/Ujian/Export")>]
+    [<Route("~/Applicants/Ujian/Export")>]
     member this.ExportUjian([<FromQuery>] inputStart: Nullable<DateTime>, [<FromQuery>] inputEnd: Nullable<DateTime>, [<FromQuery>] ujianStart: Nullable<DateTime>, [<FromQuery>] ujianEnd: Nullable<DateTime>, [<FromQuery>] status: string, [<FromQuery>] hasil: string, [<FromQuery>] sortField: string, [<FromQuery>] sortDir: Nullable<int>, [<FromQuery>] noPeserta: string) : IActionResult =
         let conn = db :?> Microsoft.Data.SqlClient.SqlConnection
         use cmd = new Microsoft.Data.SqlClient.SqlCommand()
@@ -788,7 +773,7 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
 
     [<Authorize>]
     [<HttpGet>]
-    [<Route("Applicants/Interview/List")>]
+    [<Route("~/Applicants/Interview/List")>]
     member this.ListInterview([<FromQuery>] inputStart: Nullable<DateTime>, [<FromQuery>] inputEnd: Nullable<DateTime>, [<FromQuery>] statusInterview: string, [<FromQuery>] noPeserta: string) : IActionResult =
         let conn = db :?> Microsoft.Data.SqlClient.SqlConnection
         use cmd = new Microsoft.Data.SqlClient.SqlCommand()
@@ -852,7 +837,7 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
 
     [<Authorize>]
     [<HttpGet>]
-    [<Route("Applicants/Interview/Export")>]
+    [<Route("~/Applicants/Interview/Export")>]
     member this.ExportInterview([<FromQuery>] inputStart: Nullable<DateTime>, [<FromQuery>] inputEnd: Nullable<DateTime>, [<FromQuery>] statusInterview: string, [<FromQuery>] sortField: string, [<FromQuery>] sortDir: Nullable<int>, [<FromQuery>] noPeserta: string) : IActionResult =
         let conn = db :?> Microsoft.Data.SqlClient.SqlConnection
         use cmd = new Microsoft.Data.SqlClient.SqlCommand()
@@ -1015,7 +1000,7 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
 
     [<Authorize>]
     [<HttpPost>]
-    [<Route("Applicants/Ujian/Assign")>]
+    [<Route("~/Applicants/Ujian/Assign")>]
     member this.AssignUjian([<FromBody>] req: AssignUjianRequest) : IActionResult =
         let domainName = getDomainName ()
         let encryptionKey = getEncryptionKey ()
@@ -1083,14 +1068,13 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
             cmdMsg.CommandText <- "dbo.Insert_MessageWhatsapp_Psikotest"
             cmdMsg.Parameters.AddWithValue("@NoPeserta", req.NoPeserta) |> ignore
             cmdMsg.ExecuteNonQuery() |> ignore
-            updateScreeningStatusByNoPeserta conn req.NoPeserta "Psikotest Proses" req.User
             this.Ok()
         finally
             conn.Close()
 
     [<Authorize>]
     [<HttpPost>]
-    [<Route("Applicants/Ujian/AssignBulk")>]
+    [<Route("~/Applicants/Ujian/AssignBulk")>]
     member this.AssignUjianBulk([<FromBody>] req: AssignUjianBulkRequest) : IActionResult =
         let domainName = getDomainName ()
         let encryptionKey = getEncryptionKey ()
@@ -1162,14 +1146,13 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
                     cmdMsg.CommandText <- "dbo.Insert_MessageWhatsapp_Psikotest"
                     cmdMsg.Parameters.AddWithValue("@NoPeserta", noPeserta) |> ignore
                     cmdMsg.ExecuteNonQuery() |> ignore
-                    updateScreeningStatusByNoPeserta conn noPeserta "Psikotest Proses" user
                 this.Ok()
             finally
                 conn.Close()
 
     [<Authorize>]
     [<HttpPost>]
-    [<Route("Applicants/Ujian/Edit")>]
+    [<Route("~/Applicants/Ujian/Edit")>]
     member this.EditUjian([<FromBody>] req: EditUjianRequest) : IActionResult =
         let conn = db :?> Microsoft.Data.SqlClient.SqlConnection
         use cmd = new Microsoft.Data.SqlClient.SqlCommand()
@@ -1192,7 +1175,7 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
 
     [<Authorize>]
     [<HttpPost>]
-    [<Route("Applicants/Ujian/Resend")>]
+    [<Route("~/Applicants/Ujian/Resend")>]
     member this.ResendUjian([<FromBody>] req: ResendUjianRequest) : IActionResult =
         let conn = db :?> Microsoft.Data.SqlClient.SqlConnection
         use cmd = new Microsoft.Data.SqlClient.SqlCommand()
@@ -1212,7 +1195,7 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
 
     [<Authorize>]
     [<HttpPost>]
-    [<Route("Applicants/Interview/Assign")>]
+    [<Route("~/Applicants/Interview/Assign")>]
     member this.AssignInterview([<FromBody>] req: AssignInterviewRequest) : IActionResult =
         let conn = db :?> Microsoft.Data.SqlClient.SqlConnection
         conn.Open()
@@ -1240,14 +1223,13 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
             cmdMsg.CommandText <- "dbo.Insert_MessageWhatsapp_Interview"
             cmdMsg.Parameters.AddWithValue("@NoPeserta", req.NoPeserta) |> ignore
             cmdMsg.ExecuteNonQuery() |> ignore
-            updateScreeningStatusByNoPeserta conn req.NoPeserta "Interview Proses" req.User
             this.Ok()
         finally
             conn.Close()
 
     [<Authorize>]
     [<HttpPost>]
-    [<Route("Applicants/Interview/AssignBulk")>]
+    [<Route("~/Applicants/Interview/AssignBulk")>]
     member this.AssignInterviewBulk([<FromBody>] req: AssignInterviewBulkRequest) : IActionResult =
         let conn = db :?> Microsoft.Data.SqlClient.SqlConnection
         conn.Open()
@@ -1280,13 +1262,12 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
                 cmdMsg.CommandText <- "dbo.Insert_MessageWhatsapp_Interview"
                 cmdMsg.Parameters.AddWithValue("@NoPeserta", noPeserta) |> ignore
                 cmdMsg.ExecuteNonQuery() |> ignore
-                updateScreeningStatusByNoPeserta conn noPeserta "Interview Proses" user
             this.Ok()
         finally
             conn.Close()
     [<Authorize>]
     [<HttpPost>]
-    [<Route("Applicants/Interview/Edit")>]
+    [<Route("~/Applicants/Interview/Edit")>]
     member this.EditInterview([<FromBody>] req: EditInterviewRequest) : IActionResult =
         let conn = db :?> Microsoft.Data.SqlClient.SqlConnection
         use cmd = new Microsoft.Data.SqlClient.SqlCommand()
@@ -1309,7 +1290,7 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
 
     [<Authorize>]
     [<HttpPost>]
-    [<Route("Applicants/Interview/Resend")>]
+    [<Route("~/Applicants/Interview/Resend")>]
     member this.ResendInterview([<FromBody>] req: ResendInterviewRequest) : IActionResult =
         let conn = db :?> Microsoft.Data.SqlClient.SqlConnection
         use cmd = new Microsoft.Data.SqlClient.SqlCommand()

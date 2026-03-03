@@ -615,10 +615,12 @@
   </style>
 
 <script>
+  // Global variables shared between scripts
+  var pesertaPosMap = {};
+  
   (function(){
     var debug = true;
     var rawData = [];
-    var pesertaPosMap = {};
     var activeNoPeserta = '';
     var selectedPesertaIds = new Set();
     var paketSoalCache = {};
@@ -990,11 +992,14 @@
         .then(function(rows){
           rawData = rows||[];
           pesertaPosMap = {};
+          console.log('Loading peserta data, rows count:', rawData.length);
           rawData.forEach(function(r){
             var key = ''+(r && r.nomor!=null ? r.nomor : '');
             if(!key) return;
             pesertaPosMap[key] = (r && r.posisi!=null) ? (''+r.posisi).trim() : '';
+            console.log('Added to pesertaPosMap:', key, '->', pesertaPosMap[key]);
           });
+          console.log('Final pesertaPosMap:', pesertaPosMap);
           if(debug){
             var t0 = rawData[0] ? rawData[0].time : null;
             console.log('rows', rawData.length, rawData[0] ? Object.keys(rawData[0]) : []);
@@ -1283,7 +1288,7 @@
     }
 
     var iconMsg2 = '@Url.Content("~/DCT3_Standarisasi/assets/icons/Message.png")';
-    var iconEdit = '@Url.Content("~/DCT3_Standarisasi/assets/icons/edit.png")';
+    var iconEdit = '@Url.Content("~/DCT3_Standarisasi/assets/icons/EditNB.png")';
     var iconResend = '@Url.Content("~/DCT3_Standarisasi/assets/icons/resend.png")';
     var iconView = '@Url.Content("~/DCT3_Standarisasi/assets/icons/ViewNB.png")';
     var currentUser = '@(User.Identity?.Name ?? "")';
@@ -1294,6 +1299,14 @@
     var editSave = document.getElementById('edit-save');
     var editTitle = document.getElementById('edit-title');
     var editIcon = document.getElementById('edit-icon');
+    
+    // Debug: Check if critical elements exist
+    console.log('DOM Elements Check:');
+    console.log('editOverlay:', editOverlay);
+    console.log('editTitle:', editTitle);
+    console.log('editIcon:', editIcon);
+    console.log('editSave:', editSave);
+    
     var editRowNomor = document.getElementById('edit-row-nomor');
     var editNomor = document.getElementById('edit-nomor');
     var editRowNama = document.getElementById('edit-row-nama');
@@ -1396,7 +1409,11 @@
 
     function getPosisiForPeserta(noPeserta){
       var key = ''+(noPeserta==null?'':noPeserta);
-      return key && pesertaPosMap ? pesertaPosMap[key] : '';
+      console.log('getPosisiForPeserta called with:', noPeserta, 'key:', key);
+      console.log('pesertaPosMap:', pesertaPosMap);
+      var result = key && pesertaPosMap ? pesertaPosMap[key] : '';
+      console.log('getPosisiForPeserta result:', result);
+      return result;
     }
     function fillPaketOptions(selectEl, rows){
       if(!selectEl) return;
@@ -1667,10 +1684,24 @@
     }
 
     function openEdit(){
-      if(editOverlay){ editOverlay.style.display = 'flex'; editOverlay.classList.remove('dct-hidden'); editOverlay.setAttribute('aria-hidden','false'); }
+      console.log('openEdit called, editOverlay:', editOverlay);
+      if(editOverlay){ 
+        console.log('Removing dct-hidden class and setting display to flex');
+        editOverlay.classList.remove('dct-hidden'); 
+        editOverlay.style.display = 'flex'; 
+        editOverlay.setAttribute('aria-hidden','false'); 
+        console.log('editOverlay classes:', editOverlay.className);
+        console.log('editOverlay display:', editOverlay.style.display);
+      } else {
+        console.error('editOverlay is null!');
+      }
     }
     function closeEdit(){
-      if(editOverlay){ editOverlay.style.display = 'none'; editOverlay.classList.add('dct-hidden'); editOverlay.setAttribute('aria-hidden','true'); }
+      if(editOverlay){ 
+        editOverlay.classList.add('dct-hidden'); 
+        editOverlay.style.display = 'none'; 
+        editOverlay.setAttribute('aria-hidden','true'); 
+      }
       if(editOverlay) editOverlay.classList.remove('view-wide');
       editState.kind = '';
       editState.row = null;
@@ -1691,10 +1722,13 @@
     }
 
     function openUjianEdit(row){
+      console.log('openUjianEdit called with row:', row);
+      console.log('editOverlay element:', editOverlay);
+      
       editState.kind = 'ujian';
       editState.row = row || null;
       if(editTitle) editTitle.textContent = 'Edit Ujian';
-      if(editIcon) editIcon.src = '@Url.Content("~/DCT3_Standarisasi/assets/icons/edit.png")';
+      if(editIcon) editIcon.src = '@Url.Content("~/DCT3_Standarisasi/assets/icons/EditNB.png")';
       if(editOverlay) editOverlay.classList.remove('view-wide');
       if(editNomor) editNomor.textContent = (row && row.nomor) ? (''+row.nomor) : '';
       if(editNama) editNama.textContent = (row && row.nama) ? (''+row.nama) : '';
@@ -1713,7 +1747,10 @@
       setEditDateTime(parseDateValue(row ? row.waktuTest : null));
       var pos = getPosisiForPeserta(row ? row.nomor : '');
       ensurePaketSoal(pos ? [pos] : []).then(function(rows){ fillPaketOptions(editPaket, rows); });
+      
+      console.log('About to call openEdit()');
       openEdit();
+      console.log('openEdit() called');
     }
 
     function openInterviewEdit(row){
@@ -1947,6 +1984,9 @@
           var tr=document.createElement('tr');
           var isSelesai = eqText(r.status, 'Selesai Ujian');
           var showView = isSelesai;
+          console.log('Row data:', r);
+          console.log('Status:', r.status, 'isSelesai:', isSelesai, 'showView:', showView);
+          
           var btnIconStyle = 'background-repeat:no-repeat;background-position:center;background-size:16px 16px;width:32px;height:28px;min-width:32px;padding:0;';
           var aksi = showView
             ? '<button type="button" class="ujian-view-btn btn-flat rounded-md" title="View" style="background-image:url('+iconView+');'+btnIconStyle+'"></button>'
@@ -1954,6 +1994,7 @@
                 '<button type="button" class="ujian-edit-btn btn-flat rounded-md" title="Edit" style="background-image:url('+iconEdit+');'+btnIconStyle+'"></button>'+
                 '<button type="button" class="ujian-resend-btn btn-flat rounded-md" title="Resend" style="background-image:url('+iconResend+');'+btnIconStyle+'"></button>'+
               '</div>';
+          console.log('Generated aksi HTML:', aksi);
           tr.innerHTML=
           '<td class="px-3 py-1 cell select-cell"><div class="select-square"></div></td>'+
           '<td class="px-1 py-1 cell">'+(r.num||'')+'</td>'+
@@ -1980,7 +2021,16 @@
           '<td class="px-1 py-1 cell">'+(function(){ var d=parseDateValue(r.timeEdit); return (d && !isNaN(d.getTime())) ? fmtDateTime(d) : ''; })()+'</td>';
           body.appendChild(tr);
           var btnEdit = tr.querySelector('.ujian-edit-btn');
-          if(btnEdit) btnEdit.addEventListener('click', function(e){ e.stopPropagation(); openUjianEdit(r); });
+          if(btnEdit) {
+            console.log('Adding click listener to edit button for row:', r);
+            btnEdit.addEventListener('click', function(e){ 
+              console.log('Edit button clicked!', e, r); 
+              e.stopPropagation(); 
+              openUjianEdit(r); 
+            });
+          } else {
+            console.log('No edit button found for row:', r);
+          }
           var btnResend = tr.querySelector('.ujian-resend-btn');
           if(btnResend) btnResend.addEventListener('click', function(e){
             e.stopPropagation();
