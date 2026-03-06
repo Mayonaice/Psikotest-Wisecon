@@ -53,10 +53,20 @@ type ScreeningController (db: IDbConnection) =
         "p.TimeInput, " +
         statusScreeningExpr + " AS StatusScreening, " +
         statusVerifExpr + " AS StatusVerif, " +
-        "ISNULL(s.ResultInterviewTes,'') AS ResultInterviewTes, ISNULL(s.StatusPsikotes,'') AS StatusPsikotes " +
+        "ISNULL(s.ResultInterviewTes,'') AS ResultInterviewTes, " +
+        "CASE " +
+        "WHEN ISNULL(s.StatusPsikotes,'') <> '' THEN s.StatusPsikotes " +
+        "WHEN pr.TotalResult IS NOT NULL THEN " +
+        "CASE WHEN pr.TotalResult >= pr.TotalStandard THEN 'Lulus' ELSE 'Tidak Lulus' END " +
+        "ELSE '' END AS StatusPsikotes " +
         "FROM WISECON_PSIKOTEST.dbo.MS_Peserta p " +
         "OUTER APPLY (SELECT TOP 1 Batch FROM WISECON_PSIKOTEST.dbo.MS_PesertaDtl d WHERE d.NoPeserta = p.NoPeserta ORDER BY d.TimeInput DESC) d " +
-        "LEFT JOIN WISECON_PSIKOTEST.dbo.REC_ScreeningStatus s ON s.JobVacancySubmittedSeqNo = p.ID"
+        "LEFT JOIN WISECON_PSIKOTEST.dbo.REC_ScreeningStatus s ON s.JobVacancySubmittedSeqNo = p.ID " +
+        "OUTER APPLY (" +
+        "SELECT SUM(NilaiStandard) AS TotalStandard, SUM(NilaiGroupResult) AS TotalResult " +
+        "FROM WISECON_PSIKOTEST.dbo.TR_PsikotestResult r " +
+        "WHERE r.NoPeserta = p.NoPeserta " +
+        ") pr"
 
     member private this.getQueryValue(key: string) =
         if this.Request.Query.ContainsKey(key) then this.Request.Query.[key].ToString() else ""
@@ -244,7 +254,7 @@ type ScreeningController (db: IDbConnection) =
             (if String.IsNullOrWhiteSpace(kodeLowongan) then "" else " AND b.JobPosition = @kodeLowongan ") +
             ") " +
             "SELECT SeqNo, JobCode, JobPosition, BatchNo, Name, StatusScreening, StatusVerif, ResultInterviewTes, StatusPsikotes, Sex, UserEmail, PhoneNo, PendidikanTerakhir, CVFileName, TimeInput " +
-            "FROM Ranked WHERE rn=1 ORDER BY Name"
+            "FROM Ranked WHERE rn=1 ORDER BY TimeInput DESC, Name"
         conn.Open()
         try
             use rdr = cmd.ExecuteReader()

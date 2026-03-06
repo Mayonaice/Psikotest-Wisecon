@@ -27,6 +27,79 @@ open Microsoft.AspNetCore.Http
 type AutoFinalizeUjianService(cfg: IConfiguration) =
     inherit BackgroundService()
 
+    member private this.finalizeExpiredNotStarted(conn: SqlConnection) =
+        use cmd = new SqlCommand()
+        cmd.Connection <- conn
+        cmd.CommandType <- CommandType.Text
+        cmd.CommandText <-
+            "SELECT TOP 50 D.UserId, D.NoPaket, D.NoPeserta " +
+            "FROM WISECON_PSIKOTEST.dbo.MS_PesertaDtl D " +
+            "INNER JOIN WISECON_PSIKOTEST.dbo.MS_PaketSoal PS ON PS.NoPaket = D.NoPaket " +
+            "WHERE D.StartTest IS NULL " +
+            "AND (D.Url IS NOT NULL OR ISNULL(D.block, 0) = 0) " +
+            "AND DATEADD(MINUTE, ISNULL(PS.ToleransiWaktu, 0), D.WaktuTest) < GETDATE() " +
+            "ORDER BY D.WaktuTest"
+
+        use rdr = cmd.ExecuteReader()
+        let rows = ResizeArray<string * int64 * string>()
+        while rdr.Read() do
+            let userId    = if rdr.IsDBNull(0) then "" else rdr.GetString(0)
+            let noPaket   = if rdr.IsDBNull(1) then 0L else Convert.ToInt64(rdr.GetValue(1))
+            let noPeserta = if rdr.IsDBNull(2) then "" else rdr.GetString(2)
+            if not (String.IsNullOrWhiteSpace(userId)) && noPaket > 0L && not (String.IsNullOrWhiteSpace(noPeserta)) then
+                rows.Add((userId, noPaket, noPeserta))
+        rdr.Close()
+
+        for (userId, noPaket, noPeserta) in rows do
+            try
+                use upd = new SqlCommand()
+                upd.Connection <- conn
+                upd.CommandType <- CommandType.Text
+                upd.CommandText <-
+                    // Jangan isi StartTest — biarkan NULL agar bisa dibedakan:
+                    // StartTest IS NULL = URL belum pernah dibuka peserta (auto-finish karena toleransi)
+                    // StartTest IS NOT NULL = peserta benar-benar membuka dan login ke ujian
+                    "UPDATE WISECON_PSIKOTEST.dbo.MS_PesertaDtl " +
+                    "SET TimeEdit = GETDATE(), " +
+                    "    UserEdit = 'SYSTEM', " +
+                    "    Url      = NULL, " +
+                    "    block    = 1 " +
+                    "WHERE UserId = @u AND NoPaket = @p AND NoPeserta = @n " +
+                    "AND StartTest IS NULL AND (Url IS NOT NULL OR ISNULL(block, 0) = 0) " +
+                    "AND EXISTS ( " +
+                    "  SELECT 1 FROM WISECON_PSIKOTEST.dbo.MS_PaketSoal PS2 " +
+                    "  WHERE PS2.NoPaket = @p " +
+                    "  AND DATEADD(MINUTE, ISNULL(PS2.ToleransiWaktu, 0), WaktuTest) < GETDATE() " +
+                    "); " +
+                    "SELECT @@ROWCOUNT;"
+                upd.Parameters.AddWithValue("@u", userId) |> ignore
+                upd.Parameters.AddWithValue("@p", noPaket) |> ignore
+                upd.Parameters.AddWithValue("@n", noPeserta) |> ignore
+                // Tidak perlu hitung nilai karena peserta tidak pernah mulai ujian (StartTest IS NULL)
+                let _ = try Convert.ToInt32(upd.ExecuteScalar()) with _ -> 0
+                ()
+            with _ -> ()
+
+    // Perbaiki data zombie: StartTest IS NULL tapi TimeEdit sudah ada
+    // Kondisi ini membuat UI selalu tampil 'Belum Ujian' padahal sudah selesai
+    // Terjadi karena sistem lain (w-232, dll) mengisi TimeEdit tapi lupa isi StartTest
+    member private this.repairZombieRecords(conn: SqlConnection) =
+        use upd = new SqlCommand()
+        upd.Connection <- conn
+        upd.CommandType <- CommandType.Text
+        upd.CommandText <-
+            // Hanya kosongkan Url dan block=1, JANGAN sentuh StartTest
+            // StartTest tetap NULL = peserta tidak pernah buka URL
+            // Status 'Selesai Ujian' ditangani oleh logic TimeEdit IS NOT NULL di AssignController
+            "UPDATE WISECON_PSIKOTEST.dbo.MS_PesertaDtl " +
+            "SET Url   = NULL, " +
+            "    block = 1 " +
+            "WHERE StartTest IS NULL " +
+            "AND TimeEdit IS NOT NULL " +
+            "AND (Url IS NOT NULL OR ISNULL(block,0) = 0) " +
+            "AND DATEADD(MINUTE, ISNULL((SELECT ToleransiWaktu FROM WISECON_PSIKOTEST.dbo.MS_PaketSoal PS WHERE PS.NoPaket = MS_PesertaDtl.NoPaket), 0), WaktuTest) < GETDATE();"
+        try upd.ExecuteNonQuery() |> ignore with _ -> ()
+
     member private this.recalculateResults(conn: SqlConnection, userId: string) =
         use insHist = new SqlCommand()
         insHist.Connection <- conn
@@ -121,6 +194,19 @@ type AutoFinalizeUjianService(cfg: IConfiguration) =
                                 this.recalculateResults(conn, userId)
                         with _ ->
                             ()
+
+                    // Auto-selesaikan ujian peserta yang belum mulai tapi waktu toleransi sudah habis
+                    try
+                        this.finalizeExpiredNotStarted(conn)
+                    with _ -> ()
+
+                    // NOTE: repairZombieRecords dinonaktifkan.
+                    // SP_PesertaDtl mengisi TimeEdit saat insert baru, sehingga kondisi
+                    // (StartTest IS NULL AND TimeEdit IS NOT NULL) langsung terpenuhi untuk undangan baru.
+                    // Status zombie lama kini ditangani oleh status logic di AssignController (DATEDIFF > 60 detik).
+                    // try
+                    //     this.repairZombieRecords(conn)
+                    // with _ -> ()
                 with _ ->
                     ()
 

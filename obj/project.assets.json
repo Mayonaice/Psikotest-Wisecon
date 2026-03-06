@@ -1835,23 +1835,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\vadod\\.nuget\\packages\\": {},
+    "C:\\Users\\WS24003426\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\vadod\\source\\repos\\PsikotestWisesa\\PsikotestWisesa\\PsikotestWisesa.fsproj",
+      "projectUniqueName": "C:\\Users\\WS24003426\\source\\repos\\PsikotestWisesa\\PsikotestWisesa\\PsikotestWisesa.fsproj",
       "projectName": "PsikotestWisesa",
-      "projectPath": "C:\\Users\\vadod\\source\\repos\\PsikotestWisesa\\PsikotestWisesa\\PsikotestWisesa.fsproj",
-      "packagesPath": "C:\\Users\\vadod\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\vadod\\source\\repos\\PsikotestWisesa\\PsikotestWisesa\\obj\\",
+      "projectPath": "C:\\Users\\WS24003426\\source\\repos\\PsikotestWisesa\\PsikotestWisesa\\PsikotestWisesa.fsproj",
+      "packagesPath": "C:\\Users\\WS24003426\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\WS24003426\\source\\repos\\PsikotestWisesa\\PsikotestWisesa\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\vadod\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\WS24003426\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -1860,6 +1860,7 @@
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "C:\\Program Files\\dotnet\\library-packs": {},
         "C:\\Program Files\\dotnet\\sdk\\10.0.200-preview.0.26103.119\\FSharp\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },

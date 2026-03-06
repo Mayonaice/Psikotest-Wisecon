@@ -190,11 +190,7 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
             baseWhere <- baseWhere + " AND CAST(P.TimeInput AS DATE) BETWEEN @is AND @ie "
             cmd.Parameters.AddWithValue("@is", inputStart.Value.Date) |> ignore
             cmd.Parameters.AddWithValue("@ie", inputEnd.Value.Date) |> ignore
-        match posisi with
-        | null -> ()
-        | s when String.IsNullOrWhiteSpace(s) -> ()
-        | s -> baseWhere <- baseWhere + " AND P.LamarSebagai=@pos "
-               cmd.Parameters.AddWithValue("@pos", s) |> ignore
+        // Filter posisi dihapus, biarkan frontend yang handle filtering
 
         conn.Open()
         try
@@ -207,11 +203,7 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
                     "WHEN ISNULL(HR.SumStandar,0) > 0 THEN CASE WHEN HR.SumHasil >= HR.SumStandar THEN 'LULUS' ELSE 'TIDAK LULUS' END " +
                     "WHEN ISNULL(CR.SumStandar,0) > 0 THEN CASE WHEN CR.SumHasil >= CR.SumStandar THEN 'LULUS' ELSE 'TIDAK LULUS' END " +
                     "ELSE 'BELUM UJIAN' END"
-                match hasil with
-                | null -> ()
-                | h when String.IsNullOrWhiteSpace(h) -> ()
-                | h -> whereClause <- whereClause + " AND (" + hasilCase + ") = @hasil "
-                       cmd.Parameters.AddWithValue("@hasil", h) |> ignore
+                // Filter hasil dihapus, biarkan frontend yang handle filtering
 
                 cmd.CommandText <-
                     "SELECT P.NoPeserta, P.NamaPeserta, P.Alamat, P.Email, P.LamarSebagai, P.NoKTP, P.LblRek, P.TimeInput, P.LastEducation, " +
@@ -311,7 +303,11 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
             "OUTER APPLY (SELECT TOP 1 ID, NoPeserta FROM WISECON_PSIKOTEST.dbo.MS_Peserta p WHERE p.NoPeserta=x.NoPeserta ORDER BY p.TimeInput DESC) p " +
             "LEFT JOIN WISECON_PSIKOTEST.dbo.REC_ScreeningStatus s ON s.JobVacancySubmittedSeqNo = p.ID"
         cmd.Parameters.AddWithValue("@ids", idsValue) |> ignore
-        conn.Open()
+        // Guard: jika koneksi dalam state Broken (transport error), tutup dulu sebelum open
+        if conn.State = ConnectionState.Broken then
+            try conn.Close() with _ -> ()
+        if conn.State <> ConnectionState.Open then
+            conn.Open()
         try
             use rdr = cmd.ExecuteReader()
             let rows = ResizeArray<obj>()
@@ -333,86 +329,70 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
         cmd.CommandType <- CommandType.Text
         let mutable whereClause = " WHERE 1=1 "
         if inputStart.HasValue && inputEnd.HasValue then
-            whereClause <- whereClause + " AND CAST(A.TimeInput AS DATE) BETWEEN @is AND @ie "
+            whereClause <- whereClause + " AND CAST(ISNULL(A.TimeInput, P.TimeInput) AS DATE) BETWEEN @is AND @ie "
             cmd.Parameters.AddWithValue("@is", inputStart.Value.Date) |> ignore
             cmd.Parameters.AddWithValue("@ie", inputEnd.Value.Date) |> ignore
         if ujianStart.HasValue && ujianEnd.HasValue then
-            whereClause <- whereClause + " AND CAST(A.WaktuTest AS DATE) BETWEEN @us AND @ue "
+            whereClause <- whereClause + " AND (A.WaktuTest IS NOT NULL AND CAST(A.WaktuTest AS DATE) BETWEEN @us AND @ue) "
             cmd.Parameters.AddWithValue("@us", ujianStart.Value.Date) |> ignore
             cmd.Parameters.AddWithValue("@ue", ujianEnd.Value.Date) |> ignore
-        match status with
-        | null -> ()
-        | s when String.IsNullOrWhiteSpace(s) -> ()
-        | s when String.Equals(s, "Belum Ujian", StringComparison.OrdinalIgnoreCase) ->
-            whereClause <- whereClause + " AND A.StartTest IS NULL "
-        | s when String.Equals(s, "Sedang Ujian", StringComparison.OrdinalIgnoreCase) ->
-            whereClause <- whereClause + " AND A.StartTest IS NOT NULL AND A.TimeEdit IS NULL "
-        | s when String.Equals(s, "Selesai Ujian", StringComparison.OrdinalIgnoreCase) ->
-            whereClause <- whereClause + " AND A.StartTest IS NOT NULL AND A.TimeEdit IS NOT NULL "
-        | _ -> ()
+        // Filter status pengerjaan dihapus, biarkan frontend yang handle filtering
         let hasilCase =
             "CASE " +
-            "WHEN A.StartTest IS NULL THEN 'BELUM UJIAN' " +
-            "WHEN ISNULL(HR.SumStandar,0) > 0 THEN CASE WHEN HR.SumHasil >= HR.SumStandar THEN 'LULUS' ELSE 'TIDAK LULUS' END " +
-            "WHEN ISNULL(CR.SumStandar,0) > 0 THEN CASE WHEN CR.SumHasil >= CR.SumStandar THEN 'LULUS' ELSE 'TIDAK LULUS' END " +
+            "WHEN A.ID IS NULL THEN 'BELUM UJIAN' " +
+            "WHEN A.Url IS NULL THEN " +
+            "  CASE " +
+            "  WHEN A.StartTest IS NULL THEN 'TIDAK MENGERJAKAN' " +
+            "  WHEN ISNULL(HR.SumStandar,0) > 0 THEN CASE WHEN HR.SumHasil >= HR.SumStandar THEN 'LULUS' ELSE 'TIDAK LULUS' END " +
+            "  WHEN ISNULL(CR.SumStandar,0) > 0 THEN CASE WHEN CR.SumHasil >= CR.SumStandar THEN 'LULUS' ELSE 'TIDAK LULUS' END " +
+            "  ELSE 'BELUM UJIAN' END " +
             "ELSE 'BELUM UJIAN' END"
-        match hasil with
-        | null -> ()
-        | s when String.IsNullOrWhiteSpace(s) -> ()
-        | s when String.Equals(s, "BELUM UJIAN", StringComparison.OrdinalIgnoreCase) ->
-            whereClause <- whereClause + " AND (" + hasilCase + ") = @hasil "
-            cmd.Parameters.AddWithValue("@hasil", "BELUM UJIAN") |> ignore
-        | s when String.Equals(s, "LULUS", StringComparison.OrdinalIgnoreCase) ->
-            whereClause <- whereClause + " AND (" + hasilCase + ") = @hasil "
-            cmd.Parameters.AddWithValue("@hasil", "LULUS") |> ignore
-        | s when String.Equals(s, "TIDAK LULUS", StringComparison.OrdinalIgnoreCase) ->
-            whereClause <- whereClause + " AND (" + hasilCase + ") = @hasil "
-            cmd.Parameters.AddWithValue("@hasil", "TIDAK LULUS") |> ignore
-        | _ -> ()
+        // Filter hasil dihapus, biarkan frontend yang handle filtering berdasarkan kolom HasilPsikotest
 
         match noPeserta with
         | null -> ()
         | s when String.IsNullOrWhiteSpace(s) -> ()
         | s ->
-            whereClause <- whereClause + " AND (CONVERT(VARCHAR(50),A.NoPeserta)=@noPeserta OR TRY_CONVERT(BIGINT, CONVERT(VARCHAR(50),A.NoPeserta))=TRY_CONVERT(BIGINT, @noPeserta)) "
+            whereClause <- whereClause + " AND (CONVERT(VARCHAR(50),P.NoPeserta)=@noPeserta OR TRY_CONVERT(BIGINT, CONVERT(VARCHAR(50),P.NoPeserta))=TRY_CONVERT(BIGINT, @noPeserta)) "
             cmd.Parameters.AddWithValue("@noPeserta", s.Trim()) |> ignore
 
         cmd.CommandText <-
             "SELECT " +
             "ISNULL(A.Batch,'') AS Batch, " +
-            "A.NoPeserta, " +
-            "A.NamaPeserta, " +
-            "A.UserId, " +
+            "ISNULL(P.NoPeserta,'') AS NoPeserta, " +
+            "ISNULL(P.NamaPeserta,'') AS NamaPeserta, " +
+            "ISNULL(A.UserId,'') AS UserId, " +
             "ISNULL(A.UndangPsikotestKe,0) AS UndangPsikotestKe, " +
             "CASE " +
-            "WHEN A.StartTest IS NULL THEN 'Belum Ujian' " +
-            "WHEN A.TimeEdit IS NULL THEN 'Sedang Ujian' " +
-            "ELSE 'Selesai Ujian' END AS StatusPengerjaan, " +
+            "WHEN A.ID IS NULL THEN 'Belum Ujian' " +
+            "WHEN A.Url IS NULL THEN 'Selesai Ujian' " +
+            "WHEN A.StartTest IS NOT NULL THEN 'Sedang Ujian' " +
+            "ELSE 'Belum Ujian' END AS StatusPengerjaan, " +
             hasilCase + " AS HasilPsikotest, " +
             "ISNULL(PS.NamaPaket,'') AS NamaPaket, " +
             "A.Url, " +
             "A.WaktuTest, " +
             "A.StartTest, " +
-            "A.bKirim, " +
+            "CASE WHEN A.ID IS NULL THEN 0 ELSE ISNULL(A.bKirim,0) END AS bKirim, " +
             "WA.TimeInput AS WaktuKirim, " +
             "NULL AS WaktuTerbaca, " +
-            "A.UserInput, " +
-            "A.TimeInput, " +
+            "ISNULL(A.UserInput, P.UserInput) AS UserInput, " +
+            "ISNULL(A.TimeInput, P.TimeInput) AS TimeInput, " +
             "A.UserEdit, " +
             "A.TimeEdit " +
-            "FROM WISECON_PSIKOTEST.dbo.VW_MASTER_PesertaDtl A " +
-            "LEFT JOIN WISECON_PSIKOTEST.dbo.VW_MASTER_Peserta P ON P.NoPeserta=A.NoPeserta " +
+            "FROM WISECON_PSIKOTEST.dbo.MS_Peserta P " +
+            "LEFT JOIN WISECON_PSIKOTEST.dbo.MS_PesertaDtl A ON A.NoPeserta = P.NoPeserta " +
             "LEFT JOIN WISECON_PSIKOTEST.dbo.MS_PaketSoal PS ON PS.NoPaket=A.NoPaket " +
             "OUTER APPLY (SELECT SUM(ISNULL(R.NilaiGroupResult,0)) AS SumHasil, SUM(ISNULL(ISNULL(R.NilaiStandard, G.NilaiStandar),0)) AS SumStandar " +
             "FROM WISECON_PSIKOTEST.dbo.TR_PsikotestResultHistory R " +
             "LEFT JOIN WISECON_PSIKOTEST.dbo.MS_PaketSoalGroup G ON G.NoPaket=R.NoPaket AND G.NoGroup = TRY_CONVERT(int, R.GroupSoal) " +
-            "WHERE (R.NoPeserta=A.NoPeserta OR R.UserId=A.UserId) AND CONVERT(VARCHAR(19), R.AttemptTime, 120)=CONVERT(VARCHAR(19), A.TimeInput, 120)) HR " +
+            "WHERE (R.NoPeserta=P.NoPeserta OR R.UserId=A.UserId) AND CONVERT(VARCHAR(19), R.AttemptTime, 120)=CONVERT(VARCHAR(19), A.TimeInput, 120)) HR " +
             "OUTER APPLY (SELECT SUM(ISNULL(R.NilaiGroupResult,0)) AS SumHasil, SUM(ISNULL(ISNULL(R.NilaiStandard, G.NilaiStandar),0)) AS SumStandar " +
             "FROM WISECON_PSIKOTEST.dbo.TR_PsikotestResult R " +
             "LEFT JOIN WISECON_PSIKOTEST.dbo.MS_PaketSoalGroup G ON G.NoPaket=A.NoPaket AND G.NoGroup = TRY_CONVERT(int, R.GroupSoal) " +
-            "WHERE (R.NoPeserta=A.NoPeserta OR R.UserId=A.UserId)) CR " +
+            "WHERE (R.NoPeserta=P.NoPeserta OR R.UserId=A.UserId)) CR " +
             "OUTER APPLY (SELECT TOP 1 TimeInput FROM WISECON_PSIKOTEST.dbo.Trx_SendMessageWhatsApp WHERE idclient = P.NoHP ORDER BY Id DESC) WA " +
-            whereClause + " ORDER BY A.TimeInput DESC"
+            whereClause + " ORDER BY ISNULL(A.TimeInput, P.TimeInput) DESC"
         conn.Open()
         try
             use rdr = cmd.ExecuteReader()
@@ -488,26 +468,41 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
                     rdrBio.Close()
 
                 let mutable noPaket = 0
+                let mutable startTestVal : Nullable<DateTime> = Nullable()
+                let mutable urlVal : string = ""
+                let mutable blockVal : Nullable<int> = Nullable()
                 if attemptTime.HasValue && not (String.IsNullOrWhiteSpace(noPesertaVal)) then
-                    use cmdDtl = new Microsoft.Data.SqlClient.SqlCommand("SELECT TOP 1 UserId, NoPaket FROM WISECON_PSIKOTEST.dbo.MS_PesertaDtl WHERE NoPeserta=@np AND TimeInput=@ti ORDER BY TimeInput DESC", conn)
+                    use cmdDtl = new Microsoft.Data.SqlClient.SqlCommand("SELECT TOP 1 UserId, NoPaket, StartTest, ISNULL(Url,'') AS Url, Block FROM WISECON_PSIKOTEST.dbo.MS_PesertaDtl WHERE NoPeserta=@np AND TimeInput=@ti ORDER BY TimeInput DESC", conn)
                     cmdDtl.Parameters.AddWithValue("@np", noPesertaVal) |> ignore
                     cmdDtl.Parameters.AddWithValue("@ti", attemptTime.Value) |> ignore
                     use rdrDtl = cmdDtl.ExecuteReader()
                     if rdrDtl.Read() then
                         if String.IsNullOrWhiteSpace(userIdVal) then userIdVal <- if rdrDtl.IsDBNull(0) then "" else rdrDtl.GetString(0)
                         noPaket <- if rdrDtl.IsDBNull(1) then 0 else Convert.ToInt32(rdrDtl.GetValue(1))
+                        startTestVal <- if rdrDtl.IsDBNull(2) then Nullable() else Nullable(rdrDtl.GetDateTime(2))
+                        urlVal <- if rdrDtl.IsDBNull(3) then "" else rdrDtl.GetString(3)
+                        blockVal <- if rdrDtl.IsDBNull(4) then Nullable() else Nullable(Convert.ToInt32(rdrDtl.GetValue(4)))
                     rdrDtl.Close()
                 elif not (String.IsNullOrWhiteSpace(noPesertaVal)) then
-                    use cmdDtl = new Microsoft.Data.SqlClient.SqlCommand("SELECT TOP 1 UserId, NoPaket FROM WISECON_PSIKOTEST.dbo.MS_PesertaDtl WHERE NoPeserta=@np ORDER BY TimeInput DESC", conn)
+                    use cmdDtl = new Microsoft.Data.SqlClient.SqlCommand("SELECT TOP 1 UserId, NoPaket, StartTest, ISNULL(Url,'') AS Url, Block FROM WISECON_PSIKOTEST.dbo.MS_PesertaDtl WHERE NoPeserta=@np ORDER BY TimeInput DESC", conn)
                     cmdDtl.Parameters.AddWithValue("@np", noPesertaVal) |> ignore
                     use rdrDtl = cmdDtl.ExecuteReader()
                     if rdrDtl.Read() then
                         if String.IsNullOrWhiteSpace(userIdVal) then userIdVal <- if rdrDtl.IsDBNull(0) then "" else rdrDtl.GetString(0)
                         noPaket <- if rdrDtl.IsDBNull(1) then 0 else Convert.ToInt32(rdrDtl.GetValue(1))
+                        startTestVal <- if rdrDtl.IsDBNull(2) then Nullable() else Nullable(rdrDtl.GetDateTime(2))
+                        urlVal <- if rdrDtl.IsDBNull(3) then "" else rdrDtl.GetString(3)
+                        blockVal <- if rdrDtl.IsDBNull(4) then Nullable() else Nullable(Convert.ToInt32(rdrDtl.GetValue(4)))
                     rdrDtl.Close()
 
+                // tidakMengerjakan = StartTest NULL dan ujian sudah berakhir (Url NULL atau block=1)
+                // Ini mencakup auto-finish (di mana Url dibuat kosong & block=1) saat peserta tidak buka URL.
+                let isSelesai = String.IsNullOrWhiteSpace(urlVal) || (blockVal.HasValue && blockVal.Value = 1)
+                let tidakMengerjakan = not startTestVal.HasValue && isSelesai
+
                 let psiko = ResizeArray<obj>()
-                if not (String.IsNullOrWhiteSpace(noPesertaVal)) && not (String.IsNullOrWhiteSpace(userIdVal)) then
+                // Hanya load nilai jika peserta benar-benar membuka URL (StartTest IS NOT NULL)
+                if not tidakMengerjakan && not (String.IsNullOrWhiteSpace(noPesertaVal)) && not (String.IsNullOrWhiteSpace(userIdVal)) then
                     let mutable loadedHistory = false
                     if attemptTime.HasValue then
                         use cmdHist = new Microsoft.Data.SqlClient.SqlCommand(
@@ -548,7 +543,9 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
                             psiko.Add(box {| noGroup = noGroup; namaGroup = namaGroup; nilaiStandard = standar; nilaiGroupResult = hasil; nilaiMax = nilaiMax |})
                         rdrPs.Close()
 
-                this.Ok(box {| biodata = biodataObj; psikotest = psiko |})
+                // notAttempted = true berarti peserta tidak pernah membuka URL ujian (auto-finish toleransi)
+                this.Ok(box {| biodata = biodataObj; psikotest = psiko; notAttempted = tidakMengerjakan |})
+
             finally
                 conn.Close()
 
@@ -579,9 +576,9 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
 
         let statusExpr =
             "CASE " +
-            "WHEN A.StartTest IS NULL THEN 'Belum Ujian' " +
-            "WHEN A.TimeEdit IS NULL THEN 'Sedang Ujian' " +
-            "ELSE 'Selesai Ujian' END"
+            "WHEN A.Url IS NULL THEN 'Selesai Ujian' " +
+            "WHEN A.StartTest IS NOT NULL THEN 'Sedang Ujian' " +
+            "ELSE 'Belum Ujian' END"
 
         let statusPesanExpr = "CASE WHEN ISNULL(A.bKirim,0)=1 THEN 'Terkirim' ELSE 'Belum' END"
         if inputStart.HasValue && inputEnd.HasValue then
@@ -596,11 +593,11 @@ type AssignController (db: IDbConnection, cfg: IConfiguration) =
         | null -> ()
         | s when String.IsNullOrWhiteSpace(s) -> ()
         | s when String.Equals(s, "Belum Ujian", StringComparison.OrdinalIgnoreCase) ->
-            whereClause <- whereClause + " AND A.StartTest IS NULL "
+            whereClause <- whereClause + " AND A.StartTest IS NULL AND A.Url IS NOT NULL "
         | s when String.Equals(s, "Sedang Ujian", StringComparison.OrdinalIgnoreCase) ->
-            whereClause <- whereClause + " AND A.StartTest IS NOT NULL AND A.TimeEdit IS NULL "
+            whereClause <- whereClause + " AND A.StartTest IS NOT NULL AND A.Url IS NOT NULL "
         | s when String.Equals(s, "Selesai Ujian", StringComparison.OrdinalIgnoreCase) ->
-            whereClause <- whereClause + " AND A.StartTest IS NOT NULL AND A.TimeEdit IS NOT NULL "
+            whereClause <- whereClause + " AND A.Url IS NULL "
         | _ -> ()
         match hasil with
         | null -> ()

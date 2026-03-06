@@ -923,7 +923,19 @@
       });
     }
 
-    function updatePositions(){ var positions = Array.from(new Set(rawData.map(function(d){ return d.posisi; }))).filter(function(x){ return x; }); ddPosisi.innerHTML = '<option value="">Semua Posisi</option>'; positions.forEach(function(p){ var opt = document.createElement('option'); opt.value = p; opt.textContent = p; ddPosisi.appendChild(opt); }); }
+    function updatePositions(){ 
+      var currentValue = ddPosisi.value || '';
+      var positions = Array.from(new Set(rawData.map(function(d){ return d.posisi; }))).filter(function(x){ return x; }); 
+      ddPosisi.innerHTML = '<option value="">Semua Posisi</option>'; 
+      positions.forEach(function(p){ 
+        var opt = document.createElement('option'); 
+        opt.value = p; 
+        opt.textContent = p; 
+        ddPosisi.appendChild(opt); 
+      }); 
+      ddPosisi.value = currentValue;
+      if(ddPosisi.value !== currentValue) ddPosisi.value = '';
+    }
 
     function toISODateLocal(d){
       var y = d.getFullYear();
@@ -963,7 +975,7 @@
     function fetchPeserta(){
       var sc=document.querySelector('#tblPeserta')?document.querySelector('#tblPeserta').closest('.table-scroll'):null; if(sc) sc.classList.add('loading');
       var start=ddStart.value; var end=ddEnd.value; var posisi=ddPosisi.value; var hasil=ddHasil.value;
-      var url='@Url.Content("~/Applicants/Peserta/List")'+'?inputStart='+(encodeURIComponent(start||''))+'&inputEnd='+(encodeURIComponent(end||''))+'&posisi='+(encodeURIComponent(posisi||''))+'&hasil='+(encodeURIComponent(hasil||''));
+      var url='@Url.Content("~/Applicants/Peserta/List")'+'?inputStart='+(encodeURIComponent(start||''))+'&inputEnd='+(encodeURIComponent(end||''))+'&posisi='+'&hasil=';
       if(debug){ console.groupCollapsed('[Applicants] fetch peserta'); console.log('url', url); console.log('filters', { inputStart:start, inputEnd:end, posisi:posisi, hasil:hasil }); }
       return fetch(url,{ method:'GET', credentials:'same-origin' })
         .then(function(r){
@@ -1209,6 +1221,8 @@
     btnRefresh.addEventListener('click', function(){ currentPage=1; fetchPeserta().then(function(){ applyFilters(); }); });
     ddStart.addEventListener('change', function(){ currentPage=1; fetchPeserta().then(function(){ applyFilters(); }); });
     ddEnd.addEventListener('change', function(){ currentPage=1; fetchPeserta().then(function(){ applyFilters(); }); });
+    ddPosisi.addEventListener('change', function(){ currentPage=1; applyFilters(); });
+    ddHasil.addEventListener('change', function(){ currentPage=1; applyFilters(); });
     document.querySelectorAll('.col-search').forEach(function(el){
       el.addEventListener('input', function(){ search[el.dataset.field] = el.value; currentPage=1; applyFilters(); });
     });
@@ -1800,13 +1814,28 @@
       fetchUjianResult(row).then(function(data){
         var biodata = data && data.biodata ? data.biodata : {};
         var psiko = data && data.psikotest ? data.psikotest : [];
+        var notAttempted = data && data.notAttempted === true;
         renderViewBiodata(biodata);
-        renderViewPsikotest(psiko);
+        if(notAttempted){
+          // Peserta tidak pernah membuka URL ujian — timeout sebelum ujian dimulai
+          if(viewPsikoContent) viewPsikoContent.classList.add('hidden');
+          if(viewPsikoEmpty){
+            viewPsikoEmpty.innerHTML = '<div class="flex flex-col items-center gap-2 py-4 text-gray-500">' +
+              '<svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>' +
+              '<span class="font-semibold text-gray-600">Peserta Tidak Mengerjakan Ujian</span>' +
+              '<span class="text-sm text-gray-400">URL ujian tidak pernah dibuka. Ujian otomatis diselesaikan karena melebihi batas waktu toleransi.</span>' +
+              '</div>';
+            viewPsikoEmpty.classList.remove('hidden');
+          }
+        } else {
+          renderViewPsikotest(psiko);
+        }
       }).catch(function(err){
         if(viewPsikoContent) viewPsikoContent.classList.add('hidden');
         if(viewPsikoEmpty){ viewPsikoEmpty.textContent = 'Gagal memuat data.'; viewPsikoEmpty.classList.remove('hidden'); }
         showError(err && err.message ? err.message : 'Gagal memuat data');
       });
+
       openEdit();
     }
 
@@ -1925,8 +1954,8 @@
         '&inputEnd='+(encodeURIComponent(e1||''))+
         '&ujianStart='+(encodeURIComponent(s2||''))+
         '&ujianEnd='+(encodeURIComponent(e2||''))+
-        '&status='+(encodeURIComponent(st||''))+
-        '&hasil='+(encodeURIComponent(hs||''))+
+        '&status='+
+        '&hasil='+
         (activeNoPeserta ? '&noPeserta='+(encodeURIComponent(activeNoPeserta||'')) : '');
       if(debug){ console.groupCollapsed('[Applicants] fetch ujian'); console.log('url', url); console.log('filters', { inputStart:s1, inputEnd:e1, ujianStart:s2, ujianEnd:e2, status:st, hasil:hs }); }
       return fetch(url,{ method:'GET', credentials:'same-origin' }).then(function(r){
@@ -1939,8 +1968,10 @@
         });
       }).then(function(rows){
         var allRows = (rows||[]);
+        if(debug) console.log('[Applicants] All rows from server:', allRows.length, allRows.slice(0, 5));
         examData = activeKey ? allRows.filter(function(x){ return normalizeNo(x && x.nomor) === activeKey; }) : allRows;
-        updateSelectOptions(ddStatusPengerjaan, examData, 'status');
+        if(debug) console.log('[Applicants] After activeKey filter:', examData.length, 'activeKey:', activeKey);
+        updateSelectOptions(ddStatusPengerjaan, allRows, 'status');
         if(debug){
           var t0 = examData[0] ? examData[0].timeInput : null;
           var u0 = examData[0] ? examData[0].waktuTest : null;
@@ -1949,6 +1980,20 @@
           console.log('sample.waktuTest', u0, 'parsed', parseDateValue(u0));
         }
         var rows2 = examData.filter(function(x){
+          // Filter berdasarkan dropdown Status Pengerjaan
+          var okStatus = true;
+          if(st){
+            var xStatus = (x.status || '').trim();
+            okStatus = xStatus === st;
+          }
+          // Filter berdasarkan dropdown Hasil Psikotest
+          var okHasil = true;
+          if(hs){
+            var xHasil = (x.hasil || '').toUpperCase();
+            if(debug) console.log('Nomor:', x.nomor, 'Filter hasil:', hs, 'Data hasil:', xHasil, 'Match:', xHasil === hs.toUpperCase());
+            okHasil = xHasil === hs.toUpperCase();
+          }
+          // Filter berdasarkan search box di kolom
           var okSearch = true;
           var timeKeysUjian = { waktuTest:1, waktuMulai:1, kirim:1, baca:1, timeInput:1, timeEdit:1 };
           Object.keys(searchUjian).forEach(function(k){
@@ -1961,9 +2006,9 @@
             }
             if(xv.indexOf(v)===-1) okSearch=false;
           });
-          return okSearch;
+          return okStatus && okHasil && okSearch;
         });
-        if(debug){ console.log('[Applicants] ujian filtered', { server: examData.length, filtered: rows2.length }); }
+        if(debug){ console.log('[Applicants] ujian filtered', { server: examData.length, filtered: rows2.length, hasilFilter: hs }); }
         if(sortUjian.field){
           rows2.sort(function(a,b){
             var av=a[sortUjian.field];
@@ -2082,8 +2127,9 @@
           try{ return JSON.parse(t); }catch(e){ console.error('[Applicants] JSON parse error', e, 'sample', t.slice(0,200)); return []; }
         });
       }).then(function(rows){
-        interviewData=(rows||[]).filter(function(x){ return normalizeNo(x && x.nomor) === activeKey; });
-        updateSelectOptions(ddStatusInterview, interviewData, 'statusInterview');
+        var allRows = (rows||[]);
+        interviewData = allRows.filter(function(x){ return normalizeNo(x && x.nomor) === activeKey; });
+        updateSelectOptions(ddStatusInterview, allRows, 'statusInterview');
         if(debug){
           var t0 = interviewData[0] ? interviewData[0].timeInput : null;
           var w0 = interviewData[0] ? interviewData[0].waktuInterview : null;

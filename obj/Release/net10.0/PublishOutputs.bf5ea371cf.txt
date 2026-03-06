@@ -10,8 +10,11 @@ C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Release\net
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Release\net10.0\PubTmp\Out\Views\Dashboard\Questions.cshtml
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Release\net10.0\PubTmp\Out\Views\Dashboard\Scores.cshtml
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Release\net10.0\PubTmp\Out\Views\Dashboard\Screening.cshtml
+C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Release\net10.0\PubTmp\Out\Views\Exam\Index.cshtml
+C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Release\net10.0\PubTmp\Out\Views\Exam\Test.cshtml
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Release\net10.0\PubTmp\Out\Views\Home\Index.cshtml
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Release\net10.0\PubTmp\Out\Views\Home\Privacy.cshtml
+C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Release\net10.0\PubTmp\Out\Views\Screening\Paper.cshtml
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Release\net10.0\PubTmp\Out\Views\Shared\Error.cshtml
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Release\net10.0\PubTmp\Out\Views\Shared\_DashboardLayout.cshtml
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Release\net10.0\PubTmp\Out\Views\Shared\_DCT3Notifications.cshtml

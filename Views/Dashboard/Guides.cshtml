@@ -8,8 +8,7 @@
   <div class="mt-4 bg-[#EBEBE9] border border-gray-300 rounded-xl pl-3 pr-3 py-3 w-full max-w-[32rem]">
     <div class="flex items-center gap-3 mb-2">
       <span class="text-sm text-gray-700 w-28">Tanggal Input:</span>
-      <div class="flex items-center gap-2 w-80 justify-between">
-        <span class="w-3 h-3 rounded-sm bg-[#1E90FF]"></span>
+      <div class="flex items-center gap-2 w-80 justify-start">
         <input id="gDateStart" type="date" class="border border-gray-300 rounded-md px-2 py-1 w-40" />
         <span class="text-gray-700">To</span>
         <input id="gDateEnd" type="date" class="border border-gray-300 rounded-md px-2 py-1 w-40" />
@@ -228,7 +227,7 @@
       function openModal(title, bodyHtml, onSave){ modalHeader.textContent = title||''; modalBody.innerHTML = bodyHtml||''; if (modalIcon) { var t=(title||'').toLowerCase(); var icon='@Url.Content("~/DCT3_Standarisasi/assets/icons/Confirmation.png")'; if(t.indexOf('tambah')>-1 || t.indexOf('add')>-1) icon='@Url.Content("~/DCT3_Standarisasi/assets/icons/AddNB.svg")'; if(t.indexOf('edit')>-1) icon='@Url.Content("~/DCT3_Standarisasi/assets/icons/EditNB.png")'; modalIcon.src=icon; } if(modalOverlay){ modalOverlay.classList.remove('dct-hidden'); modalOverlay.style.display='flex'; } var close=function(){ if(modalOverlay){ modalOverlay.style.display='none'; modalOverlay.classList.add('dct-hidden'); } }; if(modalClose) modalClose.onclick=close; if(modalCancel){ modalCancel.innerHTML='<img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/XNB.png")" class="w-4 h-4" /> <span>Close</span>'; modalCancel.onclick=close; } if(modalSave){ modalSave.innerHTML='<img src="@Url.Content("~/DCT3_Standarisasi/assets/icons/sendNB.png")" class="w-4 h-4" /> <span>Save</span>'; modalSave.onclick=function(){ if(typeof onSave==='function'){ var r=onSave(); if(r && typeof r.then==='function'){ r.then(close).catch(close); } else { close(); } } else { close(); } }; } }
       function hideModal(){ if(modalOverlay){ modalOverlay.style.display='none'; modalOverlay.classList.add('dct-hidden'); } }
 
-      function initDates(){ var now=new Date(); var s=new Date(now.getFullYear(),0,1); var e=new Date(now.getFullYear(),11,31); var toISO=function(d){ return d.toISOString().slice(0,10); }; ddStart.value=toISO(s); ddEnd.value=toISO(e); }
+      function initDates(){ var now=new Date(); var s=new Date(now.getFullYear(),0,1); var e=new Date(now.getFullYear(),11,31); var toISO=function(d){ return d.toISOString().slice(0,10); }; ddStart.value=toISO(s); ddEnd.value=toISO(e); enhanceDateInput(ddStart); enhanceDateInput(ddEnd); }
 
       initDates(); fetchGuides();
     })();
