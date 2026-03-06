@@ -2103,21 +2103,14 @@
       var sc=document.querySelector('#gridInterview .table-scroll'); if(sc) sc.classList.add('loading');
       if(window.__applicantsActiveNoPeserta) activeNoPeserta = ''+window.__applicantsActiveNoPeserta;
       var activeKey = normalizeNo(activeNoPeserta);
-      if(!activeNoPeserta){
-        interviewData = [];
-        var body0=document.querySelector('#tblInterview tbody'); if(body0) body0.innerHTML='';
-        infoInterview.textContent='Showing 0 to 0 of 0 entries';
-        renderPages(pageNumsInterview, 1, 1);
-        if(sc) sc.classList.remove('loading');
-        return Promise.resolve();
-      }
+      
       var s1=ddInterviewInputStart.value; var e1=ddInterviewInputEnd.value; var st=ddStatusInterview.value;
       var url='@Url.Content("~/Applicants/Interview/List")'+
         '?inputStart='+(encodeURIComponent(s1||''))+
         '&inputEnd='+(encodeURIComponent(e1||''))+
         '&statusInterview='+(encodeURIComponent(st||''))+
         '&noPeserta='+(encodeURIComponent(activeNoPeserta||''));
-      if(debug){ console.groupCollapsed('[Applicants] fetch interview'); console.log('url', url); console.log('filters', { inputStart:s1, inputEnd:e1, statusInterview:st }); }
+      if(debug){ console.groupCollapsed('[Applicants] fetch interview'); console.log('url', url); console.log('filters', { inputStart:s1, inputEnd:e1, statusInterview:st, activeNoPeserta: activeNoPeserta }); }
       return fetch(url,{ method:'GET', credentials:'same-origin' }).then(function(r){
         var status=r.status; var ok=r.ok; var ct=(r.headers&&r.headers.get)?(r.headers.get('content-type')||''):'';
         if(debug){ console.log('status', status, 'ok', ok, 'content-type', ct); }
@@ -2128,7 +2121,12 @@
         });
       }).then(function(rows){
         var allRows = (rows||[]);
-        interviewData = allRows.filter(function(x){ return normalizeNo(x && x.nomor) === activeKey; });
+        // Filter by activeNoPeserta only if a participant is selected
+        if(activeNoPeserta){
+          interviewData = allRows.filter(function(x){ return normalizeNo(x && x.nomor) === activeKey; });
+        } else {
+          interviewData = allRows;
+        }
         updateSelectOptions(ddStatusInterview, allRows, 'statusInterview');
         if(debug){
           var t0 = interviewData[0] ? interviewData[0].timeInput : null;

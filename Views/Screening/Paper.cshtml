@@ -53,9 +53,36 @@
       <textarea id="remarksInterview" class="border border-gray-300 rounded-md px-2 py-1 w-full" rows="3"></textarea>
     </div>
     <div class="mt-3">
-      <label class="block text-sm text-gray-700">Dokumentasi Interview</label>
-      <input id="fileInterview" type="file" class="border border-gray-300 rounded-md px-2 py-1 w-full" />
-      <a id="downloadInterview" class="text-sm text-blue-600 underline mt-2 inline-block" target="_blank" href="#" style="display:none;">Download File</a>
+      <label class="block text-sm text-gray-700 mb-2">Dokumentasi Interview</label>
+      <div class="relative">
+        <input id="fileInterview" type="file" class="hidden" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" />
+        <div id="fileInterviewBox" class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-blue-400 transition-colors">
+          <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <p class="mt-2 text-sm text-gray-600">Klik untuk upload file</p>
+          <p class="mt-1 text-xs text-gray-500">PDF, DOC, DOCX, JPG, PNG</p>
+        </div>
+        <div id="fileInterviewPreview" class="hidden mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <svg class="h-8 w-8 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd" />
+              </svg>
+              <div>
+                <p id="fileInterviewName" class="text-sm font-medium text-gray-900"></p>
+                <p id="fileInterviewSize" class="text-xs text-gray-500"></p>
+              </div>
+            </div>
+            <button id="fileInterviewRemove" type="button" class="text-red-500 hover:text-red-700">
+              <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <a id="downloadInterview" class="text-sm text-blue-600 underline mt-2 inline-block" target="_blank" href="#" style="display:none;">Download File Sebelumnya</a>
     </div>
     <div class="mt-6">
       <button id="saveInterview" class="px-4 py-2 rounded-md bg-[#1E90FF] text-white">Simpan Interview</button>
@@ -74,9 +101,36 @@
         </select>
       </div>
       <div>
-        <label class="block text-sm text-gray-700">Dokumentasi Psikotest</label>
-        <input id="filePsikotest" type="file" class="border border-gray-300 rounded-md px-2 py-1 w-full" />
-        <a id="downloadPsikotest" class="text-sm text-blue-600 underline mt-2 inline-block" target="_blank" href="#" style="display:none;">Download File</a>
+        <label class="block text-sm text-gray-700 mb-2">Dokumentasi Psikotest</label>
+        <div class="relative">
+          <input id="filePsikotest" type="file" class="hidden" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" />
+          <div id="filePsikotestBox" class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-blue-400 transition-colors">
+            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+              <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <p class="mt-2 text-sm text-gray-600">Klik untuk upload file</p>
+            <p class="mt-1 text-xs text-gray-500">PDF, DOC, DOCX, JPG, PNG</p>
+          </div>
+          <div id="filePsikotestPreview" class="hidden mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <svg class="h-8 w-8 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd" />
+                </svg>
+                <div>
+                  <p id="filePsikotestName" class="text-sm font-medium text-gray-900"></p>
+                  <p id="filePsikotestSize" class="text-xs text-gray-500"></p>
+                </div>
+              </div>
+              <button id="filePsikotestRemove" type="button" class="text-red-500 hover:text-red-700">
+                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        <a id="downloadPsikotest" class="text-sm text-blue-600 underline mt-2 inline-block" target="_blank" href="#" style="display:none;">Download File Sebelumnya</a>
       </div>
     </div>
     <div class="mt-4">
@@ -255,6 +309,30 @@
     const link = document.getElementById("downloadInterview");
     link.href = `@Url.Content("~/Screening/Biodata/Interview/Download")?kodeBiodata=${biodata.seqNo}`;
     link.style.display = "inline-block";
+    
+    // Show existing file preview
+    const fileName = statusData.interviewFile || "File Interview";
+    const fileExt = fileName.split('.').pop().toLowerCase();
+    const isImage = ['jpg', 'jpeg', 'png', 'gif', 'bmp'].includes(fileExt);
+    
+    const box = document.getElementById("fileInterviewBox");
+    const preview = document.getElementById("fileInterviewPreview");
+    const nameEl = document.getElementById("fileInterviewName");
+    const sizeEl = document.getElementById("fileInterviewSize");
+    
+    if (isImage) {
+      // Show image preview
+      const imgPreview = document.createElement('img');
+      imgPreview.src = link.href;
+      imgPreview.className = 'w-full h-48 object-contain rounded-lg border border-gray-200 bg-white mb-2';
+      imgPreview.id = 'fileInterviewImage';
+      preview.insertBefore(imgPreview, preview.firstChild);
+    }
+    
+    nameEl.textContent = fileName;
+    sizeEl.textContent = "File yang sudah diupload";
+    box.classList.add('hidden');
+    preview.classList.remove('hidden');
   }
 
   function normaLabel(result, standard) {
@@ -509,6 +587,30 @@
     const link = document.getElementById("downloadPsikotest");
     link.href = `@Url.Content("~/Screening/Biodata/Psikotest/Download")?kodeBiodata=${biodata.seqNo}`;
     link.style.display = "inline-block";
+    
+    // Show existing file preview
+    const fileName = statusData.psikotestFile || "File Psikotest";
+    const fileExt = fileName.split('.').pop().toLowerCase();
+    const isImage = ['jpg', 'jpeg', 'png', 'gif', 'bmp'].includes(fileExt);
+    
+    const box = document.getElementById("filePsikotestBox");
+    const preview = document.getElementById("filePsikotestPreview");
+    const nameEl = document.getElementById("filePsikotestName");
+    const sizeEl = document.getElementById("filePsikotestSize");
+    
+    if (isImage) {
+      // Show image preview
+      const imgPreview = document.createElement('img');
+      imgPreview.src = link.href;
+      imgPreview.className = 'w-full h-48 object-contain rounded-lg border border-gray-200 bg-white mb-2';
+      imgPreview.id = 'filePsikotestImage';
+      preview.insertBefore(imgPreview, preview.firstChild);
+    }
+    
+    nameEl.textContent = fileName;
+    sizeEl.textContent = "File yang sudah diupload";
+    box.classList.add('hidden');
+    preview.classList.remove('hidden');
   }
 
   document.getElementById("tabBtnInterview").addEventListener("click", () => {
@@ -563,18 +665,89 @@
     if(window.DCT3Modals){ DCT3Modals.open('alert', { message: msg || '' }); }
     else { alert(msg || ''); }
   }
-  function ModalInformation(msg){
-    if(window.DCT3Modals){ DCT3Modals.open('information', { message: msg || '' }); }
-    else { alert(msg || ''); }
+  function ModalInformation(msg, callback){
+    if(window.DCT3Modals){ 
+      DCT3Modals.open('information', { message: msg || '' });
+      if(callback) {
+        setTimeout(() => {
+          const modalOk = document.querySelector('[data-modal-action="ok"]');
+          if(modalOk) {
+            modalOk.addEventListener('click', callback, { once: true });
+          }
+        }, 100);
+      }
+    }
+    else { 
+      alert(msg || ''); 
+      if(callback) callback();
+    }
   }
   function ModalFailed(msg){
     if(window.DCT3Modals){ DCT3Modals.open('failed', { message: msg || '' }); }
     else { alert(msg || ''); }
   }
 
+  // File upload handlers
+  function setupFileUpload(inputId, boxId, previewId, nameId, sizeId, removeId) {
+    const input = document.getElementById(inputId);
+    const box = document.getElementById(boxId);
+    const preview = document.getElementById(previewId);
+    const nameEl = document.getElementById(nameId);
+    const sizeEl = document.getElementById(sizeId);
+    const removeBtn = document.getElementById(removeId);
+
+    box.addEventListener('click', () => input.click());
+
+    input.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        // Remove existing image preview if any
+        const existingImg = preview.querySelector('img');
+        if (existingImg) existingImg.remove();
+        
+        nameEl.textContent = file.name;
+        const sizeKB = (file.size / 1024).toFixed(2);
+        sizeEl.textContent = sizeKB > 1024 ? `${(sizeKB / 1024).toFixed(2)} MB` : `${sizeKB} KB`;
+        
+        // Show image preview if file is an image
+        const fileExt = file.name.split('.').pop().toLowerCase();
+        const isImage = ['jpg', 'jpeg', 'png', 'gif', 'bmp'].includes(fileExt);
+        
+        if (isImage) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const imgPreview = document.createElement('img');
+            imgPreview.src = event.target.result;
+            imgPreview.className = 'w-full h-48 object-contain rounded-lg border border-gray-200 bg-white mb-2';
+            preview.insertBefore(imgPreview, preview.firstChild);
+          };
+          reader.readAsDataURL(file);
+        }
+        
+        box.classList.add('hidden');
+        preview.classList.remove('hidden');
+      }
+    });
+
+    removeBtn.addEventListener('click', () => {
+      input.value = '';
+      const existingImg = preview.querySelector('img');
+      if (existingImg) existingImg.remove();
+      box.classList.remove('hidden');
+      preview.classList.add('hidden');
+    });
+  }
+
+  setupFileUpload('fileInterview', 'fileInterviewBox', 'fileInterviewPreview', 'fileInterviewName', 'fileInterviewSize', 'fileInterviewRemove');
+  setupFileUpload('filePsikotest', 'filePsikotestBox', 'filePsikotestPreview', 'filePsikotestName', 'filePsikotestSize', 'filePsikotestRemove');
+
   document.getElementById("saveInterview").addEventListener("click", async () => {
     const hasil = document.getElementById("hasilInterview").value;
     const file = document.getElementById("fileInterview").files[0];
+    const remarks = document.getElementById("remarksInterview").value || "";
+    const strengthWeakness = document.getElementById("strengthWeakness").value || "";
+    const likeDislike = document.getElementById("likeDislike").value || "";
+    
     if (!hasil) {
       ModalAlert("Hasil interview wajib diisi");
       return;
@@ -583,17 +756,57 @@
       ModalAlert("File hasil interview wajib diupload");
       return;
     }
+    
     const payload = {
       personal: collectInterview("personal"),
       experience: collectInterview("experience"),
       personality: collectPersonality()
     };
+    
+    // Validate remarks, strengthWeakness, likeDislike
+    if (!remarks.trim()) {
+      ModalAlert("Tidak dapat menyimpan data karena masih ada yang kosong");
+      return;
+    }
+    if (!strengthWeakness.trim()) {
+      ModalAlert("Tidak dapat menyimpan data karena masih ada yang kosong");
+      return;
+    }
+    if (!likeDislike.trim()) {
+      ModalAlert("Tidak dapat menyimpan data karena masih ada yang kosong");
+      return;
+    }
+    
+    // Validate personal items
+    for (const item of payload.personal) {
+      if (!item.answer.trim()) {
+        ModalAlert("Tidak dapat menyimpan data karena masih ada yang kosong");
+        return;
+      }
+    }
+    
+    // Validate experience items
+    for (const item of payload.experience) {
+      if (!item.answer.trim()) {
+        ModalAlert("Tidak dapat menyimpan data karena masih ada yang kosong");
+        return;
+      }
+    }
+    
+    // Validate personality items
+    for (const item of payload.personality) {
+      if (!item.nilai.trim()) {
+        ModalAlert("Tidak dapat menyimpan data karena masih ada yang kosong");
+        return;
+      }
+    }
+    
     const fd = new FormData();
     fd.append("seqNo", biodata.seqNo);
     fd.append("hasilInterview", hasil);
-    fd.append("remarks", document.getElementById("remarksInterview").value || "");
-    fd.append("strengthWeakness", document.getElementById("strengthWeakness").value || "");
-    fd.append("likeDislike", document.getElementById("likeDislike").value || "");
+    fd.append("remarks", remarks);
+    fd.append("strengthWeakness", strengthWeakness);
+    fd.append("likeDislike", likeDislike);
     fd.append("answers", JSON.stringify(payload));
     if (file) fd.append("file", file);
     const res = await fetch("@Url.Content("~/Screening/Biodata/Interview/Save")", { method: "POST", body: fd });
@@ -602,8 +815,7 @@
       ModalFailed(json.error || "Gagal menyimpan");
       return;
     }
-    ModalInformation("Berhasil menyimpan interview");
-    location.reload();
+    ModalInformation("Berhasil menyimpan interview", () => location.reload());
   });
 
   document.getElementById("savePsikotest").addEventListener("click", async () => {
@@ -627,7 +839,6 @@
       ModalFailed(json.error || "Gagal menyimpan");
       return;
     }
-    ModalInformation("Berhasil menyimpan psikotest");
-    location.reload();
+    ModalInformation("Berhasil menyimpan psikotest", () => location.reload());
   });
 </script>

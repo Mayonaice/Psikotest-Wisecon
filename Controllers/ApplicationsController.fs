@@ -46,7 +46,7 @@ type ApplicationsController (db: IDbConnection) =
         if not ok then this.Unauthorized() :> IActionResult
         else if String.IsNullOrWhiteSpace(req.UserInput) then this.BadRequest(box {| error = "UserInput is required" |}) :> IActionResult
         else
-        let dir = "C:\\dct_docs\\WISECON_PSIKOTEST\\Resume\\"
+        let dir = "D:\\dct_docs\\WISECON_PSIKOTEST\\Resume\\"
         Directory.CreateDirectory(dir) |> ignore
 
         let base64 = if String.IsNullOrWhiteSpace(req.AttachmentBase64) then "" else req.AttachmentBase64

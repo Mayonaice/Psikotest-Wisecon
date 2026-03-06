@@ -370,7 +370,7 @@ type QuestionsController (db: System.Data.IDbConnection) =
 
     [<Authorize>]
     [<HttpPost>]
-    [<Route("Questions/Detail/Copy")>]
+    [<Route("pakai opy")>]
     member this.CopyDtl ([<FromBody>] req: CopyDtlRequest) : IActionResult =
         let conn = db :?> Microsoft.Data.SqlClient.SqlConnection
         conn.Open()

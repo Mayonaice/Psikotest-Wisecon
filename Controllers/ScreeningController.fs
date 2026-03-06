@@ -293,7 +293,7 @@ type ScreeningController (db: IDbConnection) =
             let cv = if isNull cvObj then "" else cvObj.ToString()
             if String.IsNullOrWhiteSpace(cv) then this.NotFound() :> IActionResult
             else
-                let basePath = @"C:\dct_docs\WISECON_PSIKOTEST\Resume"
+                let basePath = @"D:\dct_docs\WISECON_PSIKOTEST\Resume"
                 let fileName = Path.GetFileName(cv)
                 let filePath = Path.Combine(basePath, fileName)
                 if not (System.IO.File.Exists(filePath)) then this.NotFound() :> IActionResult
@@ -314,7 +314,7 @@ type ScreeningController (db: IDbConnection) =
             let name = if isNull nameObj then "" else nameObj.ToString()
             if String.IsNullOrWhiteSpace(name) then this.NotFound() :> IActionResult
             else
-                let basePath = @"C:\dct_docs\WISECON_PSIKOTEST\Screening\Interview"
+                let basePath = @"D:\dct_docs\WISECON_PSIKOTEST\Screening\Interview"
                 let fileName = Path.GetFileName(name)
                 let filePath = Path.Combine(basePath, fileName)
                 if not (System.IO.File.Exists(filePath)) then this.NotFound() :> IActionResult
@@ -335,7 +335,7 @@ type ScreeningController (db: IDbConnection) =
             let name = if isNull nameObj then "" else nameObj.ToString()
             if String.IsNullOrWhiteSpace(name) then this.NotFound() :> IActionResult
             else
-                let basePath = @"C:\dct_docs\WISECON_PSIKOTEST\Screening\Psikotest"
+                let basePath = @"D:\dct_docs\WISECON_PSIKOTEST\Screening\Psikotest"
                 let fileName = Path.GetFileName(name)
                 let filePath = Path.Combine(basePath, fileName)
                 if not (System.IO.File.Exists(filePath)) then this.NotFound() :> IActionResult
@@ -569,7 +569,7 @@ type ScreeningController (db: IDbConnection) =
                 if String.IsNullOrWhiteSpace(answers) then { personal = [||]; experience = [||]; personality = [||] }
                 else JsonSerializer.Deserialize<InterviewSavePayload>(answers, options)
             let user = this.getUserName()
-            let folder = @"C:\dct_docs\WISECON_PSIKOTEST\Screening\Interview"
+            let folder = @"D:\dct_docs\WISECON_PSIKOTEST\Screening\Interview"
             let newFile = this.saveUpload(file, folder)
             conn.Open()
             try
@@ -669,7 +669,7 @@ type ScreeningController (db: IDbConnection) =
         else
             let conn = db :?> Microsoft.Data.SqlClient.SqlConnection
             let user = this.getUserName()
-            let folder = @"C:\dct_docs\WISECON_PSIKOTEST\Screening\Psikotest"
+            let folder = @"D:\dct_docs\WISECON_PSIKOTEST\Screening\Psikotest"
             let newFile = this.saveUpload(file, folder)
             conn.Open()
             try
