@@ -14,6 +14,7 @@
     <title>Ujian Psikotest</title>
     <base href="@Url.Content("~/")">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
     <link rel="stylesheet" href="@Url.Content("~/DCT3_Standarisasi/Layout/notifications.css")" />
     <style>
         .nav-dot { width: 30px; height: 30px; border-radius: 9999px; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; }
@@ -101,6 +102,10 @@
             </div>
         </div>
     </div>
+
+    <!-- Hidden video and canvas for face detection -->
+    <video id="faceVideo" style="display:none;" autoplay muted playsinline></video>
+    <canvas id="faceCanvas" style="display:none;"></canvas>
 
     @await Html.PartialAsync("_DCT3Notifications")
 
@@ -631,6 +636,213 @@
         prepareGroups();
         setGroup(0);
         setInterval(updateTimer, 1000);
+
+        // Face detection and photo capture
+        let photoIntervalMinutes = 0;
+        let photoIntervalId = null;
+        let faceDetectionActive = false;
+        let modelsLoaded = false;
+        const faceVideo = document.getElementById('faceVideo');
+        const faceCanvas = document.getElementById('faceCanvas');
+
+        async function loadFaceApiModels() {
+            try {
+                const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@@vladmandic/face-api/model/';
+                await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+                modelsLoaded = true;
+                return true;
+            } catch (err) {
+                console.error('Failed to load face-api models:', err);
+                return false;
+            }
+        }
+
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { width: 640, height: 480 } 
+                });
+                faceVideo.srcObject = stream;
+                return true;
+            } catch (err) {
+                console.error('Camera access denied:', err);
+                return false;
+            }
+        }
+
+        function stopCamera() {
+            if (faceVideo.srcObject) {
+                const tracks = faceVideo.srcObject.getTracks();
+                tracks.forEach(track => track.stop());
+                faceVideo.srcObject = null;
+            }
+        }
+
+        async function detectFace() {
+            if (!modelsLoaded || !faceVideo.srcObject) return false;
+            
+            try {
+                const detection = await faceapi.detectSingleFace(
+                    faceVideo, 
+                    new faceapi.TinyFaceDetectorOptions()
+                );
+                return detection !== undefined;
+            } catch (err) {
+                console.error('Face detection error:', err);
+                return false;
+            }
+        }
+
+        async function capturePhoto() {
+            if (!faceVideo.srcObject) return null;
+            
+            faceCanvas.width = faceVideo.videoWidth;
+            faceCanvas.height = faceVideo.videoHeight;
+            const ctx = faceCanvas.getContext('2d');
+            ctx.drawImage(faceVideo, 0, 0);
+            
+            return faceCanvas.toDataURL('image/jpeg', 0.8);
+        }
+
+        async function savePhotoToServer(photoData) {
+            try {
+                const formData = new FormData();
+                formData.append('token', token);
+                formData.append('photo', photoData);
+                
+                const res = await fetch(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Url.Content("~/Exam/SavePhoto"))), {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (res.ok) {
+                    const result = await res.json();
+                    console.log('Photo saved:', result.filename);
+                    return true;
+                } else {
+                    console.error('Failed to save photo');
+                    return false;
+                }
+            } catch (err) {
+                console.error('Error saving photo:', err);
+                return false;
+            }
+        }
+
+        async function takePictureWithValidation() {
+            const faceDetected = await detectFace();
+            
+            if (!faceDetected) {
+                return false;
+            }
+            
+            const photoData = await capturePhoto();
+            if (photoData) {
+                await savePhotoToServer(photoData);
+            }
+            
+            return true;
+        }
+
+        function showCameraRetryModal() {
+            if (window.DCT3Modals && typeof DCT3Modals.open === 'function') {
+                DCT3Modals.open('failed', {
+                    message: 'Kamera wajib diaktifkan/diizinkan selama ujian berlangsung, serta pastikan wajah harus terlihat dengan jelas!',
+                    okText: 'Retry',
+                    onOk: async function() {
+                        await validateCameraAndFace();
+                    }
+                });
+            } else {
+                alert('Kamera wajib diaktifkan/diizinkan selama ujian berlangsung, serta pastikan wajah harus terlihat dengan jelas!');
+                setTimeout(() => validateCameraAndFace(), 1000);
+            }
+        }
+
+        async function validateCameraAndFace() {
+            // Try to start camera
+            const cameraStarted = await startCamera();
+            if (!cameraStarted) {
+                showCameraRetryModal();
+                return;
+            }
+            
+            // Wait for video to be ready
+            await new Promise(resolve => {
+                if (faceVideo.readyState >= 2) {
+                    resolve();
+                } else {
+                    faceVideo.onloadeddata = () => resolve();
+                }
+            });
+            
+            // Try to detect face
+            const faceDetected = await detectFace();
+            if (!faceDetected) {
+                showCameraRetryModal();
+                return;
+            }
+            
+            // Success - capture first photo
+            faceDetectionActive = true;
+            await takePictureWithValidation();
+            
+            // Set up interval for subsequent photos
+            if (photoIntervalMinutes > 0) {
+                photoIntervalId = setInterval(async () => {
+                    await takePictureWithValidation();
+                }, photoIntervalMinutes * 60 * 1000);
+            }
+        }
+
+        async function initPhotoCapture() {
+            try {
+                // Get photo interval from server
+                const res = await fetch(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Url.Content("~/Exam/GetPhotoInterval"))));
+                if (!res.ok) {
+                    console.error('Failed to get photo interval');
+                    return;
+                }
+                
+                const data = await res.json();
+                photoIntervalMinutes = data.interval || 0;
+                
+                if (photoIntervalMinutes <= 0) {
+                    console.log('Photo capture not required (interval = 0)');
+                    return;
+                }
+                
+                console.log('Photo interval:', photoIntervalMinutes, 'minutes');
+                
+                // Load face-api models
+                const loaded = await loadFaceApiModels();
+                if (!loaded) {
+                    console.error('Failed to load face detection models');
+                    return;
+                }
+                
+                // Start camera and face validation
+                await validateCameraAndFace();
+                
+            } catch (err) {
+                console.error('Error initializing photo capture:', err);
+            }
+        }
+
+        // Initialize photo capture when page loads
+        if (typeof faceapi !== 'undefined') {
+            initPhotoCapture();
+        } else {
+            console.error('face-api.js not loaded');
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (photoIntervalId) {
+                clearInterval(photoIntervalId);
+            }
+            stopCamera();
+        });
     </script>
 </body>
 </html>

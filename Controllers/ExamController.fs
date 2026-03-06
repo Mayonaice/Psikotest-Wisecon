@@ -596,3 +596,120 @@ type ExamController (db: IDbConnection, cfg: IConfiguration) =
                                         this.View("Test") :> IActionResult
                 finally
                     conn.Close()
+
+    [<AllowAnonymous>]
+    [<HttpGet>]
+    [<Route("Exam/GetPhotoInterval")>]
+    member this.GetPhotoInterval() : IActionResult =
+        let conn = db :?> SqlConnection
+        conn.Open()
+        try
+            use cmd = new SqlCommand()
+            cmd.Connection <- conn
+            cmd.CommandType <- CommandType.Text
+            cmd.CommandText <- "SELECT TOP 1 Value FROM WISECON_PSIKOTEST.dbo.SYS_Parameter WHERE Name = 'Interval_Waktu_Foto' AND Status_Parameter = '1'"
+            let obj = cmd.ExecuteScalar()
+            if isNull obj then
+                this.Ok(box {| interval = 0 |}) :> IActionResult
+            else
+                let intervalStr = obj.ToString()
+                let mutable intervalMin = 0
+                if Int32.TryParse(intervalStr, &intervalMin) then
+                    this.Ok(box {| interval = intervalMin |}) :> IActionResult
+                else
+                    this.Ok(box {| interval = 0 |}) :> IActionResult
+        finally
+            conn.Close()
+
+    [<AllowAnonymous>]
+    [<HttpPost>]
+    [<Route("Exam/SavePhoto")>]
+    member this.SavePhoto() : IActionResult =
+        try
+            let form = this.Request.Form
+            let token = if form.ContainsKey("token") then form.["token"].ToString() else ""
+            let photoData = if form.ContainsKey("photo") then form.["photo"].ToString() else ""
+            
+            if String.IsNullOrWhiteSpace(token) || String.IsNullOrWhiteSpace(photoData) then
+                this.BadRequest("Token atau photo data kosong") :> IActionResult
+            else
+                let encKey = getEncryptionKey ()
+                if String.IsNullOrWhiteSpace(encKey) then
+                    this.BadRequest("Konfigurasi EncryptionKey belum diset") :> IActionResult
+                else
+                    let tokenEncFixed = Uri.UnescapeDataString(token).Replace(" ", "+")
+                    let plain = decrypt64 tokenEncFixed encKey
+                    match tryParseToken plain with
+                    | None -> this.BadRequest("Token tidak valid") :> IActionResult
+                    | Some(userId, noPaket, _, _, _) ->
+                        let conn = db :?> SqlConnection
+                        conn.Open()
+                        try
+                            // Get IdNoPeserta and NoPeserta
+                            match this.getAssignment(conn, userId, noPaket) with
+                            | None -> this.BadRequest("Data ujian tidak ditemukan") :> IActionResult
+                            | Some(idNoPeserta, noPeserta, _, _, _, _, _, _, _, _, _) ->
+                                // Remove data:image/png;base64, prefix
+                                let base64Data = 
+                                    if photoData.Contains(",") then
+                                        photoData.Substring(photoData.IndexOf(",") + 1)
+                                    else photoData
+                                
+                                let imageBytes = Convert.FromBase64String(base64Data)
+                                let basePath = @"D:\dct_docs\WISECON_PSIKOTEST\Test\WajahPeserta"
+                                
+                                // Create directory if not exists
+                                if not (System.IO.Directory.Exists(basePath)) then
+                                    System.IO.Directory.CreateDirectory(basePath) |> ignore
+                                
+                                // Generate filename: UserId_NoPaket_Timestamp.jpg
+                                let timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss_fff")
+                                let filename = sprintf "%s_%d_%s.jpg" userId noPaket timestamp
+                                let fullPath = System.IO.Path.Combine(basePath, filename)
+                                
+                                // Save file
+                                System.IO.File.WriteAllBytes(fullPath, imageBytes)
+                                
+                                // Create table if not exists and insert record
+                                use cmdCreateTable = new SqlCommand()
+                                cmdCreateTable.Connection <- conn
+                                cmdCreateTable.CommandType <- CommandType.Text
+                                cmdCreateTable.CommandText <-
+                                    "IF OBJECT_ID('WISECON_PSIKOTEST.dbo.TR_PesertaFoto','U') IS NULL " +
+                                    "BEGIN " +
+                                    "  CREATE TABLE WISECON_PSIKOTEST.dbo.TR_PesertaFoto ( " +
+                                    "    ID BIGINT IDENTITY(1,1) PRIMARY KEY, " +
+                                    "    IdNoPeserta BIGINT, " +
+                                    "    NoPeserta VARCHAR(50), " +
+                                    "    UserId VARCHAR(100), " +
+                                    "    NoPaket BIGINT, " +
+                                    "    Filename VARCHAR(255), " +
+                                    "    FilePath VARCHAR(500), " +
+                                    "    CapturedAt DATETIME DEFAULT GETDATE(), " +
+                                    "    UserInput VARCHAR(100), " +
+                                    "    TimeInput DATETIME DEFAULT GETDATE() " +
+                                    "  ); " +
+                                    "END;"
+                                cmdCreateTable.ExecuteNonQuery() |> ignore
+                                
+                                // Insert photo record
+                                use cmdInsert = new SqlCommand()
+                                cmdInsert.Connection <- conn
+                                cmdInsert.CommandType <- CommandType.Text
+                                cmdInsert.CommandText <-
+                                    "INSERT INTO WISECON_PSIKOTEST.dbo.TR_PesertaFoto " +
+                                    "(IdNoPeserta, NoPeserta, UserId, NoPaket, Filename, FilePath, CapturedAt, UserInput, TimeInput) " +
+                                    "VALUES (@idNoPeserta, @noPeserta, @userId, @noPaket, @filename, @filepath, GETDATE(), @userId, GETDATE())"
+                                cmdInsert.Parameters.AddWithValue("@idNoPeserta", idNoPeserta) |> ignore
+                                cmdInsert.Parameters.AddWithValue("@noPeserta", noPeserta) |> ignore
+                                cmdInsert.Parameters.AddWithValue("@userId", userId) |> ignore
+                                cmdInsert.Parameters.AddWithValue("@noPaket", noPaket) |> ignore
+                                cmdInsert.Parameters.AddWithValue("@filename", filename) |> ignore
+                                cmdInsert.Parameters.AddWithValue("@filepath", fullPath) |> ignore
+                                cmdInsert.ExecuteNonQuery() |> ignore
+                                
+                                this.Ok(box {| success = true; filename = filename |}) :> IActionResult
+                        finally
+                            conn.Close()
+        with ex ->
+            this.BadRequest(ex.Message) :> IActionResult
