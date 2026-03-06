@@ -5,19 +5,19 @@
 <div class="px-0 py-0 text-[#111827]">
   <h1 class="text-3xl font-semibold text-[#1E90FF]">Master Pertanyaan</h1>
 
-  <div class="mt-4 bg-[#EBEBE9] border border-gray-300 rounded-xl pl-3 pr-3 py-3 w-full max-w-[32rem]">
+  <div class="mt-4 bg-[#EBEBE9] border border-gray-300 pl-3 pr-3 py-3 w-full max-w-[32rem]">
     <div class="flex items-center gap-3 mb-2">
       <span class="text-sm text-gray-700 w-28">Tanggal Dibuat:</span>
       <div class="flex items-center gap-2 w-80 justify-between">
         <span class="w-3 h-3 rounded-sm bg-[#1E90FF]"></span>
-        <input id="qDateStart" type="date" class="border border-gray-300 rounded-md px-2 py-1 w-40" />
+        <input id="qDateStart" type="date" class="border border-gray-300 px-2 py-1 w-40" />
         <span class="text-gray-700">To</span>
-        <input id="qDateEnd" type="date" class="border border-gray-300 rounded-md px-2 py-1 w-40" />
+        <input id="qDateEnd" type="date" class="border border-gray-300 px-2 py-1 w-40" />
       </div>
     </div>
     <div class="flex items-center gap-3 mb-2">
       <span class="text-sm text-gray-700 w-28">Status</span>
-      <select id="qStatusPaket" class="border border-gray-300 rounded-md px-2 py-1 w-80">
+      <select id="qStatusPaket" class="border border-gray-300 px-2 py-1 w-80">
         <option value="">Semua Status</option>
         <option value="AKTIF">Aktif</option>
         <option value="NONAKTIF">Nonaktif</option>
@@ -37,8 +37,8 @@
 
   <div class="mt-4"></div>
 
-  <div id="titlePaket" class=" bg-[#EBEBE9] border border-gray-300 rounded-t-xl px-3 py-1 font-semibold">Paket Soal</div>
-  <div id="gridPaket" class="border border-gray-300 border-t-0 rounded-b-xl">
+  <div id="titlePaket" class=" bg-[#EBEBE9] border border-gray-300 px-3 py-1 font-semibold">Paket Soal</div>
+  <div id="gridPaket" class="border border-gray-300 border-t-0">
     <div class="table-scroll overflow-x-auto overflow-y-auto max-h-[60vh]">
       <table id="tblPaket" class="min-w-full text-sm">
         <thead>
@@ -60,15 +60,15 @@
           <th class="px-1 py-1"></th>
           <th class="px-1 py-1"></th>
           <th class="px-1 py-1"></th>
-          <th class="px-1 py-1 search-cell"><input data-field="noPaket" class="col-search-paket border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="namaPaket" class="col-search-paket border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="posisi" class="col-search-paket border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="toleransi" class="col-search-paket border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="status" class="col-search-paket border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="userInput" class="col-search-paket border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="time" class="col-search-paket border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="userEdit" class="col-search-paket border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="timeEdit" class="col-search-paket border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="noPaket" class="col-search-paket border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="namaPaket" class="col-search-paket border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="posisi" class="col-search-paket border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="toleransi" class="col-search-paket border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="status" class="col-search-paket border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="userInput" class="col-search-paket border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="time" class="col-search-paket border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="userEdit" class="col-search-paket border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="timeEdit" class="col-search-paket border border-gray-300 px-2 py-1 w-full" /></th>
         </tr>
         </thead>
         <tbody></tbody>
@@ -97,8 +97,8 @@
     </div>
   </div>
 
-  <div id="titleGroup" class=" bg-[#EBEBE9] border border-gray-300 rounded-t-xl px-3 py-1 mt-6 font-semibold">Group Soal</div>
-  <div id="gridGroup" class="border border-gray-300 border-t-0 rounded-b-xl">
+  <div id="titleGroup" class=" bg-[#EBEBE9] border border-gray-300 px-3 py-1 mt-6 font-semibold">Group Soal</div>
+  <div id="gridGroup" class="border border-gray-300 border-t-0">
     <div class="table-scroll overflow-x-auto overflow-y-auto max-h-[60vh]">
       <table id="tblGroup" class="min-w-full text-sm">
         <thead>
@@ -123,18 +123,18 @@
           <th class="px-1 py-1"></th>
           <th class="px-1 py-1"></th>
           <th class="px-1 py-1"></th>
-          <th class="px-1 py-1 search-cell"><input data-field="noGroup" class="col-search-group border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="namaGroup" class="col-search-group border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="minSoal" class="col-search-group border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="nilaiStandar" class="col-search-group border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="waktu" class="col-search-group border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="random" class="col-search-group border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="status" class="col-search-group border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="petunjuk" class="col-search-group border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="userInput" class="col-search-group border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="time" class="col-search-group border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="userEdit" class="col-search-group border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="timeEdit" class="col-search-group border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="noGroup" class="col-search-group border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="namaGroup" class="col-search-group border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="minSoal" class="col-search-group border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="nilaiStandar" class="col-search-group border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="waktu" class="col-search-group border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="random" class="col-search-group border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="status" class="col-search-group border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="petunjuk" class="col-search-group border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="userInput" class="col-search-group border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="time" class="col-search-group border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="userEdit" class="col-search-group border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="timeEdit" class="col-search-group border border-gray-300 px-2 py-1 w-full" /></th>
         </tr>
         </thead>
         <tbody></tbody>
@@ -166,8 +166,8 @@
 
   <div class="grid grid-cols-2 gap-4 mt-6">
     <div>
-      <div id="titleDtl" class=" bg-[#EBEBE9] border border-gray-300 rounded-t-xl px-3 py-1 font-semibold">Pertanyaan</div>
-      <div id="gridDtl" class="border border-gray-300 border-t-0 rounded-b-xl">
+      <div id="titleDtl" class=" bg-[#EBEBE9] border border-gray-300 px-3 py-1 font-semibold">Pertanyaan</div>
+      <div id="gridDtl" class="border border-gray-300 border-t-0">
     <div class="table-scroll overflow-x-auto overflow-y-auto max-h-[60vh]">
       <table id="tblDtl" class="min-w-full text-sm">
         <thead>
@@ -192,18 +192,18 @@
           <th class="px-1 py-1"></th>
           <th class="px-1 py-1"></th>
           <th class="px-1 py-1"></th>
-          <th class="px-1 py-1 search-cell"><input data-field="noUrut" class="col-search-dtl border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="judul" class="col-search-dtl border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="deskripsi" class="col-search-dtl border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="isDownload" class="col-search-dtl border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="aktif" class="col-search-dtl border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="urlMedia" class="col-search-dtl border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="tipeMedia" class="col-search-dtl border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="userInput" class="col-search-dtl border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="time" class="col-search-dtl border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="userEdit" class="col-search-dtl border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="timeEdit" class="col-search-dtl border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="noSoal" class="col-search-dtl border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="noUrut" class="col-search-dtl border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="judul" class="col-search-dtl border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="deskripsi" class="col-search-dtl border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="isDownload" class="col-search-dtl border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="aktif" class="col-search-dtl border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="urlMedia" class="col-search-dtl border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="tipeMedia" class="col-search-dtl border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="userInput" class="col-search-dtl border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="time" class="col-search-dtl border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="userEdit" class="col-search-dtl border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="timeEdit" class="col-search-dtl border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="noSoal" class="col-search-dtl border border-gray-300 px-2 py-1 w-full" /></th>
         </tr>
         </thead>
         <tbody></tbody>
@@ -237,8 +237,8 @@
 
     </div>
     <div>
-      <div id="titleJawaban" class=" bg-[#EBEBE9] border border-gray-300 rounded-t-xl px-3 py-1 font-semibold">Jawaban</div>
-      <div id="gridJawaban" class="border border-gray-300 border-t-0 rounded-b-xl">
+      <div id="titleJawaban" class=" bg-[#EBEBE9] border border-gray-300 px-3 py-1 font-semibold">Jawaban</div>
+      <div id="gridJawaban" class="border border-gray-300 border-t-0">
     <div class="table-scroll overflow-x-auto overflow-y-auto max-h-[60vh]">
       <table id="tblJawaban" class="min-w-full text-sm">
         <thead>
@@ -261,15 +261,15 @@
           <th class="px-1 py-1"></th>
           <th class="px-1 py-1"></th>
           <th class="px-1 py-1"></th>
-          <th class="px-1 py-1 search-cell"><input data-field="noJawaban" class="col-search-jawaban border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="jawaban" class="col-search-jawaban border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="poin" class="col-search-jawaban border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="tipeMedia" class="col-search-jawaban border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="urlMedia" class="col-search-jawaban border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="userInput" class="col-search-jawaban border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="time" class="col-search-jawaban border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="userEdit" class="col-search-jawaban border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="timeEdit" class="col-search-jawaban border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="noJawaban" class="col-search-jawaban border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="jawaban" class="col-search-jawaban border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="poin" class="col-search-jawaban border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="tipeMedia" class="col-search-jawaban border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="urlMedia" class="col-search-jawaban border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="userInput" class="col-search-jawaban border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="time" class="col-search-jawaban border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="userEdit" class="col-search-jawaban border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="timeEdit" class="col-search-jawaban border border-gray-300 px-2 py-1 w-full" /></th>
           <th class="px-1 py-1 search-cell"><input data-field="seqNo" class="col-search-jawaban border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
         </tr>
         </thead>
@@ -357,7 +357,7 @@
   .date-formatted::-webkit-datetime-edit{ color:transparent; }
   .date-formatted::-webkit-calendar-picker-indicator{ opacity:1; position:absolute; right:.5rem; top:50%; transform:translateY(-50%); margin:0; padding:0; cursor:pointer; }
   #modalContent .dct-actions{ justify-content:flex-end; }
-  .modal-form{ display:grid; grid-template-columns:160px 1fr; gap:8px 12px; }
+  .modal-form{ display:grid; grid-template-columns:160px minmax(auto, 400px); gap:8px 12px; }
   .modal-form .modal-label{ font-size:14px; align-self:center; }
   .modal-form .modal-field{ display:flex; align-items:center; gap:8px; }
   .modal-form input, .modal-form select{ border:1px solid #d1d5db; border-radius:6px; padding:4px 8px; }

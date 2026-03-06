@@ -133,6 +133,63 @@
             return urlStr;
         }
         
+        function createMediaElement(url, tipe) {
+            if (!url || tipe === 'NOMEDIA') return null;
+            
+            const urlStr = normalizeMediaUrl(url);
+            
+            // Check if YouTube
+            if (urlStr.includes('youtube.com') || urlStr.includes('youtu.be')) {
+                let videoId = '';
+                if (urlStr.includes('youtube.com/watch')) {
+                    const urlObj = new URL(urlStr);
+                    videoId = urlObj.searchParams.get('v');
+                } else if (urlStr.includes('youtu.be/')) {
+                    videoId = urlStr.split('youtu.be/')[1].split('?')[0];
+                }
+                if (videoId) {
+                    const iframe = document.createElement('iframe');
+                    iframe.src = `https://www.youtube.com/embed/${videoId}`;
+                    iframe.className = 'w-full max-w-2xl aspect-video rounded-md border border-gray-200';
+                    iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+                    iframe.allowFullscreen = true;
+                    return iframe;
+                }
+            }
+            
+            // Check if video file
+            if (urlStr.match(/\.(mp4|webm|ogg)$/i)) {
+                const video = document.createElement('video');
+                video.src = urlStr;
+                video.controls = true;
+                video.className = 'max-w-2xl max-h-96 rounded-md border border-gray-200';
+                return video;
+            }
+            
+            // Check if audio file
+            if (urlStr.match(/\.(mp3|wav|ogg|m4a)$/i)) {
+                const audio = document.createElement('audio');
+                audio.src = urlStr;
+                audio.controls = true;
+                audio.className = 'w-full max-w-md';
+                return audio;
+            }
+            
+            // Default to image
+            const img = document.createElement('img');
+            img.src = urlStr;
+            img.alt = 'media';
+            img.className = 'max-h-64 rounded-md border border-gray-200';
+            img.onerror = function() {
+                // If image fails to load, try as iframe
+                const iframe = document.createElement('iframe');
+                iframe.src = urlStr;
+                iframe.className = 'w-full max-w-2xl h-96 rounded-md border border-gray-200';
+                this.parentNode.replaceChild(iframe, this);
+            };
+            return img;
+        }
+        
         function normalizeText(v){
             if(v==null) return '';
             var s = String(v);
@@ -356,11 +413,8 @@
                 const qUrl = q && q.urlMedia ? String(q.urlMedia).trim() : '';
                 const qTipe = q && q.tipeMedia ? String(q.tipeMedia).toUpperCase() : 'NOMEDIA';
                 if(qUrl && qTipe !== 'NOMEDIA'){
-                    const img = document.createElement('img');
-                    img.src = normalizeMediaUrl(qUrl);
-                    img.alt = 'media';
-                    img.className = 'max-h-64 rounded-md border border-gray-200';
-                    soalMedia.appendChild(img);
+                    const mediaEl = createMediaElement(qUrl, qTipe);
+                    if(mediaEl) soalMedia.appendChild(mediaEl);
                 }
             }
 
@@ -395,11 +449,11 @@
                 const aUrl = a && a.urlMedia ? String(a.urlMedia).trim() : '';
                 const aTipe = a && a.tipeMedia ? String(a.tipeMedia).toUpperCase() : 'NOMEDIA';
                 if(aUrl && aTipe !== 'NOMEDIA'){
-                    const img = document.createElement('img');
-                    img.src = normalizeMediaUrl(aUrl);
-                    img.alt = 'media';
-                    img.className = 'max-h-40 rounded-md border border-gray-200';
-                    txtWrap.appendChild(img);
+                    const mediaEl = createMediaElement(aUrl, aTipe);
+                    if(mediaEl) {
+                        mediaEl.className = mediaEl.tagName === 'IMG' ? 'max-h-40 rounded-md border border-gray-200' : mediaEl.className;
+                        txtWrap.appendChild(mediaEl);
+                    }
                 }
                 row.appendChild(input);
                 row.appendChild(txtWrap);
