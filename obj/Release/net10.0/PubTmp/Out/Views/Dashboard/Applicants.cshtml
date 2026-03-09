@@ -5,25 +5,25 @@
 <div class="px-0 py-0 text-[#111827]">
   <h1 class="text-3xl font-semibold text-[#1E90FF]">Data Pelamar</h1>
 
-  <div class="mt-4 bg-[#EBEBE9] border border-gray-300 rounded-xl pl-3 pr-3 py-3 w-full max-w-[32rem]">
+  <div class="mt-4 bg-[#EBEBE9] border border-gray-300 pl-3 pr-3 py-3 w-full max-w-[32rem]">
     <div class="flex items-center gap-3 mb-2">
       <span class="text-sm text-gray-700 w-28">Tanggal Input:</span>
       <div class="flex items-center gap-2 w-80 justify-between">
         <span class="w-3 h-3 rounded-sm bg-[#1E90FF]"></span>
-        <input id="dateStart" type="date" class="border border-gray-300 rounded-md px-2 py-1 w-40" />
+        <input id="dateStart" type="date" class="border border-gray-300 px-2 py-1 w-40" />
         <span class="text-gray-700">To</span>
-        <input id="dateEnd" type="date" class="border border-gray-300 rounded-md px-2 py-1 w-40" />
+        <input id="dateEnd" type="date" class="border border-gray-300 px-2 py-1 w-40" />
       </div>
     </div>
     <div class="flex items-center gap-3 mb-2">
       <span class="text-sm text-gray-700 w-28">Posisi</span>
-      <select id="posisi" class="border border-gray-300 rounded-md px-2 py-1 w-80">
+      <select id="posisi" class="border border-gray-300 px-2 py-1 w-80">
         <option value="">Semua Posisi</option>
       </select>
     </div>
     <div class="flex items-center gap-3 mb-2">
       <span class="text-sm text-gray-700 w-28">Hasil Psikotes</span>
-      <select id="hasil" class="border border-gray-300 rounded-md px-2 py-1 w-80">
+      <select id="hasil" class="border border-gray-300 px-2 py-1 w-80">
         <option value="">Semua Hasil</option>
         <option value="BELUM UJIAN">Belum Ujian</option>
         <option value="LULUS">Lulus</option>
@@ -40,8 +40,8 @@
 
   
 
-  <div class="mt-1 bg-[#EBEBE9] border border-gray-300 rounded-t-xl px-3 py-1 font-semibold">Peserta</div>
-  <div class="border border-gray-300 border-t-0 rounded-b-xl">
+  <div class="mt-1 bg-[#EBEBE9] border border-gray-300 px-3 py-1 font-semibold">Peserta</div>
+  <div class="border border-gray-300 border-t-0">
     <div class="table-scroll overflow-x-auto overflow-y-auto max-h-[60vh]">
       <table id="tblPeserta" class="min-w-full text-sm">
         <thead>
@@ -63,15 +63,15 @@
           <th class="px-1 py-1"></th>
           <th class="px-1 py-1"></th>
           <th class="px-1 py-1"></th>
-          <th class="px-1 py-1 search-cell"><input data-field="nomor" class="col-search border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="nama" class="col-search border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="alamat" class="col-search border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="email" class="col-search border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="pendidikan" class="col-search border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="posisi" class="col-search border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="ktp" class="col-search border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="hasil" class="col-search border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="time" class="col-search border border-gray-300 rounded-md px-2 py-1 w-full"  /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="nomor" class="col-search border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="nama" class="col-search border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="alamat" class="col-search border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="email" class="col-search border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="pendidikan" class="col-search border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="posisi" class="col-search border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="ktp" class="col-search border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="hasil" class="col-search border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="time" class="col-search border border-gray-300 px-2 py-1 w-full"  /></th>
         </tr>
         
         </thead>
@@ -107,28 +107,28 @@
 
 <div class="mt-10 ">
 
-  <div id="filterUjian" class="mt-4 bg-[#EBEBE9] border border-gray-300 rounded-xl pl-3 pr-3 py-3 w-full max-w-[32rem]">
+  <div id="filterUjian" class="mt-4 bg-[#EBEBE9] border border-gray-300 pl-3 pr-3 py-3 w-full max-w-[32rem]">
     <div class="flex items-center gap-3 mb-2">
       <span class="text-sm text-gray-700 w-28">Tanggal Input:</span>
       <div class="flex items-center gap-2 w-80 justify-between">
         <span class="w-3 h-3 rounded-sm bg-[#1E90FF]"></span>
-        <input id="ujianInputStart" type="date" class="border border-gray-300 rounded-md px-2 py-1 w-40" />
+        <input id="ujianInputStart" type="date" class="border border-gray-300 px-2 py-1 w-40" />
         <span class="text-gray-700">To</span>
-        <input id="ujianInputEnd" type="date" class="border border-gray-300 rounded-md px-2 py-1 w-40" />
+        <input id="ujianInputEnd" type="date" class="border border-gray-300 px-2 py-1 w-40" />
       </div>
     </div>
     <div class="flex items-center gap-3 mb-2">
       <span class="text-sm text-gray-700 w-28">Tanggal Ujian</span>
       <div class="flex items-center gap-2 w-80 justify-between">
         <span class="w-3 h-3 rounded-sm bg-[#1E90FF]"></span>
-        <input id="ujianDateStart" type="date" class="border border-gray-300 rounded-md px-2 py-1 w-40" />
+        <input id="ujianDateStart" type="date" class="border border-gray-300 px-2 py-1 w-40" />
         <span class="text-gray-700">To</span>
-        <input id="ujianDateEnd" type="date" class="border border-gray-300 rounded-md px-2 py-1 w-40" />
+        <input id="ujianDateEnd" type="date" class="border border-gray-300 px-2 py-1 w-40" />
       </div>
     </div>
     <div class="flex items-center gap-3 mb-2">
       <span class="text-sm text-gray-700 w-28">Status Pengerjaan</span>
-      <select id="statusPengerjaan" class="border border-gray-300 rounded-md px-2 py-1 w-80">
+      <select id="statusPengerjaan" class="border border-gray-300 px-2 py-1 w-80">
         <option value="">Semua Status</option>
         <option value="Belum Ujian">Belum Ujian</option>
         <option value="Sedang Ujian">Sedang Ujian</option>
@@ -137,7 +137,7 @@
     </div>
     <div class="flex items-center gap-3 mb-2">
       <span class="text-sm text-gray-700 w-28">Hasil Psikotest</span>
-      <select id="hasilPsikotest" class="border border-gray-300 rounded-md px-2 py-1 w-80">
+      <select id="hasilPsikotest" class="border border-gray-300 px-2 py-1 w-80">
         <option value="">Semua Status</option>
         <option value="LULUS">Lulus</option>
         <option value="TIDAK LULUS">Tidak Lulus</option>
@@ -156,7 +156,7 @@
     </div>
   </div>
 
-  <div id="filterInterview" class="mt-4 bg-[#EBEBE9] border border-gray-300 rounded-xl pl-3 pr-3 py-3 w-full max-w-[32rem] hidden">
+  <div id="filterInterview" class="mt-4 bg-[#EBEBE9] border border-gray-300 pl-3 pr-3 py-3 w-full max-w-[32rem] hidden">
     <div class="flex items-center gap-3 mb-2">
       <span class="text-sm text-gray-700 w-28">Tanggal Input:</span>
       <div class="flex items-center gap-2 w-80 justify-between">
@@ -192,8 +192,8 @@
     <button id="btnTabInterview" class="tab-btn tab-interview px-4 py-2 rounded-md font-semibold">Interview</button>
   </div>
 
-  <div id="titleUjian" class=" bg-[#EBEBE9] border border-gray-300 rounded-t-xl px-3 py-1 font-semibold">Peserta Ujian</div>
-  <div id="gridUjian" class="border border-gray-300 border-t-0 rounded-b-xl">
+  <div id="titleUjian" class=" bg-[#EBEBE9] border border-gray-300 px-3 py-1 font-semibold">Peserta Ujian</div>
+  <div id="gridUjian" class="border border-gray-300 border-t-0">
     <div class="table-scroll overflow-x-auto overflow-y-auto max-h-[60vh]">
       <table id="tblUjian" class="min-w-full text-sm">
         <thead>
@@ -224,24 +224,24 @@
           <th class="px-1 py-1"></th>
           <th class="px-1 py-1"></th>
           <th class="px-1 py-1"></th>
-          <th class="px-1 py-1 search-cell"><input data-field="batch" class="col-search-ujian border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="nomor" class="col-search-ujian border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="nama" class="col-search-ujian border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="userId" class="col-search-ujian border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="undangKe" class="col-search-ujian border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="status" class="col-search-ujian border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="hasil" class="col-search-ujian border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="link" class="col-search-ujian border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="paket" class="col-search-ujian border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="waktuTest" class="col-search-ujian border border-gray-300 rounded-md px-2 py-1 w-full"  /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="waktuMulai" class="col-search-ujian border border-gray-300 rounded-md px-2 py-1 w-full"  /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="statusPesan" class="col-search-ujian border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="kirim" class="col-search-ujian border border-gray-300 rounded-md px-2 py-1 w-full"  /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="baca" class="col-search-ujian border border-gray-300 rounded-md px-2 py-1 w-full"  /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="userInput" class="col-search-ujian border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="timeInput" class="col-search-ujian border border-gray-300 rounded-md px-2 py-1 w-full"  /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="userEdit" class="col-search-ujian border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="timeEdit" class="col-search-ujian border border-gray-300 rounded-md px-2 py-1 w-full"  /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="batch" class="col-search-ujian border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="nomor" class="col-search-ujian border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="nama" class="col-search-ujian border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="userId" class="col-search-ujian border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="undangKe" class="col-search-ujian border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="status" class="col-search-ujian border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="hasil" class="col-search-ujian border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="link" class="col-search-ujian border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="paket" class="col-search-ujian border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="waktuTest" class="col-search-ujian border border-gray-300 px-2 py-1 w-full"  /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="waktuMulai" class="col-search-ujian border border-gray-300 px-2 py-1 w-full"  /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="statusPesan" class="col-search-ujian border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="kirim" class="col-search-ujian border border-gray-300 px-2 py-1 w-full"  /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="baca" class="col-search-ujian border border-gray-300 px-2 py-1 w-full"  /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="userInput" class="col-search-ujian border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="timeInput" class="col-search-ujian border border-gray-300 px-2 py-1 w-full"  /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="userEdit" class="col-search-ujian border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="timeEdit" class="col-search-ujian border border-gray-300 px-2 py-1 w-full"  /></th>
         </tr>
         </thead>
         <tbody></tbody>
@@ -267,8 +267,8 @@
     </div>
   </div>
 
-  <div id="titleInterview" class=" bg-[#EBEBE9] border border-gray-300 rounded-t-xl px-3 py-1 font-semibold hidden">Peserta Interview</div>
-  <div id="gridInterview" class="border border-gray-300 border-t-0 rounded-b-xl hidden">
+  <div id="titleInterview" class=" bg-[#EBEBE9] border border-gray-300 px-3 py-1 font-semibold hidden">Peserta Interview</div>
+  <div id="gridInterview" class="border border-gray-300 border-t-0 hidden">
     <div class="table-scroll overflow-x-auto overflow-y-auto max-h-[60vh]">
       <table id="tblInterview" class="min-w-full text-sm">
         <thead>
@@ -296,20 +296,20 @@
           <th class="px-1 py-1"></th>
           <th class="px-1 py-1"></th>
 
-          <th class="px-1 py-1 search-cell"><input data-field="batch" class="col-search-interview border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="nomor" class="col-search-interview border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="nama" class="col-search-interview border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="waktuInterview" class="col-search-interview border border-gray-300 rounded-md px-2 py-1 w-full"  /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="lokasi" class="col-search-interview border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="statusInterview" class="col-search-interview border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="undangKe" class="col-search-interview border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="statusPesan" class="col-search-interview border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="kirim" class="col-search-interview border border-gray-300 rounded-md px-2 py-1 w-full"  /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="baca" class="col-search-interview border border-gray-300 rounded-md px-2 py-1 w-full"  /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="userInput" class="col-search-interview border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="timeInput" class="col-search-interview border border-gray-300 rounded-md px-2 py-1 w-full"  /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="userEdit" class="col-search-interview border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="timeEdit" class="col-search-interview border border-gray-300 rounded-md px-2 py-1 w-full"  /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="batch" class="col-search-interview border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="nomor" class="col-search-interview border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="nama" class="col-search-interview border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="waktuInterview" class="col-search-interview border border-gray-300 px-2 py-1 w-full"  /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="lokasi" class="col-search-interview border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="statusInterview" class="col-search-interview border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="undangKe" class="col-search-interview border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="statusPesan" class="col-search-interview border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="kirim" class="col-search-interview border border-gray-300 px-2 py-1 w-full"  /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="baca" class="col-search-interview border border-gray-300 px-2 py-1 w-full"  /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="userInput" class="col-search-interview border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="timeInput" class="col-search-interview border border-gray-300 px-2 py-1 w-full"  /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="userEdit" class="col-search-interview border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="timeEdit" class="col-search-interview border border-gray-300 px-2 py-1 w-full"  /></th>
         </tr>
         </thead>
         <tbody></tbody>
@@ -923,7 +923,19 @@
       });
     }
 
-    function updatePositions(){ var positions = Array.from(new Set(rawData.map(function(d){ return d.posisi; }))).filter(function(x){ return x; }); ddPosisi.innerHTML = '<option value="">Semua Posisi</option>'; positions.forEach(function(p){ var opt = document.createElement('option'); opt.value = p; opt.textContent = p; ddPosisi.appendChild(opt); }); }
+    function updatePositions(){ 
+      var currentValue = ddPosisi.value || '';
+      var positions = Array.from(new Set(rawData.map(function(d){ return d.posisi; }))).filter(function(x){ return x; }); 
+      ddPosisi.innerHTML = '<option value="">Semua Posisi</option>'; 
+      positions.forEach(function(p){ 
+        var opt = document.createElement('option'); 
+        opt.value = p; 
+        opt.textContent = p; 
+        ddPosisi.appendChild(opt); 
+      }); 
+      ddPosisi.value = currentValue;
+      if(ddPosisi.value !== currentValue) ddPosisi.value = '';
+    }
 
     function toISODateLocal(d){
       var y = d.getFullYear();
@@ -1209,6 +1221,8 @@
     btnRefresh.addEventListener('click', function(){ currentPage=1; fetchPeserta().then(function(){ applyFilters(); }); });
     ddStart.addEventListener('change', function(){ currentPage=1; fetchPeserta().then(function(){ applyFilters(); }); });
     ddEnd.addEventListener('change', function(){ currentPage=1; fetchPeserta().then(function(){ applyFilters(); }); });
+    ddPosisi.addEventListener('change', function(){ currentPage=1; applyFilters(); });
+    ddHasil.addEventListener('change', function(){ currentPage=1; applyFilters(); });
     document.querySelectorAll('.col-search').forEach(function(el){
       el.addEventListener('input', function(){ search[el.dataset.field] = el.value; currentPage=1; applyFilters(); });
     });
@@ -2089,21 +2103,14 @@
       var sc=document.querySelector('#gridInterview .table-scroll'); if(sc) sc.classList.add('loading');
       if(window.__applicantsActiveNoPeserta) activeNoPeserta = ''+window.__applicantsActiveNoPeserta;
       var activeKey = normalizeNo(activeNoPeserta);
-      if(!activeNoPeserta){
-        interviewData = [];
-        var body0=document.querySelector('#tblInterview tbody'); if(body0) body0.innerHTML='';
-        infoInterview.textContent='Showing 0 to 0 of 0 entries';
-        renderPages(pageNumsInterview, 1, 1);
-        if(sc) sc.classList.remove('loading');
-        return Promise.resolve();
-      }
+      
       var s1=ddInterviewInputStart.value; var e1=ddInterviewInputEnd.value; var st=ddStatusInterview.value;
       var url='@Url.Content("~/Applicants/Interview/List")'+
         '?inputStart='+(encodeURIComponent(s1||''))+
         '&inputEnd='+(encodeURIComponent(e1||''))+
         '&statusInterview='+(encodeURIComponent(st||''))+
         '&noPeserta='+(encodeURIComponent(activeNoPeserta||''));
-      if(debug){ console.groupCollapsed('[Applicants] fetch interview'); console.log('url', url); console.log('filters', { inputStart:s1, inputEnd:e1, statusInterview:st }); }
+      if(debug){ console.groupCollapsed('[Applicants] fetch interview'); console.log('url', url); console.log('filters', { inputStart:s1, inputEnd:e1, statusInterview:st, activeNoPeserta: activeNoPeserta }); }
       return fetch(url,{ method:'GET', credentials:'same-origin' }).then(function(r){
         var status=r.status; var ok=r.ok; var ct=(r.headers&&r.headers.get)?(r.headers.get('content-type')||''):'';
         if(debug){ console.log('status', status, 'ok', ok, 'content-type', ct); }
@@ -2114,7 +2121,12 @@
         });
       }).then(function(rows){
         var allRows = (rows||[]);
-        interviewData = allRows.filter(function(x){ return normalizeNo(x && x.nomor) === activeKey; });
+        // Filter by activeNoPeserta only if a participant is selected
+        if(activeNoPeserta){
+          interviewData = allRows.filter(function(x){ return normalizeNo(x && x.nomor) === activeKey; });
+        } else {
+          interviewData = allRows;
+        }
         updateSelectOptions(ddStatusInterview, allRows, 'statusInterview');
         if(debug){
           var t0 = interviewData[0] ? interviewData[0].timeInput : null;

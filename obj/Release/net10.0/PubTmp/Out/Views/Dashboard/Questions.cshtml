@@ -5,19 +5,19 @@
 <div class="px-0 py-0 text-[#111827]">
   <h1 class="text-3xl font-semibold text-[#1E90FF]">Master Pertanyaan</h1>
 
-  <div class="mt-4 bg-[#EBEBE9] border border-gray-300 rounded-xl pl-3 pr-3 py-3 w-full max-w-[32rem]">
+  <div class="mt-4 bg-[#EBEBE9] border border-gray-300 pl-3 pr-3 py-3 w-full max-w-[32rem]">
     <div class="flex items-center gap-3 mb-2">
       <span class="text-sm text-gray-700 w-28">Tanggal Dibuat:</span>
       <div class="flex items-center gap-2 w-80 justify-between">
         <span class="w-3 h-3 rounded-sm bg-[#1E90FF]"></span>
-        <input id="qDateStart" type="date" class="border border-gray-300 rounded-md px-2 py-1 w-40" />
+        <input id="qDateStart" type="date" class="border border-gray-300 px-2 py-1 w-40" />
         <span class="text-gray-700">To</span>
-        <input id="qDateEnd" type="date" class="border border-gray-300 rounded-md px-2 py-1 w-40" />
+        <input id="qDateEnd" type="date" class="border border-gray-300 px-2 py-1 w-40" />
       </div>
     </div>
     <div class="flex items-center gap-3 mb-2">
       <span class="text-sm text-gray-700 w-28">Status</span>
-      <select id="qStatusPaket" class="border border-gray-300 rounded-md px-2 py-1 w-80">
+      <select id="qStatusPaket" class="border border-gray-300 px-2 py-1 w-80">
         <option value="">Semua Status</option>
         <option value="AKTIF">Aktif</option>
         <option value="NONAKTIF">Nonaktif</option>
@@ -37,8 +37,8 @@
 
   <div class="mt-4"></div>
 
-  <div id="titlePaket" class=" bg-[#EBEBE9] border border-gray-300 rounded-t-xl px-3 py-1 font-semibold">Paket Soal</div>
-  <div id="gridPaket" class="border border-gray-300 border-t-0 rounded-b-xl">
+  <div id="titlePaket" class=" bg-[#EBEBE9] border border-gray-300 px-3 py-1 font-semibold">Paket Soal</div>
+  <div id="gridPaket" class="border border-gray-300 border-t-0">
     <div class="table-scroll overflow-x-auto overflow-y-auto max-h-[60vh]">
       <table id="tblPaket" class="min-w-full text-sm">
         <thead>
@@ -60,15 +60,15 @@
           <th class="px-1 py-1"></th>
           <th class="px-1 py-1"></th>
           <th class="px-1 py-1"></th>
-          <th class="px-1 py-1 search-cell"><input data-field="noPaket" class="col-search-paket border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="namaPaket" class="col-search-paket border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="posisi" class="col-search-paket border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="toleransi" class="col-search-paket border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="status" class="col-search-paket border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="userInput" class="col-search-paket border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="time" class="col-search-paket border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="userEdit" class="col-search-paket border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="timeEdit" class="col-search-paket border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="noPaket" class="col-search-paket border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="namaPaket" class="col-search-paket border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="posisi" class="col-search-paket border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="toleransi" class="col-search-paket border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="status" class="col-search-paket border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="userInput" class="col-search-paket border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="time" class="col-search-paket border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="userEdit" class="col-search-paket border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="timeEdit" class="col-search-paket border border-gray-300 px-2 py-1 w-full" /></th>
         </tr>
         </thead>
         <tbody></tbody>
@@ -97,8 +97,8 @@
     </div>
   </div>
 
-  <div id="titleGroup" class=" bg-[#EBEBE9] border border-gray-300 rounded-t-xl px-3 py-1 mt-6 font-semibold">Group Soal</div>
-  <div id="gridGroup" class="border border-gray-300 border-t-0 rounded-b-xl">
+  <div id="titleGroup" class=" bg-[#EBEBE9] border border-gray-300 px-3 py-1 mt-6 font-semibold">Group Soal</div>
+  <div id="gridGroup" class="border border-gray-300 border-t-0">
     <div class="table-scroll overflow-x-auto overflow-y-auto max-h-[60vh]">
       <table id="tblGroup" class="min-w-full text-sm">
         <thead>
@@ -123,18 +123,18 @@
           <th class="px-1 py-1"></th>
           <th class="px-1 py-1"></th>
           <th class="px-1 py-1"></th>
-          <th class="px-1 py-1 search-cell"><input data-field="noGroup" class="col-search-group border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="namaGroup" class="col-search-group border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="minSoal" class="col-search-group border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="nilaiStandar" class="col-search-group border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="waktu" class="col-search-group border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="random" class="col-search-group border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="status" class="col-search-group border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="petunjuk" class="col-search-group border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="userInput" class="col-search-group border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="time" class="col-search-group border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="userEdit" class="col-search-group border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="timeEdit" class="col-search-group border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="noGroup" class="col-search-group border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="namaGroup" class="col-search-group border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="minSoal" class="col-search-group border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="nilaiStandar" class="col-search-group border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="waktu" class="col-search-group border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="random" class="col-search-group border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="status" class="col-search-group border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="petunjuk" class="col-search-group border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="userInput" class="col-search-group border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="time" class="col-search-group border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="userEdit" class="col-search-group border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="timeEdit" class="col-search-group border border-gray-300 px-2 py-1 w-full" /></th>
         </tr>
         </thead>
         <tbody></tbody>
@@ -166,8 +166,8 @@
 
   <div class="grid grid-cols-2 gap-4 mt-6">
     <div>
-      <div id="titleDtl" class=" bg-[#EBEBE9] border border-gray-300 rounded-t-xl px-3 py-1 font-semibold">Pertanyaan</div>
-      <div id="gridDtl" class="border border-gray-300 border-t-0 rounded-b-xl">
+      <div id="titleDtl" class=" bg-[#EBEBE9] border border-gray-300 px-3 py-1 font-semibold">Pertanyaan</div>
+      <div id="gridDtl" class="border border-gray-300 border-t-0">
     <div class="table-scroll overflow-x-auto overflow-y-auto max-h-[60vh]">
       <table id="tblDtl" class="min-w-full text-sm">
         <thead>
@@ -192,18 +192,18 @@
           <th class="px-1 py-1"></th>
           <th class="px-1 py-1"></th>
           <th class="px-1 py-1"></th>
-          <th class="px-1 py-1 search-cell"><input data-field="noUrut" class="col-search-dtl border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="judul" class="col-search-dtl border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="deskripsi" class="col-search-dtl border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="isDownload" class="col-search-dtl border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="aktif" class="col-search-dtl border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="urlMedia" class="col-search-dtl border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="tipeMedia" class="col-search-dtl border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="userInput" class="col-search-dtl border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="time" class="col-search-dtl border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="userEdit" class="col-search-dtl border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="timeEdit" class="col-search-dtl border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="noSoal" class="col-search-dtl border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="noUrut" class="col-search-dtl border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="judul" class="col-search-dtl border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="deskripsi" class="col-search-dtl border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="isDownload" class="col-search-dtl border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="aktif" class="col-search-dtl border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="urlMedia" class="col-search-dtl border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="tipeMedia" class="col-search-dtl border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="userInput" class="col-search-dtl border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="time" class="col-search-dtl border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="userEdit" class="col-search-dtl border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="timeEdit" class="col-search-dtl border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="noSoal" class="col-search-dtl border border-gray-300 px-2 py-1 w-full" /></th>
         </tr>
         </thead>
         <tbody></tbody>
@@ -237,8 +237,8 @@
 
     </div>
     <div>
-      <div id="titleJawaban" class=" bg-[#EBEBE9] border border-gray-300 rounded-t-xl px-3 py-1 font-semibold">Jawaban</div>
-      <div id="gridJawaban" class="border border-gray-300 border-t-0 rounded-b-xl">
+      <div id="titleJawaban" class=" bg-[#EBEBE9] border border-gray-300 px-3 py-1 font-semibold">Jawaban</div>
+      <div id="gridJawaban" class="border border-gray-300 border-t-0">
     <div class="table-scroll overflow-x-auto overflow-y-auto max-h-[60vh]">
       <table id="tblJawaban" class="min-w-full text-sm">
         <thead>
@@ -261,15 +261,15 @@
           <th class="px-1 py-1"></th>
           <th class="px-1 py-1"></th>
           <th class="px-1 py-1"></th>
-          <th class="px-1 py-1 search-cell"><input data-field="noJawaban" class="col-search-jawaban border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="jawaban" class="col-search-jawaban border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="poin" class="col-search-jawaban border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="tipeMedia" class="col-search-jawaban border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="urlMedia" class="col-search-jawaban border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="userInput" class="col-search-jawaban border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="time" class="col-search-jawaban border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="userEdit" class="col-search-jawaban border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-          <th class="px-1 py-1 search-cell"><input data-field="timeEdit" class="col-search-jawaban border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="noJawaban" class="col-search-jawaban border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="jawaban" class="col-search-jawaban border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="poin" class="col-search-jawaban border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="tipeMedia" class="col-search-jawaban border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="urlMedia" class="col-search-jawaban border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="userInput" class="col-search-jawaban border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="time" class="col-search-jawaban border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="userEdit" class="col-search-jawaban border border-gray-300 px-2 py-1 w-full" /></th>
+          <th class="px-1 py-1 search-cell"><input data-field="timeEdit" class="col-search-jawaban border border-gray-300 px-2 py-1 w-full" /></th>
           <th class="px-1 py-1 search-cell"><input data-field="seqNo" class="col-search-jawaban border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
         </tr>
         </thead>
@@ -357,7 +357,7 @@
   .date-formatted::-webkit-datetime-edit{ color:transparent; }
   .date-formatted::-webkit-calendar-picker-indicator{ opacity:1; position:absolute; right:.5rem; top:50%; transform:translateY(-50%); margin:0; padding:0; cursor:pointer; }
   #modalContent .dct-actions{ justify-content:flex-end; }
-  .modal-form{ display:grid; grid-template-columns:160px 1fr; gap:8px 12px; }
+  .modal-form{ display:grid; grid-template-columns:160px minmax(auto, 400px); gap:8px 12px; }
   .modal-form .modal-label{ font-size:14px; align-self:center; }
   .modal-form .modal-field{ display:flex; align-items:center; gap:8px; }
   .modal-form input, .modal-form select{ border:1px solid #d1d5db; border-radius:6px; padding:4px 8px; }
@@ -1546,7 +1546,45 @@
         });
       });
       document.getElementById('btnDeleteDtl').addEventListener('click', function(){ var keys=getSelectedKeys('#tblDtl'); if(keys.length===0){ toast('Pilih data'); return; } var doDelete=function(){ var nums=keys.map(function(k){ var n=parseInt(k,10); return isNaN(n)?null:n; }).filter(function(x){ return x!==null; }); Promise.all(nums.map(function(n){ return fetch('@Url.Content("~/Questions/Detail/Delete")',{ method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ SeqNo:n }) }); })).then(function(){ fetchDtl(selected.paket, selected.group); }); }; if(window.DCT3Modals && typeof DCT3Modals.open==='function'){ DCT3Modals.open('confirmation',{ message:'Yakin ingin menghapus data ini?', onYes:doDelete }); } else { if(confirm('Yakin ingin menghapus data ini?')){ doDelete(); } } });
-      document.getElementById('btnCopyDtl').addEventListener('click', function(){ var keys=getSelectedKeys('#tblDtl'); if(keys.length===0){ toast('Pilih data'); return; } var opts = rawGroup.map(function(g){ return '<option value="'+g.noGroup+'">'+g.noGroup+' - '+g.namaGroup+'</option>'; }).join(''); var body = '<div class="grid gap-2"><label class="text-sm">No Group Tujuan</label><select id="cpyNoGroup" class="border border-gray-300 rounded-md px-2 py-1">'+opts+'</select></div>'; openModal('Copy Pertanyaan', body, function(){ var dest = parseInt(document.getElementById('cpyNoGroup').value||'0',10); Promise.all(keys.map(function(k){ var idx=findByKey(rawDtl,'seqNo',k); if(idx===-1) idx=findByKey(rawDtl,'noSoal',k); var seq = (idx>-1 && rawDtl[idx].seqNo) ? parseInt(rawDtl[idx].seqNo,10) : parseInt(k,10); return fetch('@Url.Content("~/Questions/Detail/Copy")',{ method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ SeqNo:seq, DestNoGroup:dest, User:'@User.Identity?.Name' }) }); })).then(function(){ fetchDtl(selected.paket, selected.group); }); }); });
+      document.getElementById('btnCopyDtl').addEventListener('click', function(){ 
+        var keys=getSelectedKeys('#tblDtl'); 
+        if(keys.length===0){ toast('Pilih data'); return; } 
+        var opts = rawGroup.map(function(g){ 
+          return '<option value="'+g.noGroup+'">'+g.noGroup+' - '+g.namaGroup+'</option>'; 
+        }).join(''); 
+        var body = '<div class="grid gap-2"><label class="text-sm">No Group Tujuan</label><select id="cpyNoGroup" class="border border-gray-300 rounded-md px-2 py-1">'+opts+'</select></div>'; 
+        openModal('Copy Pertanyaan', body, function(){ 
+          var dest = parseInt(document.getElementById('cpyNoGroup').value||'0',10); 
+          if(!dest || dest === 0){ toast('Pilih group tujuan'); return; }
+          var hasError = false;
+          Promise.all(keys.map(function(k){ 
+            var idx=findByKey(rawDtl,'seqNo',k); 
+            if(idx===-1) idx=findByKey(rawDtl,'noSoal',k); 
+            var seq = (idx>-1 && rawDtl[idx].seqNo) ? parseInt(rawDtl[idx].seqNo,10) : parseInt(k,10); 
+            if(!seq || seq === 0){ console.error('Invalid SeqNo:', k, seq); return Promise.resolve(); }
+            return fetch('@Url.Content("~/Questions/Detail/Copy")',{ 
+              method:'POST', 
+              headers:{ 'Content-Type':'application/json' }, 
+              body: JSON.stringify({ SeqNo:seq, DestNoGroup:dest, User:'@(User.Identity?.Name ?? "")' }) 
+            }).then(function(r){ 
+              if(!r.ok){ 
+                return r.json().then(function(err){ 
+                  console.error('Copy failed:', err); 
+                  if(err && err.error === 'Group tujuan aktif'){ 
+                    hasError = true;
+                    ModalAlert('Tidak dapat copy, Group Soal tujuan sedang aktif!');
+                  } else {
+                    toast((err && err.error) || 'Gagal copy'); 
+                  }
+                }); 
+              } 
+              return r; 
+            }); 
+          })).then(function(){ 
+            if(!hasError) fetchDtl(selected.paket, selected.group); 
+          }); 
+        }); 
+      });
       wireSelect('#tblDtl','selectAllDtl', function(scope,key,sel){ selected.dtlSeqNo=key; var idx=findByKey(rawDtl,'seqNo',key); if(idx===-1) idx=findByKey(rawDtl,'noSoal',key); var nu = (idx>-1) ? rawDtl[idx].noUrut : 0; fetchJawaban(selected.paket, selected.group, nu); });
 
       document.getElementById('btnAddJawaban').addEventListener('click', function(){ if(!selected.paket || !selected.group || !selected.dtlSeqNo){ openModal('Informasi', '<div>Pilih Pertanyaan terlebih dahulu.</div>', null); return; } var o={ noPaket:selected.paket, noGroup:selected.group }; openModal('Tambah Jawaban', jawabanForm(o), async function(){ var np=parseInt(selected.paket||'0',10); var ng=parseInt(selected.group||'0',10); var idx=findByKey(rawDtl,'seqNo',selected.dtlSeqNo); if(idx<0) idx=findByKey(rawDtl,'noSoal',selected.dtlSeqNo); var nu=(idx>-1)?rawDtl[idx].noUrut:0; var nj=parseInt(document.getElementById('jNoJawaban').value||'0',10)||((function(){ var m=0; (rawJawaban||[]).forEach(function(r){ if(r && r.noJawaban){ m=Math.max(m, r.noJawaban); } }); return (m||0)+1; })()); var jw=(document.getElementById('jJawaban').value||'').trim(); var pnRaw=(document.getElementById('jPoin').value||'').trim(); if(isBlank(jw) || isBlank(pnRaw)){ alertEmptyFields(); return false; } var pn=parseInt(pnRaw,10); var tmr=(document.querySelector('input[name="jTipeMedia"]:checked')||{value:'NOMEDIA'}).value; var tm=(tmr==='NOMEDIA'?'NOMEDIA':(tmr==='LINK'?'LINK':'UPLOAD')); var um=document.getElementById('jUrlMedia').value||''; var txt=(document.getElementById('jTextMedia').value||''); var mediaFile='NOMEDIA'; if(tm==='NOMEDIA'){ um=''; } else if(tm==='LINK'){ if(um==='No Media') um=''; } else if(tm==='UPLOAD'){ var f=document.getElementById('jUploadFile'); if(f && f.files && f.files.length>0){ if(!validateImageFile(f.files[0])){ return false; } var fd=new FormData(); fd.append('file', f.files[0]); var up=await fetch('@Url.Content("~/Questions/Detail/UploadMedia")',{ method:'POST', body:fd }); var uj=await up.json(); if(up.ok){ um=uj.url||''; mediaFile=uj.fileName||'NOMEDIA'; } else { toast((uj && uj.error)||'Gagal upload media'); return false; } } else { toast('Pilih file untuk upload'); return false; } } return fetch('@Url.Content("~/Questions/Answer/Modify")',{ method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ SeqNo:null, NoPaket:np, NoGroup:ng, NoUrut:nu, NoJawaban:nj, Jawaban:jw, PoinJawaban:pn, MediaFileName:mediaFile, UrlMedia:um, TipeMedia:tm, TextMedia:txt, User:'@User.Identity?.Name' }) }).then(function(){ fetchJawaban(np,ng,nu); }); }); });

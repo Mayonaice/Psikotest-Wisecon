@@ -5,19 +5,19 @@
 <div class="px-0 py-0 text-[#111827]">
   <h1 class="text-3xl font-semibold text-[#1E90FF]">View Screening</h1>
 
-  <div id="filterBox" class="mt-4 ml-3 mr-3 inline-block bg-[#EBEBE9] border border-gray-300 rounded-xl px-3 py-3 w-[32rem]">
+  <div id="filterBox" class="mt-4 mb-4 ml-3 mr-3 inline-block bg-[#EBEBE9] border border-gray-300 px-3 py-3 w-[32rem]">
     <div>
       <div class="flex items-center gap-3 mb-2">
         <span class="text-sm text-gray-700 w-32">Tanggal Input</span>
         <div class="flex items-center gap-2 w-80 justify-start">
-          <input id="sInputStart" type="date" class="border border-gray-300 rounded-md px-2 py-1 w-40" />
+          <input id="sInputStart" type="date" class="border border-gray-300 px-2 py-1 w-40" />
           <span class="text-gray-700">To</span>
-          <input id="sInputEnd" type="date" class="border border-gray-300 rounded-md px-2 py-1 w-40" />
+          <input id="sInputEnd" type="date" class="border border-gray-300 px-2 py-1 w-40" />
         </div>
       </div>
       <div class="flex items-center gap-3 mb-2">
         <span class="text-sm text-gray-700 w-32">Status Seleksi</span>
-        <select id="sStatusSeleksi" class="border border-gray-300 rounded-md px-2 py-1 w-80">
+        <select id="sStatusSeleksi" class="border border-gray-300 px-2 py-1 w-80">
           <option value="">Semua Status</option>
           <option value="Belum Proses">Belum Proses</option>
           <option value="Interview Proses">Interview Proses</option>
@@ -28,7 +28,7 @@
       </div>
       <div class="flex items-center gap-3 mb-2">
         <span class="text-sm text-gray-700 w-32">Status Verifikasi</span>
-        <select id="sStatusVerifikasi" class="border border-gray-300 rounded-md px-2 py-1 w-80">
+        <select id="sStatusVerifikasi" class="border border-gray-300 px-2 py-1 w-80">
           <option value="">Semua Status</option>
           <option value="Lulus">Lulus</option>
           <option value="Tidak Lulus">Tidak Lulus</option>
@@ -47,8 +47,8 @@
     </div>
   </div>
 
-  <div id="titleTop" class="mx-3 bg-[#EBEBE9] border border-gray-300 rounded-t-xl px-3 py-1 font-semibold">Screening</div>
-  <div id="gridTop" class="mx-3 border border-gray-300 border-t-0 rounded-b-xl mb-4">
+  <div id="titleTop" class="mx-3 bg-[#EBEBE9] border border-gray-300 px-3 py-1 font-semibold">Screening</div>
+  <div id="gridTop" class="mx-3 border border-gray-300 border-t-0 mb-4">
     <div class="table-scroll overflow-x-auto overflow-y-auto max-h-[50vh]">
       <table id="tblScreeningTop" class="min-w-full text-sm">
         <thead>
@@ -73,14 +73,14 @@
           </tr>
           <tr>
             <th class="px-1 py-1"></th>
-            <th class="px-1 py-1 search-cell"><input data-field="name" class="col-search-top border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-            <th class="px-1 py-1 search-cell"><input data-field="belumProses" class="col-search-top border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-            <th class="px-1 py-1 search-cell"><input data-field="interviewProses" class="col-search-top border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-            <th class="px-1 py-1 search-cell"><input data-field="interviewTidakDatang" class="col-search-top border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-            <th class="px-1 py-1 search-cell"><input data-field="psikotestProses" class="col-search-top border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-            <th class="px-1 py-1 search-cell"><input data-field="psikotestTidakDatang" class="col-search-top border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-            <th class="px-1 py-1 search-cell"><input data-field="statusLulus" class="col-search-top border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-            <th class="px-1 py-1 search-cell"><input data-field="statusTidakLulus" class="col-search-top border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+            <th class="px-1 py-1 search-cell"><input data-field="name" class="col-search-top border border-gray-300 px-2 py-1 w-full" /></th>
+            <th class="px-1 py-1 search-cell"><input data-field="belumProses" class="col-search-top border border-gray-300 px-2 py-1 w-full" /></th>
+            <th class="px-1 py-1 search-cell"><input data-field="interviewProses" class="col-search-top border border-gray-300 px-2 py-1 w-full" /></th>
+            <th class="px-1 py-1 search-cell"><input data-field="interviewTidakDatang" class="col-search-top border border-gray-300 px-2 py-1 w-full" /></th>
+            <th class="px-1 py-1 search-cell"><input data-field="psikotestProses" class="col-search-top border border-gray-300 px-2 py-1 w-full" /></th>
+            <th class="px-1 py-1 search-cell"><input data-field="psikotestTidakDatang" class="col-search-top border border-gray-300 px-2 py-1 w-full" /></th>
+            <th class="px-1 py-1 search-cell"><input data-field="statusLulus" class="col-search-top border border-gray-300 px-2 py-1 w-full" /></th>
+            <th class="px-1 py-1 search-cell"><input data-field="statusTidakLulus" class="col-search-top border border-gray-300 px-2 py-1 w-full" /></th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -106,8 +106,8 @@
     </div>
   </div>
 
-  <div id="titleBiodata" class="mx-3 bg-[#EBEBE9] border border-gray-300 rounded-t-xl px-3 py-1 font-semibold">View Screening Biodata</div>
-  <div id="gridBiodata" class="mx-3 border border-gray-300 border-t-0 rounded-b-xl">
+  <div id="titleBiodata" class="mx-3 bg-[#EBEBE9] border border-gray-300 px-3 py-1 font-semibold">View Screening Biodata</div>
+  <div id="gridBiodata" class="mx-3 border border-gray-300 border-t-0">
     <div class="table-scroll overflow-x-auto overflow-y-auto max-h-[50vh]">
       <table id="tblBiodata" class="min-w-full text-sm">
         <thead>
@@ -134,18 +134,18 @@
             <th class="px-1 py-1"></th>
             <th class="px-1 py-1"></th>
             <th class="px-1 py-1"></th>
-            <th class="px-1 py-1 search-cell"><input data-field="posLowongan" class="col-search-bio border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-            <th class="px-1 py-1 search-cell"><input data-field="batch" class="col-search-bio border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-            <th class="px-1 py-1 search-cell"><input data-field="name" class="col-search-bio border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-            <th class="px-1 py-1 search-cell"><input data-field="statusScreening" class="col-search-bio border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-            <th class="px-1 py-1 search-cell"><input data-field="statusVerifikasi" class="col-search-bio border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-            <th class="px-1 py-1 search-cell"><input data-field="hasilInterview" class="col-search-bio border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-            <th class="px-1 py-1 search-cell"><input data-field="hasilPsikotest" class="col-search-bio border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-            <th class="px-1 py-1 search-cell"><input data-field="jenisKelamin" class="col-search-bio border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-            <th class="px-1 py-1 search-cell"><input data-field="email" class="col-search-bio border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-            <th class="px-1 py-1 search-cell"><input data-field="noHp" class="col-search-bio border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-            <th class="px-1 py-1 search-cell"><input data-field="pendidikanTerakhir" class="col-search-bio border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
-            <th class="px-1 py-1 search-cell"><input data-field="timeInput" class="col-search-bio border border-gray-300 rounded-md px-2 py-1 w-full" /></th>
+            <th class="px-1 py-1 search-cell"><input data-field="posLowongan" class="col-search-bio border border-gray-300 px-2 py-1 w-full" /></th>
+            <th class="px-1 py-1 search-cell"><input data-field="batch" class="col-search-bio border border-gray-300 px-2 py-1 w-full" /></th>
+            <th class="px-1 py-1 search-cell"><input data-field="name" class="col-search-bio border border-gray-300 px-2 py-1 w-full" /></th>
+            <th class="px-1 py-1 search-cell"><input data-field="statusScreening" class="col-search-bio border border-gray-300 px-2 py-1 w-full" /></th>
+            <th class="px-1 py-1 search-cell"><input data-field="statusVerifikasi" class="col-search-bio border border-gray-300 px-2 py-1 w-full" /></th>
+            <th class="px-1 py-1 search-cell"><input data-field="hasilInterview" class="col-search-bio border border-gray-300 px-2 py-1 w-full" /></th>
+            <th class="px-1 py-1 search-cell"><input data-field="hasilPsikotest" class="col-search-bio border border-gray-300 px-2 py-1 w-full" /></th>
+            <th class="px-1 py-1 search-cell"><input data-field="jenisKelamin" class="col-search-bio border border-gray-300 px-2 py-1 w-full" /></th>
+            <th class="px-1 py-1 search-cell"><input data-field="email" class="col-search-bio border border-gray-300 px-2 py-1 w-full" /></th>
+            <th class="px-1 py-1 search-cell"><input data-field="noHp" class="col-search-bio border border-gray-300 px-2 py-1 w-full" /></th>
+            <th class="px-1 py-1 search-cell"><input data-field="pendidikanTerakhir" class="col-search-bio border border-gray-300 px-2 py-1 w-full" /></th>
+            <th class="px-1 py-1 search-cell"><input data-field="timeInput" class="col-search-bio border border-gray-300 px-2 py-1 w-full" /></th>
           </tr>
         </thead>
         <tbody></tbody>
