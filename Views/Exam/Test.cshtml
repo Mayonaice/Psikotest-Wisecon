@@ -14,7 +14,7 @@
     <title>Ujian Psikotest</title>
     <base href="@Url.Content("~/")">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@@vladmandic/face-api/dist/face-api.min.js"></script>
     <link rel="stylesheet" href="@Url.Content("~/DCT3_Standarisasi/Layout/notifications.css")" />
     <style>
         .nav-dot { width: 30px; height: 30px; border-radius: 9999px; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; }
@@ -103,9 +103,29 @@
         </div>
     </div>
 
-    <!-- Hidden video and canvas for face detection -->
-    <video id="faceVideo" style="display:none;" autoplay muted playsinline></video>
+    <!-- Video for face detection (visible for debugging) -->
+    <video id="faceVideo" style="position:fixed;bottom:10px;right:10px;width:320px;height:240px;border:2px solid red;z-index:9999;" autoplay muted playsinline></video>
     <canvas id="faceCanvas" style="display:none;"></canvas>
+
+    <!-- Face detection overlay -->
+    <div id="faceDetectionOverlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.2);z-index:40;"></div>
+    
+    <!-- Face detection loading modal -->
+    <div id="faceDetectionModal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:30px 40px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.3);z-index:41;text-align:center;">
+        <div style="font-size:18px;font-weight:600;color:#333;margin-bottom:15px;">Sedang mendeteksi wajah terlebih dahulu</div>
+        <div style="display:flex;justify-content:center;align-items:center;gap:8px;">
+            <div class="loading-dot" style="width:12px;height:12px;background:#2F86C8;border-radius:50%;animation:bounce 1.4s infinite ease-in-out both;"></div>
+            <div class="loading-dot" style="width:12px;height:12px;background:#2F86C8;border-radius:50%;animation:bounce 1.4s infinite ease-in-out both;animation-delay:-0.32s;"></div>
+            <div class="loading-dot" style="width:12px;height:12px;background:#2F86C8;border-radius:50%;animation:bounce 1.4s infinite ease-in-out both;animation-delay:-0.16s;"></div>
+        </div>
+    </div>
+    
+    <style>
+        @@keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+    </style>
 
     @await Html.PartialAsync("_DCT3Notifications")
 
@@ -647,9 +667,11 @@
 
         async function loadFaceApiModels() {
             try {
+                console.log('Loading TinyFaceDetector model from CDN...');
                 const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@@vladmandic/face-api/model/';
                 await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
                 modelsLoaded = true;
+                console.log('TinyFaceDetector model loaded successfully');
                 return true;
             } catch (err) {
                 console.error('Failed to load face-api models:', err);
@@ -659,13 +681,15 @@
 
         async function startCamera() {
             try {
+                console.log('Requesting camera access...');
                 const stream = await navigator.mediaDevices.getUserMedia({ 
                     video: { width: 640, height: 480 } 
                 });
                 faceVideo.srcObject = stream;
+                console.log('Camera stream obtained successfully');
                 return true;
             } catch (err) {
-                console.error('Camera access denied:', err);
+                console.error('Camera access denied or failed:', err);
                 return false;
             }
         }
@@ -679,14 +703,25 @@
         }
 
         async function detectFace() {
-            if (!modelsLoaded || !faceVideo.srcObject) return false;
+            if (!modelsLoaded || !faceVideo.srcObject) {
+                console.log('Cannot detect face: models not loaded or no video stream');
+                return false;
+            }
             
             try {
+                console.log('Detecting face... video dimensions:', faceVideo.videoWidth, 'x', faceVideo.videoHeight);
                 const detection = await faceapi.detectSingleFace(
                     faceVideo, 
-                    new faceapi.TinyFaceDetectorOptions()
+                    new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 })
                 );
-                return detection !== undefined;
+                
+                if (detection) {
+                    console.log('Face detected! Score:', detection.score, 'Box:', detection.box);
+                    return true;
+                } else {
+                    console.log('No face detected in frame');
+                    return false;
+                }
             } catch (err) {
                 console.error('Face detection error:', err);
                 return false;
@@ -710,6 +745,8 @@
                 formData.append('token', token);
                 formData.append('photo', photoData);
                 
+                console.log('Sending photo to server, token length:', token.length);
+                
                 const res = await fetch(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Url.Content("~/Exam/SavePhoto"))), {
                     method: 'POST',
                     body: formData
@@ -720,7 +757,8 @@
                     console.log('Photo saved:', result.filename);
                     return true;
                 } else {
-                    console.error('Failed to save photo');
+                    const errorText = await res.text();
+                    console.error('Failed to save photo. Status:', res.status, 'Error:', errorText);
                     return false;
                 }
             } catch (err) {
@@ -730,15 +768,28 @@
         }
 
         async function takePictureWithValidation() {
+            console.log('Taking picture with validation...');
             const faceDetected = await detectFace();
             
             if (!faceDetected) {
+                console.log('No face detected during photo capture - disabling inputs and showing modal');
+                disableAllInputs();
+                showCameraRetryModal();
                 return false;
             }
             
+            console.log('Face detected, capturing photo...');
             const photoData = await capturePhoto();
             if (photoData) {
-                await savePhotoToServer(photoData);
+                console.log('Photo captured, saving to server...');
+                const saved = await savePhotoToServer(photoData);
+                if (saved) {
+                    console.log('Photo saved successfully');
+                } else {
+                    console.error('Failed to save photo to server');
+                }
+            } else {
+                console.error('Failed to capture photo');
             }
             
             return true;
@@ -747,81 +798,138 @@
         function showCameraRetryModal() {
             if (window.DCT3Modals && typeof DCT3Modals.open === 'function') {
                 DCT3Modals.open('failed', {
-                    message: 'Kamera wajib diaktifkan/diizinkan selama ujian berlangsung, serta pastikan wajah harus terlihat dengan jelas!',
+                    message: 'Peserta wajib izinkan akses kamera pada browser dan wajah harus terlihat pada kamera',
                     okText: 'Retry',
                     onOk: async function() {
+                        console.log('Retry button clicked, validating camera and face...');
                         await validateCameraAndFace();
                     }
                 });
             } else {
-                alert('Kamera wajib diaktifkan/diizinkan selama ujian berlangsung, serta pastikan wajah harus terlihat dengan jelas!');
+                alert('Peserta wajib izinkan akses kamera pada browser dan wajah harus terlihat pada kamera');
                 setTimeout(() => validateCameraAndFace(), 1000);
             }
         }
 
         async function validateCameraAndFace() {
+            console.log('Starting camera and face validation...');
+            
+            // Disable all radio buttons until face is validated
+            disableAllInputs();
+            
             // Try to start camera
             const cameraStarted = await startCamera();
             if (!cameraStarted) {
+                console.log('Camera failed to start, showing retry modal');
                 showCameraRetryModal();
                 return;
             }
+            
+            console.log('Camera started successfully');
             
             // Wait for video to be ready
             await new Promise(resolve => {
                 if (faceVideo.readyState >= 2) {
+                    console.log('Video already ready');
                     resolve();
                 } else {
-                    faceVideo.onloadeddata = () => resolve();
+                    console.log('Waiting for video to load...');
+                    faceVideo.onloadeddata = () => {
+                        console.log('Video loaded');
+                        resolve();
+                    };
                 }
             });
             
-            // Try to detect face
-            const faceDetected = await detectFace();
+            // Wait longer for camera to stabilize and get good lighting
+            console.log('Waiting 3 seconds for camera to stabilize...');
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            
+            // Try to detect face multiple times
+            console.log('Attempting face detection (will try 3 times)...');
+            let faceDetected = false;
+            for (let i = 0; i < 3; i++) {
+                console.log('Detection attempt', i + 1, 'of 3...');
+                faceDetected = await detectFace();
+                if (faceDetected) break;
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            
             if (!faceDetected) {
+                console.log('No face detected after 3 attempts, showing retry modal');
                 showCameraRetryModal();
                 return;
             }
             
-            // Success - capture first photo
-            faceDetectionActive = true;
-            await takePictureWithValidation();
+            console.log('Face detected successfully!');
             
-            // Set up interval for subsequent photos
-            if (photoIntervalMinutes > 0) {
-                photoIntervalId = setInterval(async () => {
-                    await takePictureWithValidation();
-                }, photoIntervalMinutes * 60 * 1000);
+            // Success - enable inputs and capture first photo (only if not already active)
+            enableAllInputs();
+            if (!faceDetectionActive) {
+                faceDetectionActive = true;
+                console.log('Capturing first photo...');
+                await takePictureWithValidation();
+                
+                // Set up interval for subsequent photos
+                if (photoIntervalMinutes > 0 && !photoIntervalId) {
+                    console.log('Setting up photo interval:', photoIntervalMinutes, 'minutes');
+                    photoIntervalId = setInterval(async () => {
+                        console.log('Interval triggered, capturing photo...');
+                        await takePictureWithValidation();
+                    }, photoIntervalMinutes * 60 * 1000);
+                }
+            } else {
+                console.log('Face re-validated, continuing...');
             }
         }
 
+        function disableAllInputs() {
+            console.log('Showing face detection overlay...');
+            document.getElementById('faceDetectionOverlay').style.display = 'block';
+            document.getElementById('faceDetectionModal').style.display = 'block';
+        }
+
+        function enableAllInputs() {
+            console.log('Hiding face detection overlay...');
+            document.getElementById('faceDetectionOverlay').style.display = 'none';
+            document.getElementById('faceDetectionModal').style.display = 'none';
+        }
+
         async function initPhotoCapture() {
+            console.log('=== Initializing Photo Capture Feature ===');
             try {
                 // Get photo interval from server
+                console.log('Fetching photo interval from server...');
                 const res = await fetch(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Url.Content("~/Exam/GetPhotoInterval"))));
                 if (!res.ok) {
-                    console.error('Failed to get photo interval');
+                    console.error('Failed to get photo interval, status:', res.status);
                     return;
                 }
                 
                 const data = await res.json();
                 photoIntervalMinutes = data.interval || 0;
                 
+                console.log('Photo interval received:', photoIntervalMinutes, 'minutes');
+                
                 if (photoIntervalMinutes <= 0) {
                     console.log('Photo capture not required (interval = 0)');
                     return;
                 }
                 
-                console.log('Photo interval:', photoIntervalMinutes, 'minutes');
+                console.log('Photo capture is REQUIRED. Starting initialization...');
                 
                 // Load face-api models
+                console.log('Loading face-api models...');
                 const loaded = await loadFaceApiModels();
                 if (!loaded) {
                     console.error('Failed to load face detection models');
                     return;
                 }
                 
+                console.log('Face-api models loaded successfully');
+                
                 // Start camera and face validation
+                console.log('Starting camera and face validation...');
                 await validateCameraAndFace();
                 
             } catch (err) {
@@ -830,11 +938,29 @@
         }
 
         // Initialize photo capture when page loads
-        if (typeof faceapi !== 'undefined') {
-            initPhotoCapture();
-        } else {
-            console.error('face-api.js not loaded');
-        }
+        (function() {
+            console.log('Page loaded, checking for face-api.js...');
+            
+            // Only run on Test page (check if we have groups data)
+            if (typeof groups === 'undefined' || !Array.isArray(groups)) {
+                console.log('Not on Test page, skipping photo capture initialization');
+                return;
+            }
+            
+            // Wait for face-api.js to be loaded
+            function waitForFaceApi() {
+                if (typeof faceapi !== 'undefined') {
+                    console.log('face-api.js is available, initializing...');
+                    initPhotoCapture();
+                } else {
+                    console.log('Waiting for face-api.js to load...');
+                    setTimeout(waitForFaceApi, 100);
+                }
+            }
+            
+            // Start checking after a short delay to ensure DOM is ready
+            setTimeout(waitForFaceApi, 100);
+        })();
 
         // Cleanup on page unload
         window.addEventListener('beforeunload', () => {
