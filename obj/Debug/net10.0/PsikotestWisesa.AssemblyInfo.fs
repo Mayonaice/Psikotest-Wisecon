@@ -11,7 +11,7 @@ open System.Reflection
 [<assembly: System.Reflection.AssemblyCompanyAttribute("PsikotestWisesa")>]
 [<assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")>]
 [<assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")>]
-[<assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+47e710de373cc52ec8fdad64e7dcf255006c15bd")>]
+[<assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7c61f9564a1d7285a28408c508bb661c8e7b5c4c")>]
 [<assembly: System.Reflection.AssemblyProductAttribute("PsikotestWisesa")>]
 [<assembly: System.Reflection.AssemblyTitleAttribute("PsikotestWisesa")>]
 [<assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")>]

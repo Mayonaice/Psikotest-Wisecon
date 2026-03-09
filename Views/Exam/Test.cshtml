@@ -5,6 +5,7 @@
     var startAtIso = (ViewData["StartAtIso"] as string) ?? "";
     var endAtIso = (ViewData["EndAtIso"] as string) ?? "";
     var questionsJson = (ViewData["QuestionsJson"] as string) ?? "[]";
+    var lastIncompleteGroup = ViewData["LastIncompleteGroup"] != null ? Convert.ToInt32(ViewData["LastIncompleteGroup"]) : -1;
 }
 <!DOCTYPE html>
 <html lang="id">
@@ -134,6 +135,7 @@
         const token = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(token));
         const groups = @Html.Raw(questionsJson);
         const namaPaket = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(namaPaket));
+        const lastIncompleteGroup = @lastIncompleteGroup;
 
         function pad2(n){ return String(n).padStart(2,'0'); }
         function normalizeMediaUrl(url) {
@@ -567,9 +569,24 @@
             }
         }
 
-        function moveToNextGroup(){
+        async function moveToNextGroup(){
             if(finishing || movingGroup) return;
             movingGroup = true;
+            
+            // Mark current group as completed
+            const currentGroup = groups[state.groupIndex];
+            if (currentGroup && currentGroup.noGroup) {
+                try {
+                    await fetch(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Url.Content("~/Exam/GroupComplete"))), {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ token, noGroup: currentGroup.noGroup })
+                    });
+                } catch (err) {
+                    console.error('Failed to mark group as completed:', err);
+                }
+            }
+            
             const next = state.groupIndex + 1;
             if(next < groups.length){
                 setGroup(next);
@@ -654,7 +671,18 @@
         });
 
         prepareGroups();
-        setGroup(0);
+        
+        // Start from last incomplete group if available
+        let startGroupIndex = 0;
+        if (lastIncompleteGroup >= 0 && groups && groups.length > 0) {
+            const groupIndex = groups.findIndex(g => g.noGroup === lastIncompleteGroup);
+            if (groupIndex >= 0) {
+                startGroupIndex = groupIndex;
+                console.log('Resuming from last incomplete group:', lastIncompleteGroup, 'at index:', startGroupIndex);
+            }
+        }
+        
+        setGroup(startGroupIndex);
         setInterval(updateTimer, 1000);
 
         // Face detection and photo capture

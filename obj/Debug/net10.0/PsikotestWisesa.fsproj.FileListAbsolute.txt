@@ -1322,3 +1322,4 @@ C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Debug\net10
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Debug\net10.0\compressed\yvbxt8dnhs-{0}-9xvp453ngh-9xvp453ngh.gz
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Debug\net10.0\compressed\zut9pys375-{0}-1bzaz1hbcr-1bzaz1hbcr.gz
 C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Debug\net10.0\compressed\bnrteh1hhh-{0}-9xvp453ngh-9xvp453ngh.gz
+C:\Users\WS24003426\source\repos\PsikotestWisesa\PsikotestWisesa\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt

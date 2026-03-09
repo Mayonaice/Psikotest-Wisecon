@@ -22,6 +22,9 @@ type ExamSubmitAnswerRequest = { Token: string; NoGroup: int; NoUrut: int; Jawab
 [<CLIMutable>]
 type ExamGroupStartRequest = { Token: string; NoGroup: int }
 
+[<CLIMutable>]
+type ExamGroupCompleteRequest = { Token: string; NoGroup: int }
+
 type ExamAnswer = { noJawaban: int; jawaban: string; poin: int; tipeMedia: string; urlMedia: string; textMedia: string }
 type ExamQuestion = { noUrut: int; judul: string; deskripsi: string; tipeMedia: string; urlMedia: string; answers: ResizeArray<ExamAnswer> }
 type ExamGroup = { noGroup: int; namaGroup: string; minSoal: int; waktu: int; random: bool; isPrioritas: bool; noPetunjuk: int; petunjuk: string; questions: ResizeArray<ExamQuestion> }
@@ -89,6 +92,21 @@ type ExamController (db: IDbConnection, cfg: IConfiguration) =
 
     let eqi (a: string) (b: string) =
         String.Equals(norm a, norm b, StringComparison.OrdinalIgnoreCase)
+
+    member private this.getLastIncompleteGroup(conn: SqlConnection, userId: string, noPaket: int64, attemptTime: DateTime) =
+        use cmd = new SqlCommand()
+        cmd.Connection <- conn
+        cmd.CommandType <- CommandType.Text
+        cmd.CommandText <- 
+            "SELECT TOP 1 NoGroup FROM WISECON_PSIKOTEST.dbo.TR_PesertaGroupProgress " +
+            "WHERE UserId=@u AND NoPaket=@p AND IsCompleted=0 " +
+            "AND CONVERT(VARCHAR(19), AttemptTime, 120) = CONVERT(VARCHAR(19), @at, 120) " +
+            "ORDER BY TimeInput ASC"
+        cmd.Parameters.AddWithValue("@u", userId) |> ignore
+        cmd.Parameters.AddWithValue("@p", noPaket) |> ignore
+        cmd.Parameters.AddWithValue("@at", attemptTime) |> ignore
+        let obj = cmd.ExecuteScalar()
+        if isNull obj then -1 else try Convert.ToInt32(obj) with _ -> -1
 
     member private this.hasFinalResult(conn: SqlConnection, userId: string) =
         use cmd = new SqlCommand()
@@ -493,6 +511,104 @@ type ExamController (db: IDbConnection, cfg: IConfiguration) =
                         else
                             let key = this.groupKey(userId, noPaket, req.NoGroup)
                             groupStartMap.[key] <- DateTime.Now
+                            
+                            // Get attempt time from MS_PesertaDtl
+                            use cmdAttempt = new SqlCommand()
+                            cmdAttempt.Connection <- conn
+                            cmdAttempt.CommandType <- CommandType.Text
+                            cmdAttempt.CommandText <- 
+                                "SELECT TOP 1 TimeInput FROM WISECON_PSIKOTEST.dbo.MS_PesertaDtl " +
+                                "WHERE UserId=@u AND NoPaket=@p ORDER BY TimeInput DESC"
+                            cmdAttempt.Parameters.AddWithValue("@u", userId) |> ignore
+                            cmdAttempt.Parameters.AddWithValue("@p", noPaket) |> ignore
+                            let attemptObj = cmdAttempt.ExecuteScalar()
+                            let attemptTime = 
+                                if isNull attemptObj then DateTime.Now
+                                else try Convert.ToDateTime(attemptObj) with _ -> DateTime.Now
+                            
+                            // Mark group as started in progress table
+                            use cmdCheck = new SqlCommand()
+                            cmdCheck.Connection <- conn
+                            cmdCheck.CommandType <- CommandType.Text
+                            cmdCheck.CommandText <- 
+                                "SELECT COUNT(*) FROM WISECON_PSIKOTEST.dbo.TR_PesertaGroupProgress " +
+                                "WHERE UserId=@u AND NoPaket=@p AND NoGroup=@g " +
+                                "AND CONVERT(VARCHAR(19), AttemptTime, 120) = CONVERT(VARCHAR(19), @at, 120)"
+                            cmdCheck.Parameters.AddWithValue("@u", userId) |> ignore
+                            cmdCheck.Parameters.AddWithValue("@p", noPaket) |> ignore
+                            cmdCheck.Parameters.AddWithValue("@g", req.NoGroup) |> ignore
+                            cmdCheck.Parameters.AddWithValue("@at", attemptTime) |> ignore
+                            let count = Convert.ToInt32(cmdCheck.ExecuteScalar())
+                            
+                            if count = 0 then
+                                use cmdInsert = new SqlCommand()
+                                cmdInsert.Connection <- conn
+                                cmdInsert.CommandType <- CommandType.Text
+                                cmdInsert.CommandText <-
+                                    "INSERT INTO WISECON_PSIKOTEST.dbo.TR_PesertaGroupProgress " +
+                                    "(UserId, NoPaket, NoGroup, IsCompleted, AttemptTime, UserInput, TimeInput) " +
+                                    "VALUES (@u, @p, @g, 0, @at, @u, GETDATE())"
+                                cmdInsert.Parameters.AddWithValue("@u", userId) |> ignore
+                                cmdInsert.Parameters.AddWithValue("@p", noPaket) |> ignore
+                                cmdInsert.Parameters.AddWithValue("@g", req.NoGroup) |> ignore
+                                cmdInsert.Parameters.AddWithValue("@at", attemptTime) |> ignore
+                                cmdInsert.ExecuteNonQuery() |> ignore
+                            
+                            this.Ok(box {| ok = true |}) :> IActionResult
+                finally
+                    conn.Close()
+
+    [<AllowAnonymous>]
+    [<HttpPost>]
+    [<Route("Exam/GroupComplete")>]
+    member this.GroupComplete([<FromBody>] req: ExamGroupCompleteRequest) : IActionResult =
+        let encKey = getEncryptionKey ()
+        if String.IsNullOrWhiteSpace(encKey) then
+            this.BadRequest("Konfigurasi EncryptionKey belum diset") :> IActionResult
+        else
+            let tokenEnc = norm req.Token
+            let tokenEncFixed = Uri.UnescapeDataString(tokenEnc).Replace(" ", "+")
+            let plain = decrypt64 tokenEncFixed encKey
+            match tryParseToken plain with
+            | None -> this.BadRequest("Token tidak valid") :> IActionResult
+            | Some(userId, noPaket, _, _, _) ->
+                let conn = db :?> SqlConnection
+                conn.Open()
+                try
+                    match this.getAssignment(conn, userId, noPaket) with
+                    | None -> this.BadRequest("Data ujian tidak ditemukan") :> IActionResult
+                    | Some(_, _, _, _, _, _, _, isBlocked, _, _, _) ->
+                        if isBlocked then this.BadRequest("Akses ujian diblokir") :> IActionResult
+                        else
+                            // Get attempt time from MS_PesertaDtl
+                            use cmdAttempt = new SqlCommand()
+                            cmdAttempt.Connection <- conn
+                            cmdAttempt.CommandType <- CommandType.Text
+                            cmdAttempt.CommandText <- 
+                                "SELECT TOP 1 TimeInput FROM WISECON_PSIKOTEST.dbo.MS_PesertaDtl " +
+                                "WHERE UserId=@u AND NoPaket=@p ORDER BY TimeInput DESC"
+                            cmdAttempt.Parameters.AddWithValue("@u", userId) |> ignore
+                            cmdAttempt.Parameters.AddWithValue("@p", noPaket) |> ignore
+                            let attemptObj = cmdAttempt.ExecuteScalar()
+                            let attemptTime = 
+                                if isNull attemptObj then DateTime.Now
+                                else try Convert.ToDateTime(attemptObj) with _ -> DateTime.Now
+                            
+                            // Mark group as completed
+                            use cmdUpdate = new SqlCommand()
+                            cmdUpdate.Connection <- conn
+                            cmdUpdate.CommandType <- CommandType.Text
+                            cmdUpdate.CommandText <-
+                                "UPDATE WISECON_PSIKOTEST.dbo.TR_PesertaGroupProgress " +
+                                "SET IsCompleted=1, CompletedAt=GETDATE() " +
+                                "WHERE UserId=@u AND NoPaket=@p AND NoGroup=@g " +
+                                "AND CONVERT(VARCHAR(19), AttemptTime, 120) = CONVERT(VARCHAR(19), @at, 120)"
+                            cmdUpdate.Parameters.AddWithValue("@u", userId) |> ignore
+                            cmdUpdate.Parameters.AddWithValue("@p", noPaket) |> ignore
+                            cmdUpdate.Parameters.AddWithValue("@g", req.NoGroup) |> ignore
+                            cmdUpdate.Parameters.AddWithValue("@at", attemptTime) |> ignore
+                            cmdUpdate.ExecuteNonQuery() |> ignore
+                            
                             this.Ok(box {| ok = true |}) :> IActionResult
                 finally
                     conn.Close()
@@ -576,15 +692,23 @@ type ExamController (db: IDbConnection, cfg: IConfiguration) =
                                         cmd.Parameters.AddWithValue("@p", noPaket) |> ignore
                                         let _ = cmd.ExecuteNonQuery()
                                         let q = this.loadQuestions(conn, noPaket)
-                                        use cmdStart = new SqlCommand("SELECT TOP 1 StartTest FROM WISECON_PSIKOTEST.dbo.MS_PesertaDtl WHERE UserId=@u AND NoPaket=@p ORDER BY TimeInput DESC", conn)
+                                        
+                                        use cmdStart = new SqlCommand("SELECT TOP 1 StartTest, TimeInput FROM WISECON_PSIKOTEST.dbo.MS_PesertaDtl WHERE UserId=@u AND NoPaket=@p ORDER BY TimeInput DESC", conn)
                                         cmdStart.Parameters.AddWithValue("@u", userId) |> ignore
                                         cmdStart.Parameters.AddWithValue("@p", noPaket) |> ignore
-                                        let startObj = cmdStart.ExecuteScalar()
-                                        let startAt2 =
-                                            if isNull startObj then now
+                                        use rdr = cmdStart.ExecuteReader()
+                                        let (startAt2, attemptTime) =
+                                            if rdr.Read() then
+                                                let st = if rdr.IsDBNull(0) then now else rdr.GetDateTime(0)
+                                                let at = if rdr.IsDBNull(1) then now else rdr.GetDateTime(1)
+                                                (st, at)
                                             else
-                                                try Convert.ToDateTime(startObj)
-                                                with _ -> now
+                                                (now, now)
+                                        rdr.Close()
+                                        
+                                        // Get last incomplete group for this attempt
+                                        let lastIncompleteGroup = this.getLastIncompleteGroup(conn, userId, noPaket, attemptTime)
+                                        
                                         this.ViewData.["Token"] <- req.Token
                                         this.ViewData.["UserId"] <- userId
                                         this.ViewData.["NoPaket"] <- noPaket
@@ -593,6 +717,7 @@ type ExamController (db: IDbConnection, cfg: IConfiguration) =
                                         this.ViewData.["StartAtIso"] <- startAt2.ToString("yyyy-MM-ddTHH:mm:ss")
                                         this.ViewData.["EndAtIso"] <- startAt2.ToString("yyyy-MM-ddTHH:mm:ss")
                                         this.ViewData.["QuestionsJson"] <- System.Text.Json.JsonSerializer.Serialize(q)
+                                        this.ViewData.["LastIncompleteGroup"] <- lastIncompleteGroup
                                         this.View("Test") :> IActionResult
                 finally
                     conn.Close()
